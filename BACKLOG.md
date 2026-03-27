@@ -7,12 +7,15 @@ that need to be built, decided, or documented when the time is right.
 
 ## evaluators/ — agent scripts not yet built
 
-The `evaluators/` folder exists as a placeholder. The intention is that
-agent scripts implementing the `check_notes` from each rule live here.
-When the evaluator is ready to be built, this is where it lands.
+The `evaluators/` folder exists as a placeholder. Agent scripts implementing
+the check_notes from each rule live here.
 
-Priority: build the first evaluator script once the capture endpoint
-(separate repo) is live and the feedback loop is established.
+First candidate: a DoD evaluator that reads `definitions-of-done.yaml`,
+determines the artifact type being evaluated, and runs the appropriate
+checklist post-PR or post-deploy.
+
+Priority: build once the capture endpoint is live and the feedback loop
+is established.
 
 ---
 

@@ -85,7 +85,7 @@ files:
     description: Standards governing how AI evaluation is performed. Evaluation triggers, context contract, and finding requirements.
     rule_prefix: EVAL
 
-  - file: standards/definitions-of-done.yaml
+  - file: definitions-of-done.yaml
     domain: definitions-of-done
     description: Checklists used by AI evaluators for post-PR assessment. One checklist per artifact type — processor, FastAPI service, pipeline, frontend site, React app, Hono service.
     rule_prefix: DOD
