@@ -1,0 +1,109 @@
+# ecosystem-standards / definitions-of-done.yaml
+# Checklists used by AI evaluators for post-PR assessment.
+# A piece of work is done when it meets ALL criteria for its type.
+# Version: 1.0.0 · 2026-03
+
+definitions_of_done:
+
+  new_python_processor:
+    label: New Python Processor
+    checklist:
+      - Bootstrapped from python-project-template via init_project.py
+      - uv for dependency management, ruff for linting
+      - kaiano-common-utils declared as dependency
+      - "Four critical path tests present per module: normalization, deduplication, failure path, output shape"
+      - "CI workflow configured: ci.yml with test + release jobs using semantic-release"
+      - .releaserc.json present with correct plugin configuration
+      - README documents purpose, inputs, outputs, environment variables, how to run locally
+      - README includes Developer Setup section (prerequisites, uv sync, pre-commit install, test/lint/type check commands)
+      - .env.example present and current
+      - docs/PIPELINE.md describes where this processor fits in the broader flow
+      - docs/CONFIGURATION.md documents every environment variable
+      - Error handling follows python.yaml PY-012/PY-013/PY-014 patterns
+      - Pydantic models used for all external data validation
+      - Main entry point wrapped in @flow decorator and connected to Prefect Cloud
+
+  new_fastapi_service:
+    label: New FastAPI Service
+    checklist:
+      - "Versioned routes: /v1/<resource>"
+      - Response envelope on all endpoints
+      - Contract test for every endpoint — response shape verified
+      - Mock verification in all tests — no vacuous passes
+      - Test database fixture — no production data in tests
+      - owner_id on all tables
+      - Sentry integration configured
+      - CORS configured — CORS_ORIGINS env var, not hardcoded
+      - Feature flags table seeded with initial flags
+      - Clerk auth requirement explicitly decided and documented
+      - Deployed to Railway
+      - "OpenAPI docs complete: summary, description, response_model on every endpoint"
+      - .env.example present and current
+      - README documents purpose, endpoints, deployment, versioning section
+      - README includes full Developer Setup section (prerequisites, uv sync --all-extras, pre-commit install, uvicorn run, pytest, lint/format/mypy, alembic upgrade head)
+      - Design decisions documented in docs/DESIGN.md
+      - "CI workflow: ci.yml with test + release jobs using semantic-release"
+      - .releaserc.json present with correct plugin configuration
+
+  new_pipeline:
+    label: New Pipeline
+    checklist:
+      - Main entry point wrapped in @flow decorator
+      - Connected to Prefect Cloud — flows visible in dashboard
+      - External API calls wrapped in @task with retry logic
+      - "Dual logger pattern: get_run_logger() with fallback to standard logger"
+      - Idempotent steps — safe to re-run
+      - AI evaluation step included as final task
+      - Concurrency group declared
+      - GitHub Actions workflow updated with PREFECT_API_KEY and PREFECT_API_URL
+      - Pipeline flow documented in docs/PIPELINE.md
+      - Deprecation plan documented if workflow is temporary
+
+  new_frontend_site:
+    label: New Frontend Site (Astro)
+    checklist:
+      - Astro for all static sites — portfolio, technical, and community
+      - Deployed to Cloudflare Pages
+      - Build succeeds with empty API data — graceful fallback on all fetches
+      - No hardcoded API URLs — PUBLIC_API_URL env var throughout
+      - data-api-url attribute on html tag for client-side script access
+      - "CI workflow: ci.yml with build + release jobs using semantic-release"
+      - .releaserc.json present with correct plugin configuration
+      - README documents purpose, deployment, environment variables, versioning section
+      - Deployed and publicly accessible before considered portfolio-ready
+
+  new_react_app:
+    label: New React Web App
+    checklist:
+      - Vite + React + TypeScript — no other bundler or UI framework
+      - Tailwind CSS configured — no other styling approach
+      - shadcn/ui installed — components copied into src/components/ui/
+      - React Hook Form + Zod used for all forms and validation
+      - Clerk configured for authentication where auth is required
+      - No hardcoded API URLs — VITE_API_URL env var throughout
+      - "CI workflow: ci.yml with build + release jobs using semantic-release"
+      - .releaserc.json present with correct plugin configuration
+      - README documents purpose, local setup, environment variables, and deployment
+      - .env.example present and current — all VITE_ vars documented
+
+  new_hono_service:
+    label: New Hono API Service (TypeScript)
+    checklist:
+      - Hono on Node — not Cloudflare Workers runtime
+      - kaiano-ts-utils declared as dependency — do not reimplement logging, auth, or response helpers
+      - "Versioned routes: /v1/<resource>"
+      - "Response envelope on all endpoints — { data, meta } / { error: { code, message } }"
+      - Drizzle ORM for database access — schema defined in TypeScript, migrations via Drizzle Kit
+      - Clerk auth middleware from kaiano-ts-utils — not hand-rolled
+      - Zod schemas for all request validation
+      - Contract test for every endpoint — response shape verified
+      - Deployed to Railway — not Cloudflare Workers
+      - Sentry integration configured
+      - CORS configured — CORS_ORIGINS env var, not hardcoded
+      - owner_id on all tables
+      - "CI workflow: ci.yml with test + release jobs using semantic-release"
+      - .releaserc.json present with correct plugin configuration
+      - README documents purpose, endpoints, local setup, deployment, versioning
+      - README includes full Developer Setup section (prerequisites, pnpm install, dev server, test commands, lint/type check)
+      - .env.example present and current
+      - Design decisions documented in docs/DESIGN.md

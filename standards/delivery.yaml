@@ -1,4 +1,4 @@
-# kaiano-ecosystem-standards / delivery.yaml
+# ecosystem-standards / delivery.yaml
 # Continuous delivery, versioning, and observability standards.
 # Version: 1.0.0 · 2026-03
 
@@ -40,7 +40,7 @@ standards:
     dimension: cd_readiness
     severity: WARN
     description: >
-      kaiano-common-utils logger used throughout Python services. kaiano-ts-utils
+      common-utils logger used throughout Python services. kaiano-ts-utils
       logger used throughout TypeScript services. JSON-formatted in production.
       Emoji prefixes for human-readable local output. Never use print() in
       production code paths.
@@ -152,4 +152,40 @@ standards:
     check_notes: >
       Check release job in ci.yml for npm install --no-save step before npx
       semantic-release. Flag if absent.
+    added: 2026-03
+
+  - id: CD-005
+    title: Prefect Cloud for pipeline observability
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    description: >
+      All pipeline flows connect to Prefect Cloud (free tier). Run history, step logs,
+      and flow state are visible at app.prefect.cloud. GitHub Actions logs are for
+      deep debugging only — not the primary observability surface.
+    checkable: false
+    added: 2026-03
+
+  - id: CD-006
+    title: GitHub Actions as trigger layer only
+    status: requirement
+    dimension: structural_conformance
+    severity: INFO
+    description: >
+      GitHub Actions triggers Prefect flows via workflow_dispatch or repository_dispatch.
+      GitHub Actions is not the orchestrator — it is the trigger and CI/CD layer only.
+      Existing orchestration workflows migrate to this pattern when significantly reworked.
+    checkable: false
+    added: 2026-03
+
+  - id: VER-007
+    title: Pull before branching
+    status: convention
+    dimension: cd_readiness
+    severity: INFO
+    description: >
+      Always run git pull origin main before creating a new feature branch.
+      Prevents merge conflicts with semantic-release commits
+      (chore(release): X.Y.Z [skip ci]) that land on main after every release.
+    checkable: false
     added: 2026-03

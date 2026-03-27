@@ -1,4 +1,4 @@
-# kaiano-ecosystem-standards / frontend.yaml
+# ecosystem-standards / frontend.yaml
 # Standards for all frontend sites and web applications.
 # Version: 1.0.0 · 2026-03
 #
@@ -95,4 +95,39 @@ standards:
     check_notes: >
       Scan source files for hardcoded API URL strings (http://localhost, railway.app,
       etc.). Flag if found outside of .env files.
+    added: 2026-03
+
+  - id: FE-008
+    title: Pinned starter version
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      Astro sites pin their starter version. Upstream preserved in-repo for reference.
+      Do not blindly upgrade starter versions — pin and document the version in use.
+    checkable: false
+    added: 2026-03
+
+  - id: FE-009
+    title: Build-time data for static content
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      Infrequently-changing data (collections, summaries) fetched at build time via
+      Astro data files. Do not make runtime API calls for content that could be
+      fetched at build time.
+    checkable: false
+    added: 2026-03
+
+  - id: FE-010
+    title: Runtime queries for interactive demos only
+    status: requirement
+    dimension: structural_conformance
+    severity: INFO
+    description: >
+      Live API queries reserved for search, filtering, and interactive demo surfaces.
+      Implemented via Astro component islands. Document which endpoints are called
+      at runtime vs build time.
+    checkable: false
     added: 2026-03

@@ -1,4 +1,4 @@
-# kaiano-ecosystem-standards / pipeline.yaml
+# ecosystem-standards / pipeline.yaml
 # Standards for pipeline design and orchestration.
 # Version: 1.0.0 · 2026-03
 
@@ -91,5 +91,34 @@ standards:
     description: >
       Tasks that call external APIs use retries=2, retry_delay_seconds=30. Tasks
       calling Google APIs inherit kaiano-common-utils retry logic.
+    checkable: false
+    added: 2026-03
+
+  - id: PIPE-008
+    title: Drive integration canonical pattern
+    status: requirement
+    dimension: structural_conformance
+    severity: INFO
+    description: >
+      The canonical Drive ingestion flow until a direct API upload path is available:
+        File dropped in Drive source folder
+        → Apps Script trigger (google-app-script-trigger)
+        → repository_dispatch to GitHub
+        → Process pipeline: normalize → validate → move to year folder
+        → Collect pipeline: rebuild collection → write to DB + JSON snapshot
+        → AI evaluation step: assess run conformance
+      This pattern is maintained until superseded by a direct Prefect webhook trigger.
+    checkable: false
+    added: 2026-03
+
+  - id: PIPE-009
+    title: AI evaluation step as final pipeline task
+    status: requirement
+    dimension: pipeline_consistency
+    severity: WARN
+    description: >
+      All production pipelines include an AI evaluation step as the final task.
+      The step assesses run conformance against the current standards version and
+      writes findings to the pipeline_evaluations table.
     checkable: false
     added: 2026-03

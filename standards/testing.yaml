@@ -1,4 +1,4 @@
-# kaiano-ecosystem-standards / testing.yaml
+# ecosystem-standards / testing.yaml
 # Testing standards for all Python processors and FastAPI services.
 # Version: 1.0.0 · 2026-03
 #
@@ -6,6 +6,21 @@
 # Remediation order: deejay-set-processor-dev first, then by activity level.
 
 standards:
+
+  - id: TEST-000
+    title: Testing pyramid — right ratio, not maximum coverage
+    status: requirement
+    dimension: testing_coverage
+    severity: INFO
+    description: >
+      The goal is the right ratio of test types, not maximum line coverage.
+      Unit tests (many): pure functions in isolation, no I/O, no external calls. Fast.
+      Integration tests (some): processor interaction with mocked external dependencies.
+        One per major external integration.
+      E2E tests (few): happy path only, run nightly not on every commit.
+        One per pipeline covering the full flow.
+    checkable: false
+    added: 2026-03
 
   # ─────────────────────────────────────────────
   # CRITICAL PATH — PYTHON PROCESSORS
@@ -181,4 +196,22 @@ standards:
       Every mock in a test must be verified with assert_called() or assert_called_once().
       Tests that pass because a mock was never called are false positives.
     checkable: false
+    added: 2026-03
+
+  - id: TEST-GAP-001
+    title: "GAP: Most existing processors have import-level tests only"
+    status: gap
+    dimension: testing_coverage
+    severity: INFO
+    description: >
+      Most existing processors currently have import-level tests only. This is a
+      known gap with active remediation underway. Remediation order:
+      deejay-set-processor-dev first (new platform foundation), then by activity level.
+      When a processor is remediated, this gap entry is closed and the processor
+      is marked as compliant with TEST-001 through TEST-004.
+    checkable: true
+    check_notes: >
+      For each processor repo, check tests/ for the four critical path tests
+      (TEST-001 through TEST-004). Flag any processor missing any of the four.
+      Track remediation progress here.
     added: 2026-03

@@ -1,4 +1,4 @@
-# kaiano-ecosystem-standards / evaluation.yaml
+# ecosystem-standards / evaluation.yaml
 # Standards governing how AI evaluation is performed across the ecosystem.
 # Version: 1.0.0 · 2026-03
 #
@@ -48,6 +48,43 @@ standards:
       Findings reference a specific standard by ID, describe what was observed,
       and suggest a concrete remediation. Vague findings are not acceptable.
     checkable: false
+    added: 2026-03
+
+  - id: EVAL-004
+    title: Structural conformance dimension
+    status: requirement
+    dimension: structural_conformance
+    severity: INFO
+    description: >
+      Evaluation dimension: does the repo/workflow follow the patterns in the
+      standards? Covers src layout, naming conventions, error handling, tooling choices.
+    checkable: false
+    added: 2026-03
+
+  - id: EVAL-005
+    title: Pipeline consistency dimension
+    status: requirement
+    dimension: pipeline_consistency
+    severity: INFO
+    description: >
+      Evaluation dimension: did this run behave the same way as previous runs?
+      Covers unexpected timing changes, new error types, missing steps.
+    checkable: false
+    added: 2026-03
+
+  - id: EVAL-006
+    title: Standards currency dimension
+    status: requirement
+    dimension: standards_currency
+    severity: INFO
+    description: >
+      Evaluation dimension: has this repo been evaluated against the current version
+      of the standards document? Is it behind? Flag if the last evaluation used a
+      standards version more than one minor version behind current.
+    checkable: true
+    check_notes: >
+      Check pipeline_evaluations for this repo. Compare standards_version on the
+      most recent evaluation against current index.yaml version. Flag if behind.
     added: 2026-03
 
   # ─────────────────────────────────────────────

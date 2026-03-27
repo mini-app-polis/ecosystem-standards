@@ -1,15 +1,15 @@
-# kaiano-ecosystem-standards / index.yaml
+# ecosystem-standards / index.yaml
 # Manifest file — agents fetch this first to discover available standards files.
-# Version: 1.0.0 · 2026-03
+# Version: 1.1.0 · 2026-03
 #
 # Fetch pattern:
 #   1. GET index.yaml  → discover files and current version
 #   2. GET standards/<file>.yaml  → fetch relevant domain(s)
 #   3. Pin standards_version in evaluation output for auditability
 
-version: 1.0.0
+version: 1.1.0
 updated: 2026-03
-maintainer: kaiano-levine
+maintainer: mini-app-polis
 
 # Dimensions used across all standards files.
 # These map directly to the pipeline_evaluations table dimension field.
@@ -85,6 +85,11 @@ files:
     description: Standards governing how AI evaluation is performed. Evaluation triggers, context contract, and finding requirements.
     rule_prefix: EVAL
 
+  - file: standards/definitions-of-done.yaml
+    domain: definitions-of-done
+    description: Checklists used by AI evaluators for post-PR assessment. One checklist per artifact type — processor, FastAPI service, pipeline, frontend site, React app, Hono service.
+    rule_prefix: DOD
+
   - file: standards/cross-stack.yaml
     domain: cross-stack
     description: Standards that apply across both Python and TypeScript stacks. Shared library usage and response shape parity.
@@ -92,10 +97,20 @@ files:
 
 # Changelog — why this version exists.
 changelog:
+  - version: 1.1.0
+    date: 2026-03
+    notes: >
+      Added definitions-of-done.yaml (migrated from v10 docx Section 13, expanded
+      with Hono service DoD). Added missing rules: TEST-000 (testing pyramid),
+      TEST-GAP-001 (untested processors gap), PIPE-008 (Drive integration pattern),
+      PIPE-009 (AI evaluation as final task), CD-005/CD-006 (Prefect observability),
+      VER-007 (pull before branching), FE-008/FE-009/FE-010 (frontend data patterns),
+      EVAL-004/EVAL-005/EVAL-006 (evaluation dimensions formalized).
+
   - version: 1.0.0
     date: 2026-03
     notes: >
-      Initial formalization. Migrated from kaiano_ecosystem_standards_v10.docx
+      Initial formalization. Migrated from ecosystem_standards_v10.docx
       into machine-readable YAML. Added nine rules from kaianolevine-api and
       kaiano-common-utils code review audit (AUTH-001, AUTH-002, CFG-001, CFG-002,
       PKG-002→PY-009, FMT-001→PY-010, CI-001→TEST-012, CI-002→CD-004, PKG-001→DOC-009).

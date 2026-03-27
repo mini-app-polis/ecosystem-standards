@@ -2,7 +2,7 @@
 
 ## 1.0.0 — 2026-03
 
-Initial release. Migrated from `kaiano_ecosystem_standards_v10.docx` into
+Initial release. Migrated from `ecosystem_standards_v10.docx` into
 machine-readable YAML split across ten domain files.
 
 **Added from code review audit of `kaianolevine-api` and `kaiano-common-utils`:**

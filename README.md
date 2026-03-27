@@ -1,4 +1,4 @@
-# kaiano-ecosystem-standards
+# ecosystem-standards
 
 Machine-readable standards for the Kaiano engineering ecosystem.
 
@@ -26,7 +26,7 @@ Every evaluation output should pin the `version` from `index.yaml` so findings a
 ## Repo Structure
 
 ```
-kaiano-ecosystem-standards/
+ecosystem-standards/
 ├── index.yaml                  ← start here — manifest and version
 ├── README.md
 ├── CHANGELOG.md
