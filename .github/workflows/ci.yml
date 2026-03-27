@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate YAML
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Validate all standards YAML files
+        run: |
+          python3 << 'EOF'
+          import yaml, glob, sys, os
+
+          errors = []
+
+          # Validate index.yaml
+          try:
+              data = yaml.safe_load(open('index.yaml'))
+              assert 'version' in data, "index.yaml missing version"
+              assert 'files' in data, "index.yaml missing files"
+              print(f"✅ index.yaml")
+          except Exception as e:
+              errors.append(f"❌ index.yaml: {e}")
+
+          # Validate each standards file
+          all_ids = []
+          for f in sorted(glob.glob('standards/*.yaml')):
+              try:
+                  data = yaml.safe_load(open(f))
+                  assert 'standards' in data, f"{f} missing 'standards' key"
+                  rules = data['standards']
+                  for r in rules:
+                      assert 'id' in r, f"Rule missing id in {f}"
+                      assert 'title' in r, f"Rule {r.get('id')} missing title"
+                      assert 'status' in r, f"Rule {r.get('id')} missing status"
+                      assert 'severity' in r, f"Rule {r.get('id')} missing severity"
+                      assert 'dimension' in r, f"Rule {r.get('id')} missing dimension"
+                      all_ids.append(r['id'])
+                  print(f"✅ {f}: {len(rules)} rules")
+              except Exception as e:
+                  errors.append(f"❌ {f}: {e}")
+
+          # Check for duplicate IDs
+          dupes = [id for id in all_ids if all_ids.count(id) > 1]
+          if dupes:
+              errors.append(f"❌ Duplicate rule IDs found: {list(set(dupes))}")
+
+          if errors:
+              for e in errors:
+                  print(e)
+              sys.exit(1)
+
+          print(f"\n✅ All valid — {len(all_ids)} rules, 0 duplicates")
+          EOF
+
+  release:
+    name: Release
+    needs: validate
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install semantic-release plugins
+        run: |
+          npm install --no-save \
+            semantic-release \
+            @semantic-release/changelog \
+            @semantic-release/git \
+            @semantic-release/github \
+            @semantic-release/exec \
+            @semantic-release/commit-analyzer \
+            @semantic-release/release-notes-generator
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release
