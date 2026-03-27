@@ -38,7 +38,7 @@ permanent record of why it exists.
 
 ## Capture endpoint — backlog items not yet auto-routed here
 
-The planned capture system (POST /capture on kaiano-api → GitHub Issue
+The planned capture system (POST /capture on api-kaianolevine-com → GitHub Issue
 in this repo) is not yet built. Until it is, new issues must be manually
 added to this file or directly as GitHub Issues.
 

@@ -1,6 +1,6 @@
 # ecosystem-standards
 
-Machine-readable standards for the Kaiano engineering ecosystem.
+Machine-readable standards for the MiniAppPolis ecosystem.
 
 This repo is the single source of truth for all architectural decisions, patterns, and conventions. It is the rubric used by evaluator agents and the reference point for all development work.
 
