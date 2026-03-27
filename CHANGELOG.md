@@ -1,3 +1,15 @@
+# 1.0.0 (2026-03-27)
+
+
+### Bug Fixes
+
+* moving definition of done ([0822b79](https://github.com/mini-app-polis/ecosystem-standards/commit/0822b79a2cc164ac0aaf628fb8b9aa9a6a332c5c))
+
+
+### Features
+
+* first workable draft ([974f5d0](https://github.com/mini-app-polis/ecosystem-standards/commit/974f5d0b5e4ce5fd1be4a2979615888e7bc614c1))
+
 # Changelog
 
 ## 1.0.0 — 2026-03
