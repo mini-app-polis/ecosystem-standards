@@ -1,0 +1,155 @@
+# kaiano-ecosystem-standards / delivery.yaml
+# Continuous delivery, versioning, and observability standards.
+# Version: 1.0.0 · 2026-03
+
+standards:
+
+  # ─────────────────────────────────────────────
+  # OBSERVABILITY
+  # ─────────────────────────────────────────────
+
+  - id: CD-001
+    title: Unleash for feature flags
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    description: >
+      Open source, self-hostable. Flags stored in Postgres alongside application data.
+      Flag naming convention: flags.<service>.<feature>
+      Example: flags.deejay_api.ai_evaluation_enabled
+    checkable: false
+    added: 2026-03
+
+  - id: CD-002
+    title: Sentry for error tracking in all production services
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    description: >
+      All FastAPI services and Python processors running in production integrate
+      Sentry. Free tier is sufficient.
+    checkable: true
+    check_notes: >
+      Check for sentry-sdk in pyproject.toml dependencies and Sentry initialization
+      in the service entry point. Flag production services without Sentry.
+    added: 2026-03
+
+  - id: CD-003
+    title: Structured logging via shared library
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    description: >
+      kaiano-common-utils logger used throughout Python services. kaiano-ts-utils
+      logger used throughout TypeScript services. JSON-formatted in production.
+      Emoji prefixes for human-readable local output. Never use print() in
+      production code paths.
+    checkable: true
+    check_notes: >
+      Scan source files for print() statements in production code paths. Flag if found.
+    added: 2026-03
+
+  # ─────────────────────────────────────────────
+  # CI/CD
+  # ─────────────────────────────────────────────
+
+  - id: CD-004
+    title: GitHub Actions version tags must be valid
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    description: >
+      All "uses: owner/repo@vN" references in .github/workflows/ must reference
+      version tags that exist in the action's release history. Invalid version tags
+      cause CI to fail silently. Current pinned versions (March 2026):
+      actions/checkout@v4, actions/setup-node@v4, astral-sh/setup-uv@v5.
+      Verify the tag exists before committing any version pin.
+    checkable: true
+    check_notes: >
+      Parse all uses: references in .github/workflows/*.yml. For each action,
+      verify the pinned version tag exists via the GitHub API. Flag any returning 404.
+    origin: "Invalid version tags cause CI to fail silently, creating false confidence in a passing pipeline."
+    added: 2026-03
+
+  # ─────────────────────────────────────────────
+  # VERSIONING
+  # ─────────────────────────────────────────────
+
+  - id: VER-001
+    title: Conventional Commits format
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    description: >
+      All commit messages follow: type: description.
+      Types: feat, fix, docs, refactor, chore, test, ci.
+    checkable: false
+    added: 2026-03
+
+  - id: VER-002
+    title: BREAKING CHANGE footer for major bumps
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    description: >
+      Use explicit BREAKING CHANGE in commit body for major version bumps.
+      The feat!: shorthand is unreliable. Correct pattern using two -m flags:
+        git commit -m 'feat: description' -m 'BREAKING CHANGE: explanation'
+    checkable: false
+    added: 2026-03
+
+  - id: VER-003
+    title: semantic-release on all repos
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    description: >
+      Every repo has .releaserc.json and a release job in ci.yml. On merge to main:
+      tests run, semantic-release reads commits, determines bump, updates version
+      file, updates CHANGELOG.md, creates git tag, creates GitHub Release.
+    checkable: true
+    check_notes: >
+      Check for .releaserc.json at repo root and a release job in
+      .github/workflows/ci.yml. Flag if either is absent.
+    added: 2026-03
+
+  - id: VER-004
+    title: Never manually edit version files or CHANGELOG
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    description: >
+      Never manually edit version in pyproject.toml or package.json. Never manually
+      edit CHANGELOG.md. Both are owned by semantic-release.
+    checkable: false
+    added: 2026-03
+
+  - id: VER-005
+    title: "fetch-depth: 0 on CI checkout"
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    description: >
+      All CI jobs that run semantic-release must use fetch-depth: 0 on the checkout
+      step. Without this semantic-release cannot read full git history and will not
+      release correctly.
+    checkable: true
+    check_notes: >
+      Scan .github/workflows/ci.yml for actions/checkout steps in the release job.
+      Flag if fetch-depth: 0 is absent.
+    added: 2026-03
+
+  - id: VER-006
+    title: Plugins installed explicitly before semantic-release
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    description: >
+      semantic-release plugins are installed via npm install --no-save in the release
+      job before running npx semantic-release. Not via package.json. Required because
+      npx only installs the core package.
+    checkable: true
+    check_notes: >
+      Check release job in ci.yml for npm install --no-save step before npx
+      semantic-release. Flag if absent.
+    added: 2026-03

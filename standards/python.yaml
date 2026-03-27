@@ -1,0 +1,248 @@
+# kaiano-ecosystem-standards / python.yaml
+# Standards for all Python services, processors, and libraries.
+# Version: 1.0.0 · 2026-03
+
+standards:
+
+  # ─────────────────────────────────────────────
+  # TOOLING
+  # ─────────────────────────────────────────────
+
+  - id: PY-001
+    title: uv for dependency management
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      uv replaces Poetry. Faster installs, simpler lockfile, better resolution.
+      All new processors use uv. Existing processors migrate when touched.
+    checkable: true
+    check_notes: >
+      Check for uv.lock or [tool.uv] in pyproject.toml. Flag new repos using
+      Poetry. Flag existing repos using Poetry only when actively being worked on.
+    added: 2026-03
+
+  - id: PY-002
+    title: ruff for linting and formatting
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      ruff replaces black + isort + flake8. Single tool, significantly faster.
+      Configured in pyproject.toml.
+    checkable: true
+    check_notes: >
+      Check for [tool.ruff] in pyproject.toml. Flag if repo configures
+      black, isort, or flake8 separately.
+    added: 2026-03
+
+  - id: PY-003
+    title: Python 3.11+ minimum version
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      Minimum version for new work is Python 3.11. Python 3.13 preferred.
+      Type hints used throughout.
+    checkable: true
+    check_notes: >
+      Check requires-python in pyproject.toml. Flag if minimum is below 3.11.
+    added: 2026-03
+
+  - id: PY-004
+    title: Pydantic for all external data validation
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      All external data (CSV rows, API responses, Drive file metadata) validated
+      through Pydantic models before processing. Replaces ad-hoc dict access.
+    checkable: false
+    added: 2026-03
+
+  - id: PY-009
+    title: hatchling as build backend
+    status: convention
+    dimension: structural_conformance
+    severity: INFO
+    description: >
+      hatchling is the ecosystem standard build backend for all Python packages.
+      Already used by kaiano-common-utils. Requires no [tool.setuptools] config.
+      New repos must use hatchling from day one. Existing repos migrate as a chore commit.
+    decision: "Decided: hatchling. March 2026. Rationale: already used by shared library, simpler config, modern default."
+    checkable: true
+    check_notes: >
+      Check [build-system] requires in pyproject.toml. Flag if value is not hatchling.
+    added: 2026-03
+
+  - id: PY-010
+    title: ruff line length is 88
+    status: convention
+    dimension: structural_conformance
+    severity: INFO
+    description: >
+      All Python repos set line-length = 88 in [tool.ruff] in pyproject.toml.
+      Matches Python community default and Black. Ensures cross-repo consistency.
+    decision: "Decided: 88. March 2026. Rationale: Python community default, matches Black, lower cognitive load on diff review."
+    checkable: true
+    check_notes: >
+      Parse [tool.ruff] line-length in pyproject.toml. Flag if value is not 88
+      or if field is absent.
+    added: 2026-03
+
+  # ─────────────────────────────────────────────
+  # PROJECT STRUCTURE
+  # ─────────────────────────────────────────────
+
+  - id: PY-005
+    title: src layout required
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    description: >
+      All packages use src/<package_name>/ + tests/<package_name>/. No flat layouts.
+    checkable: true
+    check_notes: >
+      Check for presence of src/ directory. Flag if Python package files are at
+      the repo root (flat layout).
+    added: 2026-03
+
+  - id: PY-006
+    title: kaiano-common-utils declared as dependency
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    description: >
+      All processors declare kaiano-common-utils as a dependency. Shared behaviors
+      live there, not duplicated per-repo. Flag if processor re-implements logging,
+      API clients, or metadata helpers.
+    checkable: true
+    check_notes: >
+      Check pyproject.toml dependencies for kaiano-common-utils. Flag if absent
+      and repo is a Python processor.
+    added: 2026-03
+
+  - id: PY-007
+    title: pyproject.toml as single source of truth
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      pyproject.toml is the only configuration file. No setup.py, no requirements.txt.
+    checkable: true
+    check_notes: >
+      Check for presence of setup.py or requirements.txt at repo root. Flag if found.
+    added: 2026-03
+
+  - id: PY-008
+    title: pre-commit configured
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      ruff and basic hooks configured via .pre-commit-config.yaml. Runs on every commit.
+    checkable: true
+    check_notes: >
+      Check for .pre-commit-config.yaml at repo root. Flag if absent.
+    added: 2026-03
+
+  # ─────────────────────────────────────────────
+  # NAMING CONVENTIONS
+  # ─────────────────────────────────────────────
+
+  - id: PY-011
+    title: Naming conventions — Python
+    status: convention
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      Package name: snake_case matching repo name (hyphens become underscores).
+      Module files: snake_case verb phrases (process_new_files.py).
+      Functions: snake_case descriptive verbs (generate_dj_set_collection()).
+      Constants: UPPER_SNAKE_CASE in config module.
+      Pydantic models: PascalCase nouns (DjSetRecord, TrackRow).
+      Log messages: emoji prefix for lifecycle events (🚀 start ✅ success ❌ failure).
+    checkable: false
+    added: 2026-03
+
+  # ─────────────────────────────────────────────
+  # ERROR HANDLING
+  # ─────────────────────────────────────────────
+
+  - id: PY-012
+    title: FAILED_ prefix for failed inputs
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      Files that fail processing are renamed FAILED_<original> in the source folder
+      for manual retry. Failed files must not be silently deleted or left unmarked.
+    checkable: false
+    added: 2026-03
+
+  - id: PY-013
+    title: possible_duplicate_ prefix for duplicates
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      Duplicate files are renamed rather than overwritten or deleted.
+      Human review required.
+    checkable: false
+    added: 2026-03
+
+  - id: PY-014
+    title: finally for temp file cleanup
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      Temp files created during processing are always cleaned up in a finally
+      block regardless of success or failure.
+    checkable: false
+    added: 2026-03
+
+  # ─────────────────────────────────────────────
+  # CONFIGURATION (from code review audit)
+  # ─────────────────────────────────────────────
+
+  - id: CFG-001
+    title: No getattr() access for undeclared Settings fields
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      pydantic-settings with extra="ignore" silently drops env vars not declared
+      as fields. Using getattr(settings, "KEY", default) on an undeclared key is
+      always equivalent to using the hardcoded default. This pattern is prohibited.
+      Any key accessed via settings.KEY or getattr(settings, "KEY", ...) must be
+      declared as a typed field on the Settings class. Deferred fields must be
+      documented in a commented-out stub block in config.py.
+    checkable: true
+    check_notes: >
+      AST scan: find all getattr(settings, ...) calls and verify the key name
+      appears as a declared field on the Settings class. Also flag settings.KEY
+      attribute access where KEY is not a declared field.
+    origin: >
+      routers/webhook.py uses getattr(settings, "STANDARDS_VERSION", "6.0") but
+      STANDARDS_VERSION is not on Settings. The env var has no effect.
+    added: 2026-03
+
+  - id: CFG-002
+    title: Every key in .env.example must be declared in Settings
+    status: convention
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      Any key in .env.example that is not a declared field on Settings creates a
+      misleading contract. Exception: keys consumed by external tooling (RAILWAY_*,
+      NODE_ENV) may be listed with a comment indicating they are not read by the app.
+    checkable: true
+    check_notes: >
+      Parse .env.example keys. For each key, verify it appears as a declared field
+      on Settings OR has a comment marking it as external tooling. Flag undocumented
+      mismatches.
+    origin: >
+      KAIANO_API_CLERK_TOKEN appears in kaiano-common-utils/.env.example but is
+      not read anywhere in the current implementation.
+    added: 2026-03

@@ -1,0 +1,118 @@
+# kaiano-ecosystem-standards / principles.yaml
+# Immutable core principles that govern intent and philosophy across the ecosystem.
+# Stack choices change. These do not.
+# Version: 1.0.0 · 2026-03
+
+standards:
+
+  - id: PRIN-001
+    title: Reuse over rebuild
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    description: >
+      Work in one layer should have a clear path to surfacing in another.
+      Processors feed APIs. APIs feed sites. Shared libraries reduce duplication
+      across all layers.
+    checkable: false
+    added: 2026-03
+
+  - id: PRIN-002
+    title: Pipeline resilience — continue on item failure
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    description: >
+      Pipelines continue on per-file errors. One bad input does not abort a run.
+      Failures are logged, prefixed, and left for retry — never silently dropped.
+    checkable: true
+    check_notes: >
+      Scan pipeline entry points for bare except/raise that would abort the full
+      run on a single item failure. Flag if no per-item try/except wrapping exists.
+    added: 2026-03
+
+  - id: PRIN-003
+    title: AI evaluates process, not data
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    description: >
+      AI is infrastructure, not a feature. It runs during the pipeline to evaluate
+      health and conformance — not to enrich output data for end users.
+    checkable: false
+    added: 2026-03
+
+  - id: PRIN-004
+    title: New stack, opportunistic migration
+    status: requirement
+    dimension: structural_conformance
+    severity: INFO
+    description: >
+      New things are built with the current best stack. Existing things migrate
+      when the opportunity arises — not on a forced schedule.
+    checkable: false
+    added: 2026-03
+
+  - id: PRIN-005
+    title: Observability is not optional
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    description: >
+      If you cannot see what a system is doing in production, you cannot deploy
+      it confidently. Logging, error tracking, and run history are requirements,
+      not enhancements. Every production service must have all three.
+    checkable: true
+    check_notes: >
+      Check for Sentry integration, structured logging via kaiano-common-utils
+      or kaiano-ts-utils, and Prefect run history (for pipelines). Flag any
+      production service missing any of these three.
+    added: 2026-03
+
+  - id: PRIN-006
+    title: Deploy anytime, release when ready
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    description: >
+      Code and features are decoupled. Deployments are safe at any time.
+      Feature flags control what users see.
+    checkable: false
+    added: 2026-03
+
+  - id: PRIN-007
+    title: Portfolio artifacts are working systems
+    status: requirement
+    dimension: structural_conformance
+    severity: INFO
+    description: >
+      Portfolio pieces are live, queryable, demonstrable systems — not case
+      studies, READMEs, or screenshots.
+    checkable: false
+    added: 2026-03
+
+  - id: PRIN-008
+    title: Every bug fix includes a regression test
+    status: requirement
+    dimension: testing_coverage
+    severity: ERROR
+    description: >
+      If a bug was found in production, a test is written that would have caught it.
+      This is non-negotiable.
+    checkable: false
+    added: 2026-03
+
+  - id: PRIN-009
+    title: Standards are a living document
+    status: requirement
+    dimension: standards_currency
+    severity: WARN
+    description: >
+      This document is updated as the ecosystem evolves. Outdated standards are
+      worse than no standards — they create confusion and erode trust in the process.
+      Standards must be reviewed at least every 90 days.
+    checkable: true
+    check_notes: >
+      Check the updated date on index.yaml. Flag if more than 90 days have elapsed
+      since last update.
+    added: 2026-03

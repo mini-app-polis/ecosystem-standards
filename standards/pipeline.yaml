@@ -1,0 +1,95 @@
+# kaiano-ecosystem-standards / pipeline.yaml
+# Standards for pipeline design and orchestration.
+# Version: 1.0.0 · 2026-03
+
+standards:
+
+  # ─────────────────────────────────────────────
+  # ORCHESTRATION STACK
+  # ─────────────────────────────────────────────
+
+  - id: PIPE-001
+    title: Prefect for new pipelines
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      New event-driven pipelines use Prefect. Python-native, built-in observability,
+      retry logic, run history. GitHub Actions is for CI/CD only — not pipeline
+      orchestration.
+    checkable: false
+    added: 2026-03
+
+  # ─────────────────────────────────────────────
+  # PIPELINE DESIGN
+  # ─────────────────────────────────────────────
+
+  - id: PIPE-002
+    title: Idempotent pipeline steps
+    status: requirement
+    dimension: pipeline_consistency
+    severity: ERROR
+    description: >
+      Every pipeline step can be safely re-run without side effects. Re-running a
+      step produces the same result as running it once.
+    checkable: false
+    added: 2026-03
+
+  - id: PIPE-003
+    title: Separate process and collect steps
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      Processing new inputs and rebuilding the collection are separate pipeline
+      steps — not combined. Allows independent retry.
+    checkable: false
+    added: 2026-03
+
+  - id: PIPE-004
+    title: Concurrency groups required for shared resources
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    description: >
+      Pipelines writing to shared resources declare a concurrency group.
+      cancel-in-progress: false for data pipelines.
+    checkable: false
+    added: 2026-03
+
+  - id: PIPE-005
+    title: Archive, never delete raw inputs
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    description: >
+      Raw inputs are archived after processing, never deleted. Archive subfolder used.
+    checkable: false
+    added: 2026-03
+
+  - id: PIPE-006
+    title: Dual logger pattern in Prefect flows
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      Flow functions use get_run_logger() for Prefect-visible logs with fallback
+      to standard logger for local runs:
+        try: logger = get_run_logger()
+        except Exception: logger = log
+    checkable: true
+    check_notes: >
+      Scan Prefect @flow decorated functions for get_run_logger() with fallback.
+      Flag flows using only standard logging.
+    added: 2026-03
+
+  - id: PIPE-007
+    title: Retry logic on external API calls
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      Tasks that call external APIs use retries=2, retry_delay_seconds=30. Tasks
+      calling Google APIs inherit kaiano-common-utils retry logic.
+    checkable: false
+    added: 2026-03

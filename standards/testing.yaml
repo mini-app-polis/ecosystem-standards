@@ -1,0 +1,184 @@
+# kaiano-ecosystem-standards / testing.yaml
+# Testing standards for all Python processors and FastAPI services.
+# Version: 1.0.0 · 2026-03
+#
+# GAP: Most existing processors currently have import-level tests only.
+# Remediation order: deejay-set-processor-dev first, then by activity level.
+
+standards:
+
+  # ─────────────────────────────────────────────
+  # CRITICAL PATH — PYTHON PROCESSORS
+  # Four tests required per processor. Not 100% line coverage —
+  # these four specific paths.
+  # ─────────────────────────────────────────────
+
+  - id: TEST-001
+    title: Normalization test required per processor
+    status: requirement
+    dimension: testing_coverage
+    severity: WARN
+    description: >
+      A test that verifies the normalization/cleaning logic on representative input.
+      Covers the core transformation the processor exists to do.
+    checkable: true
+    check_notes: >
+      Scan tests/ directory for test functions covering normalization or cleaning
+      logic. Flag if no such test exists.
+    added: 2026-03
+
+  - id: TEST-002
+    title: Deduplication test required per processor
+    status: requirement
+    dimension: testing_coverage
+    severity: WARN
+    description: >
+      A test that verifies duplicate inputs are correctly identified and handled —
+      not silently overwritten.
+    checkable: true
+    check_notes: >
+      Scan tests/ directory for test functions covering duplicate detection.
+      Flag if no such test exists.
+    added: 2026-03
+
+  - id: TEST-003
+    title: Failure path test required per processor
+    status: requirement
+    dimension: testing_coverage
+    severity: ERROR
+    description: >
+      A test that verifies the processor handles a bad input correctly — logs the
+      error, marks the file, and continues rather than aborting.
+    checkable: true
+    check_notes: >
+      Scan tests/ directory for test functions that pass malformed or invalid input
+      and assert the processor continues. Flag if no failure path test exists.
+    added: 2026-03
+
+  - id: TEST-004
+    title: Output shape test required per processor
+    status: requirement
+    dimension: testing_coverage
+    severity: WARN
+    description: >
+      A test that verifies the output (JSON schema, DB row, or file structure)
+      matches the expected contract.
+    checkable: true
+    check_notes: >
+      Scan tests/ directory for test functions asserting output structure or schema.
+      Flag if no output shape test exists.
+    added: 2026-03
+
+  # ─────────────────────────────────────────────
+  # TOOLING
+  # ─────────────────────────────────────────────
+
+  - id: TEST-005
+    title: pytest as test runner
+    status: requirement
+    dimension: testing_coverage
+    severity: WARN
+    description: >
+      pytest is the test runner for all Python projects. Configured in pyproject.toml.
+    checkable: true
+    check_notes: >
+      Check for [tool.pytest.ini_options] in pyproject.toml. Flag if repo uses
+      unittest directly without pytest.
+    added: 2026-03
+
+  - id: TEST-006
+    title: pytest-cov for coverage in CI
+    status: requirement
+    dimension: testing_coverage
+    severity: WARN
+    description: >
+      Coverage measured on every CI run. Report in terminal. Threshold not enforced
+      by number — enforced by critical path coverage (TEST-001 through TEST-004).
+    checkable: true
+    check_notes: >
+      Check CI workflow for pytest --cov or pytest-cov invocation. Flag if coverage
+      is not measured in CI.
+    added: 2026-03
+
+  - id: TEST-007
+    title: respx/httpx for HTTP mocking — no real external calls
+    status: requirement
+    dimension: testing_coverage
+    severity: ERROR
+    description: >
+      respx/httpx used for mocking HTTP calls in integration tests. No real external
+      calls to Drive, Sheets, or any external API in unit or integration tests.
+    checkable: false
+    added: 2026-03
+
+  - id: TEST-012
+    title: mypy must run in CI if [tool.mypy] is declared
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    description: >
+      If a repo declares [tool.mypy] in pyproject.toml, a CI step invoking
+      "uv run mypy src/" (or equivalent) is required. A mypy config that is never
+      run in CI gives false assurance and drifts silently.
+      Exception: mypy may be omitted during initial setup if repo is in a documented
+      "typing: in progress" state. This exception must not persist past first stable release.
+    checkable: true
+    check_notes: >
+      Check pyproject.toml for [tool.mypy] section. If present, scan
+      .github/workflows/ for a step invoking mypy. Flag if no mypy CI step exists
+      and repo is not in a documented "typing: in progress" state.
+    origin: "kaianolevine-api has no mypy CI step. common-python-utils does. Standard aligns them."
+    added: 2026-03
+
+  # ─────────────────────────────────────────────
+  # FASTAPI TESTING
+  # ─────────────────────────────────────────────
+
+  - id: TEST-008
+    title: FastAPI TestClient for API tests
+    status: requirement
+    dimension: testing_coverage
+    severity: WARN
+    description: >
+      FastAPI's TestClient via httpx used for all API endpoint tests.
+      Tests run without a live server.
+    checkable: false
+    added: 2026-03
+
+  - id: TEST-009
+    title: Database fixtures — no production data in tests
+    status: requirement
+    dimension: testing_coverage
+    severity: ERROR
+    description: >
+      Tests use a separate test database or in-memory SQLite with transaction
+      rollback. Never run against the production database.
+    checkable: false
+    added: 2026-03
+
+  - id: TEST-010
+    title: Contract test for every API endpoint
+    status: requirement
+    dimension: testing_coverage
+    severity: ERROR
+    description: >
+      Every API endpoint has a dedicated test asserting the response envelope shape:
+      { data, meta } on success, { error: { code, message } } on failure.
+      One contract test per endpoint minimum. Contract tests run in CI on every push.
+    checkable: true
+    check_notes: >
+      Count FastAPI route decorators. Count test functions asserting response shape.
+      Flag if any endpoint has no corresponding contract test, or if contract tests
+      are absent from CI workflow.
+    added: 2026-03
+
+  - id: TEST-011
+    title: Mock verification required
+    status: requirement
+    dimension: testing_coverage
+    severity: ERROR
+    description: >
+      Every mock in a test must be verified with assert_called() or assert_called_once().
+      Tests that pass because a mock was never called are false positives.
+    checkable: false
+    added: 2026-03

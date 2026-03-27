@@ -1,0 +1,187 @@
+# kaiano-ecosystem-standards / documentation.yaml
+# Documentation standards for all repos, modules, and API endpoints.
+# Version: 1.0.0 · 2026-03
+
+standards:
+
+  # ─────────────────────────────────────────────
+  # REPO-LEVEL
+  # ─────────────────────────────────────────────
+
+  - id: DOC-001
+    title: README.md is mandatory
+    status: requirement
+    dimension: documentation_coverage
+    severity: ERROR
+    description: >
+      Every repo has a README. It describes: purpose (one paragraph), inputs,
+      outputs, environment variables, how to run locally, how to run tests,
+      and versioning policy.
+    checkable: true
+    check_notes: >
+      Check for README.md at repo root. Flag if absent or if it is clearly
+      a template default with no real content.
+    added: 2026-03
+
+  - id: DOC-002
+    title: README describes inputs and outputs
+    status: requirement
+    dimension: documentation_coverage
+    severity: WARN
+    description: >
+      For processors: what files are expected, where they come from, what is
+      produced and where it goes. For APIs: what endpoints exist and what they serve.
+    checkable: false
+    added: 2026-03
+
+  - id: DOC-003
+    title: CHANGELOG.md required
+    status: requirement
+    dimension: documentation_coverage
+    severity: WARN
+    description: >
+      Tracks meaningful changes per version. Not every commit — only changes that
+      affect behavior, interface, or configuration. Managed by semantic-release.
+      Never edited manually.
+    checkable: true
+    check_notes: >
+      Check for CHANGELOG.md at repo root. Flag if absent.
+    added: 2026-03
+
+  - id: DOC-004
+    title: .env.example is current
+    status: requirement
+    dimension: documentation_coverage
+    severity: WARN
+    description: >
+      Every environment variable used by the service is documented in .env.example
+      with a description and example value. Kept current — not a one-time artifact.
+    checkable: true
+    check_notes: >
+      Check for .env.example at repo root. Flag if absent. Cross-reference with
+      Settings class fields (see CFG-002 in python.yaml).
+    added: 2026-03
+
+  - id: DOC-005
+    title: Design decisions captured
+    status: requirement
+    dimension: documentation_coverage
+    severity: WARN
+    description: >
+      When a significant architectural decision is made, the rationale is written
+      down — in docs/DESIGN.md, a CHANGELOG entry, or a README note. Not just what
+      was decided but why.
+    checkable: false
+    added: 2026-03
+
+  # ─────────────────────────────────────────────
+  # CODE-LEVEL
+  # ─────────────────────────────────────────────
+
+  - id: DOC-006
+    title: Docstrings on all public functions and classes
+    status: requirement
+    dimension: documentation_coverage
+    severity: WARN
+    description: >
+      All public functions and classes have docstrings. One sentence minimum
+      describing what the function does, not how.
+    checkable: true
+    check_notes: >
+      AST scan: find public functions and classes (not prefixed with _) lacking
+      a docstring. Flag if any exist.
+    added: 2026-03
+
+  - id: DOC-007
+    title: Pydantic field descriptions required
+    status: requirement
+    dimension: documentation_coverage
+    severity: WARN
+    description: >
+      Pydantic model fields use the description parameter. Models are
+      self-documenting — no separate documentation needed for data shapes.
+    checkable: false
+    added: 2026-03
+
+  - id: DOC-008
+    title: No dead code
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      Commented-out code is removed, not left in place. Version control is the
+      history — the codebase is the present.
+    checkable: true
+    check_notes: >
+      Scan for large blocks of commented-out code (3+ consecutive commented lines
+      that appear to be code, not documentation). Flag if found.
+    added: 2026-03
+
+  - id: DOC-009
+    title: Split package identity documented at entry point
+    status: requirement
+    dimension: documentation_coverage
+    severity: WARN
+    description: >
+      If a Python library's install name (pyproject.toml [project] name) differs
+      from its import namespace (src/ directory name), both names and their
+      relationship must be documented in __init__.py docstring. README must show
+      both correct install snippet and correct import path.
+    checkable: true
+    check_notes: >
+      Compare [project] name in pyproject.toml against directory name under src/.
+      If they differ, verify __init__.py docstring mentions both names and README
+      contains both install and import examples.
+    origin: >
+      common-python-utils/__init__.py had broken install URL and no explanation
+      of the name split. New consumers had to discover the import namespace by
+      inspecting src/.
+    added: 2026-03
+
+  # ─────────────────────────────────────────────
+  # API DOCUMENTATION
+  # ─────────────────────────────────────────────
+
+  - id: DOC-010
+    title: OpenAPI docs are first-class
+    status: requirement
+    dimension: documentation_coverage
+    severity: ERROR
+    description: >
+      FastAPI's /docs is a deliverable, not a side effect. Every endpoint must
+      be complete and accurate before the service is considered done. All endpoints
+      have summary, description, and response_model defined.
+    checkable: true
+    check_notes: >
+      Scan FastAPI route decorators for presence of summary=, description=, and
+      response_model=. Flag any endpoint missing any of the three.
+    added: 2026-03
+
+  - id: DOC-011
+    title: Public endpoints documented as intentional
+    status: requirement
+    dimension: documentation_coverage
+    severity: WARN
+    description: >
+      Public (unauthenticated) endpoints include a note in their description
+      confirming they are intentionally public.
+    checkable: false
+    added: 2026-03
+
+  # ─────────────────────────────────────────────
+  # STANDARDS DOCUMENT ITSELF
+  # ─────────────────────────────────────────────
+
+  - id: DOC-012
+    title: Standards document is versioned
+    status: requirement
+    dimension: standards_currency
+    severity: ERROR
+    description: >
+      Every update to the standards repo increments the version in index.yaml.
+      The AI evaluator always references a specific version. Evaluations without
+      a standards version reference are invalid.
+    checkable: true
+    check_notes: >
+      Verify evaluation calls include a standards_version field. Flag if absent.
+    added: 2026-03

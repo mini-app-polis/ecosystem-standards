@@ -1,0 +1,54 @@
+# kaiano-ecosystem-standards / cross-stack.yaml
+# Standards that apply across both Python and TypeScript stacks.
+# The pattern is the standard, not the implementation.
+# Version: 1.0.0 · 2026-03
+#
+# Whether working in Python or TypeScript, the answers to:
+#   - how do I log something?
+#   - how do I shape an API response?
+#   - how do I validate data?
+# should feel identical — expressed in the idioms of that language,
+# but driven by the same philosophy.
+#
+# Parity reference:
+#   Concern              Python                    TypeScript
+#   Shared library       kaiano-common-utils        kaiano-ts-utils
+#   Data validation      Pydantic                   Zod
+#   API response shape   { data, meta } / { error } Identical
+#   Logging              common-utils logger         ts-utils logger
+#   Auth                 Clerk JWT (FastAPI dep)     Clerk JWT (Hono middleware)
+#   ORM / DB             SQLAlchemy + Alembic        Drizzle ORM + Drizzle Kit
+#   HTTP framework       FastAPI                     Hono on Node
+#   Error philosophy     per-item catch, log, cont.  Identical
+
+standards:
+
+  - id: XSTACK-001
+    title: Use shared library — do not reimplement shared behaviors
+    status: requirement
+    dimension: cross_repo_coherence
+    severity: ERROR
+    description: >
+      Python services declare kaiano-common-utils as a dependency.
+      TypeScript services declare kaiano-ts-utils as a dependency.
+      Neither stack reimplements logging, auth verification, or response helpers
+      provided by the shared library.
+    checkable: true
+    check_notes: >
+      Check pyproject.toml or package.json for the appropriate shared library.
+      Flag if service implements its own logger, auth verify, or response envelope
+      helper without using the shared library.
+    added: 2026-03
+
+  - id: XSTACK-002
+    title: Cross-stack response shape parity
+    status: requirement
+    dimension: cross_repo_coherence
+    severity: ERROR
+    description: >
+      API response shapes are identical across Python and TypeScript services:
+        success: { data: ..., meta: { count, version } }
+        error: { error: { code, message } }
+      Defined in kaiano-ts-utils for TypeScript. Enforced by response_model in FastAPI.
+    checkable: false
+    added: 2026-03

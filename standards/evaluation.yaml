@@ -1,0 +1,80 @@
+# kaiano-ecosystem-standards / evaluation.yaml
+# Standards governing how AI evaluation is performed across the ecosystem.
+# Version: 1.0.0 · 2026-03
+#
+# AI is used to evaluate the development process itself — not to enrich output data.
+# The evaluator checks conformance to these standards, surfaces drift, and provides
+# actionable feedback.
+
+standards:
+
+  # ─────────────────────────────────────────────
+  # PHILOSOPHY
+  # ─────────────────────────────────────────────
+
+  - id: EVAL-001
+    title: Evaluation findings stored, not ephemeral
+    status: requirement
+    dimension: pipeline_consistency
+    severity: WARN
+    description: >
+      Evaluation results are written to the database alongside pipeline outputs.
+      They are reviewable, queryable, and feed the portfolio surface. Results
+      logged only are not acceptable for production pipelines.
+    checkable: false
+    added: 2026-03
+
+  - id: EVAL-002
+    title: Every evaluation references a standards version
+    status: requirement
+    dimension: standards_currency
+    severity: ERROR
+    description: >
+      Every evaluation call includes a reference to the current version of the
+      standards document being evaluated against. Without the rubric, evaluation
+      is undefined.
+    checkable: true
+    check_notes: >
+      Check pipeline_evaluations table for standards_version field. Flag evaluations
+      missing this field.
+    added: 2026-03
+
+  - id: EVAL-003
+    title: Findings are specific and actionable
+    status: requirement
+    dimension: pipeline_consistency
+    severity: WARN
+    description: >
+      Findings reference a specific standard by ID, describe what was observed,
+      and suggest a concrete remediation. Vague findings are not acceptable.
+    checkable: false
+    added: 2026-03
+
+  # ─────────────────────────────────────────────
+  # EVALUATION TRIGGERS
+  # ─────────────────────────────────────────────
+  # These are not checkable rules — they define when evaluation runs.
+
+  # post-pipeline-run: After any Prefect pipeline completes, evaluate whether
+  #   it behaved consistently with past runs and these standards.
+  #   Context: run log, step timings, error counts.
+
+  # post-pr-merge: Evaluate diffs for conformance to naming, structure, error
+  #   handling, and testing standards.
+  #   Context: diff, changed files, PR description.
+
+  # post-deploy: Evaluate whether the deployment followed the CD pipeline.
+  #   Context: deploy log, test results, flag states.
+
+  # monthly-review: Ecosystem-wide summary of drift, inconsistencies, and
+  #   technical debt. Context: all repos, recent findings, standards version.
+
+  # ─────────────────────────────────────────────
+  # CONTEXT CONTRACT
+  # Every evaluation call must include:
+  #   - standards_version: the version of this standards repo
+  #   - artifact: pipeline log, diff, deploy record, or repo snapshot
+  #   - dimension(s): the evaluation dimension(s) being assessed
+  #   - baseline: historical baseline where relevant (previous run outputs)
+  #   - state_tags: current state tags for standards in flux
+  # ─────────────────────────────────────────────

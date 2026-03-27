@@ -1,0 +1,102 @@
+# kaiano-ecosystem-standards / index.yaml
+# Manifest file — agents fetch this first to discover available standards files.
+# Version: 1.0.0 · 2026-03
+#
+# Fetch pattern:
+#   1. GET index.yaml  → discover files and current version
+#   2. GET standards/<file>.yaml  → fetch relevant domain(s)
+#   3. Pin standards_version in evaluation output for auditability
+
+version: 1.0.0
+updated: 2026-03
+maintainer: kaiano-levine
+
+# Dimensions used across all standards files.
+# These map directly to the pipeline_evaluations table dimension field.
+dimensions:
+  - structural_conformance
+  - pipeline_consistency
+  - testing_coverage
+  - documentation_coverage
+  - cd_readiness
+  - cross_repo_coherence
+  - standards_currency
+
+# Severities used across all standards files.
+# These map directly to the pipeline_evaluations table severity field.
+severities:
+  ERROR: "PRINCIPLE or PATTERN violated. Requires remediation before next deploy."
+  WARN: "Current-state pattern in new code, or TARGET state not being progressed toward. Remediation recommended."
+  INFO: "Observation worth noting. No action required but useful for monthly review."
+
+# Statuses used across all standards files.
+statuses:
+  requirement: "Must-comply. Agents flag violations as blocking."
+  convention: "Should-comply. Deviation requires an inline comment explaining why."
+  advisory: "Guidance only. Agents report as informational."
+  idea: "Under consideration. Not yet validated by a real issue. Not enforced."
+  gap: "Known deficiency. Tracked for remediation."
+
+# Standards files — one per domain.
+# Agents may fetch all files or only the domains relevant to the artifact being evaluated.
+files:
+  - file: standards/principles.yaml
+    domain: principles
+    description: Immutable core principles governing intent and philosophy across the ecosystem.
+    rule_prefix: PRIN
+
+  - file: standards/python.yaml
+    domain: python
+    description: Standards for all Python services, processors, and libraries. Includes tooling, structure, naming, error handling, and configuration rules.
+    rule_prefix: [PY, CFG]
+
+  - file: standards/testing.yaml
+    domain: testing
+    description: Testing standards for Python processors and FastAPI services. Critical path coverage, tooling, and FastAPI-specific patterns.
+    rule_prefix: TEST
+
+  - file: standards/documentation.yaml
+    domain: documentation
+    description: Documentation standards for repos, code, APIs, and the standards document itself.
+    rule_prefix: DOC
+
+  - file: standards/api.yaml
+    domain: api
+    description: Standards for all API services — FastAPI (Python) and Hono (TypeScript). Includes auth rules from code review audit.
+    rule_prefix: [API, AUTH]
+
+  - file: standards/pipeline.yaml
+    domain: pipeline
+    description: Pipeline design and orchestration standards. Prefect patterns, idempotency, and data safety rules.
+    rule_prefix: PIPE
+
+  - file: standards/frontend.yaml
+    domain: frontend
+    description: Frontend standards for static sites (Astro) and web applications (Vite + React).
+    rule_prefix: FE
+
+  - file: standards/delivery.yaml
+    domain: delivery
+    description: Continuous delivery, observability, and versioning standards. Includes semantic-release and GitHub Actions patterns.
+    rule_prefix: [CD, VER]
+
+  - file: standards/evaluation.yaml
+    domain: evaluation
+    description: Standards governing how AI evaluation is performed. Evaluation triggers, context contract, and finding requirements.
+    rule_prefix: EVAL
+
+  - file: standards/cross-stack.yaml
+    domain: cross-stack
+    description: Standards that apply across both Python and TypeScript stacks. Shared library usage and response shape parity.
+    rule_prefix: XSTACK
+
+# Changelog — why this version exists.
+changelog:
+  - version: 1.0.0
+    date: 2026-03
+    notes: >
+      Initial formalization. Migrated from kaiano_ecosystem_standards_v10.docx
+      into machine-readable YAML. Added nine rules from kaianolevine-api and
+      kaiano-common-utils code review audit (AUTH-001, AUTH-002, CFG-001, CFG-002,
+      PKG-002→PY-009, FMT-001→PY-010, CI-001→TEST-012, CI-002→CD-004, PKG-001→DOC-009).
+      Decisions made: build backend = hatchling, ruff line length = 88.

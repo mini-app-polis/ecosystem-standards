@@ -1,0 +1,98 @@
+# kaiano-ecosystem-standards / frontend.yaml
+# Standards for all frontend sites and web applications.
+# Version: 1.0.0 · 2026-03
+#
+# Decision rule: if the primary product is content delivery, use Astro.
+# If it is an application with persistent UI state and user actions, use React.
+
+standards:
+
+  # ─────────────────────────────────────────────
+  # FRAMEWORK CHOICES
+  # ─────────────────────────────────────────────
+
+  - id: FE-001
+    title: Astro for all static sites
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      All portfolio, technical, and community sites use Astro. Static-first,
+      component islands for interactivity. If the primary product is content
+      delivery, use Astro. If it is an app with persistent UI state, use React.
+    checkable: false
+    added: 2026-03
+
+  - id: FE-002
+    title: Vite + React + TypeScript for web apps
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    description: >
+      Standard stack for all React web apps. Vite for bundling, React 19,
+      TypeScript throughout. No exceptions.
+    checkable: false
+    added: 2026-03
+
+  - id: FE-003
+    title: Tailwind CSS for styling
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      Tailwind is the styling primitive for all React apps and Astro sites.
+      No CSS modules, no styled-components, no other CSS framework.
+    checkable: false
+    added: 2026-03
+
+  - id: FE-004
+    title: shadcn/ui for components
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      shadcn/ui is the component library standard. Components are copied into
+      src/components/ui/ — not installed as a dependency. Built on Radix UI
+      primitives and Tailwind.
+    checkable: false
+    added: 2026-03
+
+  - id: FE-005
+    title: React Hook Form + Zod for forms and validation
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      All forms use React Hook Form. All validation schemas use Zod. These are
+      assumed by shadcn/ui form components and are the ecosystem standard.
+    checkable: false
+    added: 2026-03
+
+  # ─────────────────────────────────────────────
+  # DATA INTEGRATION
+  # ─────────────────────────────────────────────
+
+  - id: FE-006
+    title: Graceful degradation — build succeeds without API
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    description: >
+      Build succeeds with empty or unavailable API data. Site does not break if
+      API is down.
+    checkable: false
+    added: 2026-03
+
+  - id: FE-007
+    title: No hardcoded API URLs
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    description: >
+      No hardcoded API URLs. PUBLIC_API_URL (Astro) or VITE_API_URL (React)
+      env var used throughout.
+    checkable: true
+    check_notes: >
+      Scan source files for hardcoded API URL strings (http://localhost, railway.app,
+      etc.). Flag if found outside of .env files.
+    added: 2026-03
