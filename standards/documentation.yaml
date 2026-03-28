@@ -74,6 +74,27 @@ standards:
     checkable: false
     added: 2026-03
 
+  - id: DOC-013
+    title: README "Running locally" section is complete
+    status: requirement
+    dimension: documentation_coverage
+    severity: WARN
+    description: >
+      Every repo's README includes a "Running locally" section that covers:
+      (1) prerequisites — Python version (≥3.11) and uv;
+      (2) install — `uv sync --all-extras`;
+      (3) pre-commit — `uv run pre-commit install` (run once after cloning);
+      (4) run — the exact command(s) to execute the service or scripts;
+      (5) test — `uv run pytest` and the coverage variant.
+      The section must be kept current. Copy-paste from the README must work
+      on a clean clone with no prior knowledge of the repo.
+    checkable: true
+    check_notes: >
+      Scan README.md for a section containing uv sync, pre-commit install,
+      uv run pytest, and a prerequisites mention (Python version or uv).
+      Flag if any of the five elements are missing.
+    added: 2026-03
+
   # ─────────────────────────────────────────────
   # CODE-LEVEL
   # ─────────────────────────────────────────────

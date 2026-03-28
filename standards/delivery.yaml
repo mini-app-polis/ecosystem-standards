@@ -93,7 +93,7 @@ standards:
       All "uses: owner/repo@vN" references in .github/workflows/ must reference
       version tags that exist in the action's release history. Invalid version tags
       cause CI to fail silently. Current pinned versions (March 2026):
-      actions/checkout@v6, actions/setup-node@v6, astral-sh/setup-uv@v5.
+      actions/checkout@v6, actions/setup-node@v6, astral-sh/setup-uv@v7.
       Verify the tag exists before committing any version pin.
     checkable: true
     check_notes: >
