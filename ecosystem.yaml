@@ -46,9 +46,12 @@ services:
     language: python
     host: railway
     description: >
-      Post-pipeline AI evaluation. Assesses run conformance against the
-      current ecosystem standards version and writes findings to
-      pipeline_evaluations table.
+      Multi-mode AI evaluation cog. Houses all evaluation flows for the
+      ecosystem: post-pipeline behavioral evaluation (pipeline_eval),
+      structural conformance checking against ecosystem standards
+      (conformance), and ecosystem-wide drift reporting (monthly_report).
+      All findings written to pipeline_evaluations table via
+      api-kaianolevine-com with source field distinguishing evaluation type.
     added: 2026-03
 
   # ── API services ──────────────────────────────────────────────
