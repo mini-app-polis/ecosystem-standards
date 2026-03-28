@@ -5,8 +5,8 @@
 
 definitions_of_done:
 
-  new_python_processor:
-    label: New Python Processor
+  new_cog:
+    label: New Python Cog
     checklist:
       - Bootstrapped from python-project-template via init_project.py
       - uv for dependency management, ruff for linting
@@ -17,7 +17,7 @@ definitions_of_done:
       - README documents purpose, inputs, outputs, environment variables, how to run locally
       - README includes Developer Setup section (prerequisites, uv sync, pre-commit install, test/lint/type check commands)
       - .env.example present and current
-      - docs/PIPELINE.md describes where this processor fits in the broader flow
+      - docs/PIPELINE.md describes where this cog fits in the broader flow
       - docs/CONFIGURATION.md documents every environment variable
       - Error handling follows python.yaml PY-012/PY-013/PY-014 patterns
       - Pydantic models used for all external data validation

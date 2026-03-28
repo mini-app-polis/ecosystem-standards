@@ -12,7 +12,7 @@ standards:
     severity: ERROR
     description: >
       Work in one layer should have a clear path to surfacing in another.
-      Processors feed APIs. APIs feed sites. Shared libraries reduce duplication
+      Cogs feed APIs. APIs feed sites. Shared libraries reduce duplication
       across all layers.
     checkable: false
     added: 2026-03

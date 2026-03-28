@@ -94,9 +94,9 @@ files:
     domain: ecosystem
     description: >
       Authoritative inventory of all active, transitioning, and retired
-      services, libraries, and canonical patterns. Updated on every rename,
-      retirement, or new service addition. The single source of truth for
-      service names referenced across standards files.
+      services, libraries, canonical patterns, and ecosystem terminology.
+      Updated on every rename, retirement, new service addition, or
+      terminology change.
     rule_prefix: ECO
 
   - file: standards/cross-stack.yaml

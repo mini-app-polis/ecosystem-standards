@@ -27,8 +27,8 @@ standards:
     severity: WARN
     description: >
       All production services integrate Sentry for unhandled exception
-      tracking. This includes FastAPI services, Hono services, Python
-      processors, and always-on worker services (cogs). Free tier is
+      tracking. This includes FastAPI services, Hono services, and Python
+      cogs (always-on worker services). Free tier is
       sufficient. Sentry is initialised at service entry point before
       any application logic runs. SENTRY_DSN is set as an environment
       variable — never hardcoded. The same Sentry project may be shared
@@ -206,7 +206,7 @@ standards:
       GitHub Actions handles lint, tests, deploys, and semantic-release.
       It does not trigger pipeline flows. Drive-event triggers go through
       watcher-cog. Scheduled and manual triggers go through Prefect
-      deployments. repository_dispatch as a trigger relay for processors
+      deployments. repository_dispatch as a trigger relay for cogs
       is a retired pattern.
     checkable: false
     added: 2026-03

@@ -169,3 +169,34 @@ patterns:
     current: api-kaianolevine-com (sole API for kaianolevine.com ecosystem)
     retired: deejay-marvel-api (merged into api-kaianolevine-com)
     changed: 2026-03
+
+terminology:
+
+  cog:
+    definition: >
+      An always-on Python worker service deployed on Railway. Runs a
+      continuous loop or event-driven task. No HTTP server, no port binding.
+      The canonical service type for all automation, processing, and
+      evaluation work in the ecosystem.
+    examples:
+      - watcher-cog — Drive folder watcher, fires Prefect flow runs
+      - deejay-cog — DJ set CSV processor and ingestion
+      - evaluator-cog — post-pipeline AI evaluation
+    replaces: processor
+    note: >
+      "Processor" was the original term for this service type. It is retired.
+      All new services of this type are named {purpose}-cog and use the
+      new_cog DoD checklist.
+
+  pipeline:
+    definition: >
+      The Prefect flow and task logic inside a cog. A cog runs a pipeline.
+      The terms are related but distinct — the cog is the service,
+      the pipeline is the execution logic within it.
+
+  trigger:
+    definition: >
+      The mechanism that causes a Prefect flow run to be created.
+      Triggers are fired by watcher-cog (Drive events), Prefect schedules
+      (time-based), or the Prefect UI/API (manual). GitHub Actions is
+      not a trigger mechanism.

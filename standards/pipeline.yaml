@@ -104,9 +104,9 @@ standards:
         File appears in watched Drive folder
         → watcher-cog detects change (1-minute poll via Drive API)
         → watcher-cog calls Prefect API to create flow run
-        → Prefect executes the processor flow
+        → Prefect executes the cog flow
       watcher-cog is an always-on Railway worker service. Config-driven:
-      adding a new folder-to-processor mapping requires one WatcherConfig
+      adding a new folder-to-cog mapping requires one WatcherConfig
       entry — no code changes. The previous pattern (Apps Script →
       repository_dispatch → GitHub Actions) is retired. google-app-script-trigger
       is archived.

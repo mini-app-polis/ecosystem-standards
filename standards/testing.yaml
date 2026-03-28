@@ -1,8 +1,8 @@
 # ecosystem-standards / testing.yaml
-# Testing standards for all Python processors and FastAPI services.
+# Testing standards for all Python cogs and FastAPI services.
 # Version: 1.0.0 · 2026-03
 #
-# GAP: Most existing processors currently have import-level tests only.
+# GAP: Most existing cogs currently have import-level tests only.
 # Remediation order: deejay-cog first, then by activity level.
 
 standards:
@@ -15,7 +15,7 @@ standards:
     description: >
       The goal is the right ratio of test types, not maximum line coverage.
       Unit tests (many): pure functions in isolation, no I/O, no external calls. Fast.
-      Integration tests (some): processor interaction with mocked external dependencies.
+      Integration tests (some): cog interaction with mocked external dependencies.
         One per major external integration.
       E2E tests (few): happy path only, run nightly not on every commit.
         One per pipeline covering the full flow.
@@ -24,18 +24,18 @@ standards:
 
   # ─────────────────────────────────────────────
   # CRITICAL PATH — PYTHON PROCESSORS
-  # Four tests required per processor. Not 100% line coverage —
+  # Four tests required per cog. Not 100% line coverage —
   # these four specific paths.
   # ─────────────────────────────────────────────
 
   - id: TEST-001
-    title: Normalization test required per processor
+    title: Normalization test required per cog
     status: requirement
     dimension: testing_coverage
     severity: WARN
     description: >
       A test that verifies the normalization/cleaning logic on representative input.
-      Covers the core transformation the processor exists to do.
+      Covers the core transformation the cog exists to do.
     checkable: true
     check_notes: >
       Scan tests/ directory for test functions covering normalization or cleaning
@@ -43,7 +43,7 @@ standards:
     added: 2026-03
 
   - id: TEST-002
-    title: Deduplication test required per processor
+    title: Deduplication test required per cog
     status: requirement
     dimension: testing_coverage
     severity: WARN
@@ -57,21 +57,21 @@ standards:
     added: 2026-03
 
   - id: TEST-003
-    title: Failure path test required per processor
+    title: Failure path test required per cog
     status: requirement
     dimension: testing_coverage
     severity: ERROR
     description: >
-      A test that verifies the processor handles a bad input correctly — logs the
+      A test that verifies the cog handles a bad input correctly — logs the
       error, marks the file, and continues rather than aborting.
     checkable: true
     check_notes: >
       Scan tests/ directory for test functions that pass malformed or invalid input
-      and assert the processor continues. Flag if no failure path test exists.
+      and assert the cog continues. Flag if no failure path test exists.
     added: 2026-03
 
   - id: TEST-004
-    title: Output shape test required per processor
+    title: Output shape test required per cog
     status: requirement
     dimension: testing_coverage
     severity: WARN
@@ -199,19 +199,19 @@ standards:
     added: 2026-03
 
   - id: TEST-GAP-001
-    title: "GAP: Most existing processors have import-level tests only"
+    title: "GAP: Most existing cogs have import-level tests only"
     status: gap
     dimension: testing_coverage
     severity: INFO
     description: >
-      Most existing processors currently have import-level tests only. This is a
+      Most existing cogs currently have import-level tests only. This is a
       known gap with active remediation underway. Remediation order:
       deejay-cog first (new platform foundation), then by activity level.
-      When a processor is remediated, this gap entry is closed and the processor
+      When a cog is remediated, this gap entry is closed and the cog
       is marked as compliant with TEST-001 through TEST-004.
     checkable: true
     check_notes: >
-      For each processor repo, check tests/ for the four critical path tests
-      (TEST-001 through TEST-004). Flag any processor missing any of the four.
+      For each cog repo, check tests/ for the four critical path tests
+      (TEST-001 through TEST-004). Flag any cog missing any of the four.
       Track remediation progress here.
     added: 2026-03

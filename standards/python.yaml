@@ -1,5 +1,5 @@
 # ecosystem-standards / python.yaml
-# Standards for all Python services, processors, and libraries.
+# Standards for all Python services, cogs, and libraries.
 # Version: 1.0.0 · 2026-03
 
 standards:
@@ -15,7 +15,7 @@ standards:
     severity: WARN
     description: >
       uv replaces Poetry. Faster installs, simpler lockfile, better resolution.
-      All new processors use uv. Existing processors migrate when touched.
+      All new cogs use uv. Existing cogs migrate when touched.
     checkable: true
     check_notes: >
       Check for uv.lock or [tool.uv] in pyproject.toml. Flag new repos using
@@ -113,13 +113,13 @@ standards:
     dimension: structural_conformance
     severity: ERROR
     description: >
-      All processors declare common-python-utils as a dependency. Shared behaviors
-      live there, not duplicated per-repo. Flag if processor re-implements logging,
+      All cogs declare common-python-utils as a dependency. Shared behaviors
+      live there, not duplicated per-repo. Flag if cog re-implements logging,
       API clients, or metadata helpers.
     checkable: true
     check_notes: >
       Check pyproject.toml dependencies for common-python-utils. Flag if absent
-      and repo is a Python processor.
+      and repo is a Python cog.
     added: 2026-03
 
   - id: PY-007
