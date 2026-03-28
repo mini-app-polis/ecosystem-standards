@@ -1,3 +1,10 @@
+## [1.2.5](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.2.4...v1.2.5) (2026-03-28)
+
+
+### Bug Fixes
+
+* use findngs update ([87a6c2f](https://github.com/mini-app-polis/ecosystem-standards/commit/87a6c2f4cc5d6cc0b54ecd67f8bb200cc84b33dd))
+
 ## [1.2.4](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.2.3...v1.2.4) (2026-03-28)
 
 
