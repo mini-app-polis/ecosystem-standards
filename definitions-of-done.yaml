@@ -7,6 +7,11 @@ definitions_of_done:
 
   new_cog:
     label: New Python Cog
+    note: >
+      Two cog subtypes exist. Pipeline cogs (e.g. deejay-cog) run Prefect
+      flows and process data. Trigger cogs (e.g. watcher-cog) detect events
+      and fire Prefect flow runs. Some checklist items apply only to one
+      subtype — see inline notes.
     checklist:
       - Bootstrapped from python-project-template via init_project.py
       - uv for dependency management, ruff for linting
@@ -20,8 +25,13 @@ definitions_of_done:
       - docs/PIPELINE.md describes where this cog fits in the broader flow
       - docs/CONFIGURATION.md documents every environment variable
       - Error handling follows python.yaml PY-012/PY-013/PY-014 patterns
-      - Pydantic models used for all external data validation
-      - Main entry point wrapped in @flow decorator and connected to Prefect Cloud
+      - Pydantic models used for all external data validation unless external
+        data is consumed exclusively via common-python-utils wrappers which
+        handle validation internally (e.g. Drive API via DriveFacade)
+      - If cog runs a pipeline: main entry point wrapped in @flow decorator
+        and connected to Prefect Cloud
+      - If cog is a trigger service (e.g. watcher-cog): connects to Prefect
+        Cloud via API to create flow runs — no @flow decorator required
       - Sentry integration configured — sentry_sdk.init() at entry point, SENTRY_DSN in .env.example
       - Structured logging via common-python-utils logger — not inline logging configuration
 

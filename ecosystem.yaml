@@ -182,6 +182,13 @@ terminology:
       - watcher-cog — Drive folder watcher, fires Prefect flow runs
       - deejay-cog — DJ set CSV processor and ingestion
       - evaluator-cog — post-pipeline AI evaluation
+    subtypes:
+      pipeline_cog: >
+        Runs a Prefect @flow to process data. Examples: deejay-cog,
+        evaluator-cog.
+      trigger_cog: >
+        Detects events and fires Prefect flow runs via API. No @flow
+        decorator. Examples: watcher-cog.
     replaces: processor
     note: >
       "Processor" was the original term for this service type. It is retired.
