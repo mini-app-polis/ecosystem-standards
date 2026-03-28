@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.1.0...v1.2.0) (2026-03-28)
+
+
+### Features
+
+* adding terminology and new project expectations ([5ef303a](https://github.com/mini-app-polis/ecosystem-standards/commit/5ef303abd4c821553851deba512d21504cf6d880))
+
 # [1.1.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.0.1...v1.1.0) (2026-03-28)
 
 
