@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.0.1...v1.1.0) (2026-03-28)
+
+
+### Features
+
+* orchestration architecture, logging standards, ecosystem inventory, service renames ([5250010](https://github.com/mini-app-polis/ecosystem-standards/commit/5250010800a354cd94bb33a7f7bdf75b668d27fe))
+
 ## [1.0.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.0.0...v1.0.1) (2026-03-27)
 
 
