@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.2.0...v1.2.1) (2026-03-28)
+
+
+### Bug Fixes
+
+* minor clean up of terminology references ([15a46fc](https://github.com/mini-app-polis/ecosystem-standards/commit/15a46fcb61330695c20cd2677852c2c29af52622))
+
 # [1.2.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.1.0...v1.2.0) (2026-03-28)
 
 
