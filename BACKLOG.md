@@ -5,6 +5,24 @@ that need to be built, decided, or documented when the time is right.
 
 ---
 
+## playbooks/ — bootstrap guides for new repos
+
+The python-project-template is retired. Its replacement is a set of
+playbooks in playbooks/ — one per artifact type. Each playbook
+documents the exact steps to go from empty repo to first green CI.
+
+Artifact types needing playbooks:
+  - ✅ new-cog.md (Python worker service) — complete
+  - new-fastapi-service.md
+  - new-astro-site.md
+  - new-react-app.md
+  - new-hono-service.md
+
+Priority: new-cog.md first — it is referenced by the new_cog DoD
+checklist and watcher-cog was the first cog built without it.
+
+---
+
 ## evaluators/ — agent scripts not yet built
 
 The `evaluators/` folder exists as a placeholder. Agent scripts implementing

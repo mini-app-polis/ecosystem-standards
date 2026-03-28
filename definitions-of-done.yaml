@@ -13,14 +13,20 @@ definitions_of_done:
       and fire Prefect flow runs. Some checklist items apply only to one
       subtype — see inline notes.
     checklist:
-      - Bootstrapped from python-project-template via init_project.py
+      - Bootstrapped following playbooks/new-cog.md in this repo
       - uv for dependency management, ruff for linting
       - common-python-utils declared as dependency
-      - "Four critical path tests present per module: normalization, deduplication, failure path, output shape"
+      - If pipeline cog: four critical path tests per module —
+        normalization, deduplication, failure path, output shape
+      - If trigger cog: critical path tests cover — poll cycle happy path,
+        new file detection, no-new-files no-trigger, error recovery,
+        heartbeat integration
       - "CI workflow configured: ci.yml with test + release jobs using semantic-release"
       - .releaserc.json present with correct plugin configuration
       - README documents purpose, inputs, outputs, environment variables, how to run locally
-      - README includes Developer Setup section (prerequisites, uv sync, pre-commit install, test/lint/type check commands)
+      - README includes "Running locally" section per DOC-013: prerequisites,
+        uv sync --all-extras, pre-commit install + run --all-files, run
+        commands, uv run pytest
       - .env.example present and current
       - docs/PIPELINE.md describes where this cog fits in the broader flow
       - docs/CONFIGURATION.md documents every environment variable
