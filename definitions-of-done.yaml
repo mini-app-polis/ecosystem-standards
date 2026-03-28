@@ -62,27 +62,6 @@ definitions_of_done:
       - Pipeline flow documented in docs/PIPELINE.md
       - Deprecation plan documented if workflow is temporary
 
-  new_worker_service:
-    label: New Always-On Worker Service (cog)
-    checklist:
-      - Bootstrapped with uv, ruff, src/tests layout, hatchling build backend
-      - common-python-utils declared as dependency
-      - No HTTP server — pure worker process (no PORT binding)
-      - Config-driven — behaviour controlled by config dataclass, not hardcoded logic
-      - Config list (e.g. WATCHERS) is empty by default — populated per deployment
-      - Three-layer observability present per CD-010:
-          Layer 1 — HEALTHCHECKS_URL in .env.example, ping on every work cycle
-          Layer 2 — common-python-utils logger, JSON output, standard event shape
-          Layer 3 — Sentry initialised at entry point, SENTRY_DSN in .env.example
-      - Errors caught at loop level — one cycle failure does not kill the process
-      - asyncio used for concurrent work loops — not threads
-      - README includes Post-deploy setup section documenting all manual external config
-      - Railway deployment documented — worker service, no port, env vars listed
-      - "CI workflow: ci.yml with test + release jobs using semantic-release"
-      - .releaserc.json present with correct plugin configuration
-      - .env.example present and current — all env vars documented with inline comments
-      - Critical path tests cover: main loop happy path, error recovery, config variants
-
   new_frontend_site:
     label: New Frontend Site (Astro)
     checklist:

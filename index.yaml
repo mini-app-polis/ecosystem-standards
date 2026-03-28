@@ -47,12 +47,12 @@ files:
 
   - file: standards/python.yaml
     domain: python
-    description: Standards for all Python services, processors, and libraries. Includes tooling, structure, naming, error handling, and configuration rules.
+    description: Standards for all Python services, cogs, and libraries. Includes tooling, structure, naming, error handling, and configuration rules.
     rule_prefix: [PY, CFG]
 
   - file: standards/testing.yaml
     domain: testing
-    description: Testing standards for Python processors and FastAPI services. Critical path coverage, tooling, and FastAPI-specific patterns.
+    description: Testing standards for Python cogs and FastAPI services. Critical path coverage, tooling, and FastAPI-specific patterns.
     rule_prefix: TEST
 
   - file: standards/documentation.yaml
@@ -87,7 +87,7 @@ files:
 
   - file: definitions-of-done.yaml
     domain: definitions-of-done
-    description: Checklists used by AI evaluators for post-PR assessment. One checklist per artifact type — processor, FastAPI service, pipeline, frontend site, React app, Hono service.
+    description: Checklists used by AI evaluators for post-PR assessment. One checklist per artifact type — cog, FastAPI service, pipeline, frontend site, React app, Hono service.
     rule_prefix: DOD
 
   - file: ecosystem.yaml
