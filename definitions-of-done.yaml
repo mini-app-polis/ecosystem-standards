@@ -10,7 +10,7 @@ definitions_of_done:
     checklist:
       - Bootstrapped from python-project-template via init_project.py
       - uv for dependency management, ruff for linting
-      - kaiano-common-utils declared as dependency
+      - common-python-utils declared as dependency
       - "Four critical path tests present per module: normalization, deduplication, failure path, output shape"
       - "CI workflow configured: ci.yml with test + release jobs using semantic-release"
       - .releaserc.json present with correct plugin configuration
@@ -22,6 +22,8 @@ definitions_of_done:
       - Error handling follows python.yaml PY-012/PY-013/PY-014 patterns
       - Pydantic models used for all external data validation
       - Main entry point wrapped in @flow decorator and connected to Prefect Cloud
+      - Sentry integration configured — sentry_sdk.init() at entry point, SENTRY_DSN in .env.example
+      - Structured logging via common-python-utils logger — not inline logging configuration
 
   new_fastapi_service:
     label: New FastAPI Service
@@ -52,12 +54,34 @@ definitions_of_done:
       - Connected to Prefect Cloud — flows visible in dashboard
       - External API calls wrapped in @task with retry logic
       - "Dual logger pattern: get_run_logger() with fallback to standard logger"
+      - Log events use standard shape — category, event, context fields present on all INFO and above
       - Idempotent steps — safe to re-run
       - AI evaluation step included as final task
       - Concurrency group declared
       - GitHub Actions workflow updated with PREFECT_API_KEY and PREFECT_API_URL
       - Pipeline flow documented in docs/PIPELINE.md
       - Deprecation plan documented if workflow is temporary
+
+  new_worker_service:
+    label: New Always-On Worker Service (cog)
+    checklist:
+      - Bootstrapped with uv, ruff, src/tests layout, hatchling build backend
+      - common-python-utils declared as dependency
+      - No HTTP server — pure worker process (no PORT binding)
+      - Config-driven — behaviour controlled by config dataclass, not hardcoded logic
+      - Config list (e.g. WATCHERS) is empty by default — populated per deployment
+      - Three-layer observability present per CD-010:
+          Layer 1 — HEALTHCHECKS_URL in .env.example, ping on every work cycle
+          Layer 2 — common-python-utils logger, JSON output, standard event shape
+          Layer 3 — Sentry initialised at entry point, SENTRY_DSN in .env.example
+      - Errors caught at loop level — one cycle failure does not kill the process
+      - asyncio used for concurrent work loops — not threads
+      - README includes Post-deploy setup section documenting all manual external config
+      - Railway deployment documented — worker service, no port, env vars listed
+      - "CI workflow: ci.yml with test + release jobs using semantic-release"
+      - .releaserc.json present with correct plugin configuration
+      - .env.example present and current — all env vars documented with inline comments
+      - Critical path tests cover: main loop happy path, error recovery, config variants
 
   new_frontend_site:
     label: New Frontend Site (Astro)

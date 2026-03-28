@@ -12,7 +12,7 @@
 #
 # Parity reference:
 #   Concern              Python                    TypeScript
-#   Shared library       kaiano-common-utils        kaiano-ts-utils
+#   Shared library       common-python-utils        kaiano-ts-utils
 #   Data validation      Pydantic                   Zod
 #   API response shape   { data, meta } / { error } Identical
 #   Logging              common-utils logger         ts-utils logger
@@ -29,7 +29,7 @@ standards:
     dimension: cross_repo_coherence
     severity: ERROR
     description: >
-      Python services declare kaiano-common-utils as a dependency.
+      Python services declare common-python-utils as a dependency.
       TypeScript services declare kaiano-ts-utils as a dependency.
       Neither stack reimplements logging, auth verification, or response helpers
       provided by the shared library.

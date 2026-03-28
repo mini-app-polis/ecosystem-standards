@@ -67,7 +67,7 @@ standards:
     severity: INFO
     description: >
       hatchling is the ecosystem standard build backend for all Python packages.
-      Already used by kaiano-common-utils. Requires no [tool.setuptools] config.
+      Already used by common-python-utils. Requires no [tool.setuptools] config.
       New repos must use hatchling from day one. Existing repos migrate as a chore commit.
     decision: "Decided: hatchling. March 2026. Rationale: already used by shared library, simpler config, modern default."
     checkable: true
@@ -108,17 +108,17 @@ standards:
     added: 2026-03
 
   - id: PY-006
-    title: kaiano-common-utils declared as dependency
+    title: common-python-utils declared as dependency
     status: requirement
     dimension: structural_conformance
     severity: ERROR
     description: >
-      All processors declare kaiano-common-utils as a dependency. Shared behaviors
+      All processors declare common-python-utils as a dependency. Shared behaviors
       live there, not duplicated per-repo. Flag if processor re-implements logging,
       API clients, or metadata helpers.
     checkable: true
     check_notes: >
-      Check pyproject.toml dependencies for kaiano-common-utils. Flag if absent
+      Check pyproject.toml dependencies for common-python-utils. Flag if absent
       and repo is a Python processor.
     added: 2026-03
 
@@ -243,6 +243,6 @@ standards:
       on Settings OR has a comment marking it as external tooling. Flag undocumented
       mismatches.
     origin: >
-      KAIANO_API_CLERK_TOKEN appears in kaiano-common-utils/.env.example but is
+      KAIANO_API_CLERK_TOKEN appears in common-python-utils/.env.example but is
       not read anywhere in the current implementation.
     added: 2026-03

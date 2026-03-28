@@ -7,8 +7,8 @@
 #   2. GET standards/<file>.yaml  → fetch relevant domain(s)
 #   3. Pin standards_version in evaluation output for auditability
 
-version: 1.0.1
-updated: 1.0.1
+version: 1.0.0
+updated: 1.0.0
 maintainer: mini-app-polis
 
 # Dimensions used across all standards files.
@@ -90,6 +90,15 @@ files:
     description: Checklists used by AI evaluators for post-PR assessment. One checklist per artifact type — processor, FastAPI service, pipeline, frontend site, React app, Hono service.
     rule_prefix: DOD
 
+  - file: ecosystem.yaml
+    domain: ecosystem
+    description: >
+      Authoritative inventory of all active, transitioning, and retired
+      services, libraries, and canonical patterns. Updated on every rename,
+      retirement, or new service addition. The single source of truth for
+      service names referenced across standards files.
+    rule_prefix: ECO
+
   - file: standards/cross-stack.yaml
     domain: cross-stack
     description: Standards that apply across both Python and TypeScript stacks. Shared library usage and response shape parity.
@@ -97,6 +106,37 @@ files:
 
 # Changelog — why this version exists.
 changelog:
+  - version: 1.3.0
+    date: 2026-03
+    notes: >
+      Major update reflecting March 2026 architecture decisions.
+      Renames: kaiano-common-utils → common-python-utils throughout;
+      deejay-set-processor-dev → deejay-cog; deejay-marvel-api →
+      api-kaianolevine-com (retired). Architecture: PIPE-008 rewritten —
+      watcher-cog replaces Apps Script → repository_dispatch as canonical
+      Drive trigger. CD-006 updated: GitHub Actions is CI/CD only, not a
+      trigger relay. CD-004 updated: actions/checkout and actions/setup-node
+      pinned to v6. Observability: CD-002 expanded to all production service
+      types. CD-003 expanded with structured log event shape and four
+      categories (infra, pipeline, data, api). Added CD-007
+      (Healthchecks.io for worker services), CD-008 (log level contract),
+      CD-009 (structured log event shape), CD-010 (three-layer observability
+      stack). New DoD checklist: new_worker_service. Updated
+      new_python_processor and new_pipeline DoD checklists with Sentry and
+      structured logging requirements. New file: ecosystem.yaml — service
+      inventory and canonical pattern registry.
+
+  - version: 1.2.0
+    date: 2026-03
+    notes: >
+      Orchestration trigger architecture updated. watcher-cog replaces
+      Apps Script → repository_dispatch as canonical Drive trigger pattern
+      (PIPE-008 rewritten). CD-006 updated: GitHub Actions is CI/CD only,
+      not a trigger relay. CD-003 expanded with structured log event shape
+      and four event categories (infra, pipeline, data, api). Added CD-007:
+      Healthchecks.io requirement for always-on worker services.
+      CD-004 updated: actions/checkout and actions/setup-node pinned to v6.
+
   - version: 1.1.0
     date: 2026-03
     notes: >
@@ -112,6 +152,6 @@ changelog:
     notes: >
       Initial formalization. Migrated from ecosystem_standards_v10.docx
       into machine-readable YAML. Added nine rules from kaianolevine-api and
-      kaiano-common-utils code review audit (AUTH-001, AUTH-002, CFG-001, CFG-002,
+      common-python-utils code review audit (AUTH-001, AUTH-002, CFG-001, CFG-002,
       PKG-002→PY-009, FMT-001→PY-010, CI-001→TEST-012, CI-002→CD-004, PKG-001→DOC-009).
       Decisions made: build backend = hatchling, ruff line length = 88.

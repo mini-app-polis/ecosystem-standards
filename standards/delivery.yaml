@@ -16,22 +16,31 @@ standards:
     description: >
       Open source, self-hostable. Flags stored in Postgres alongside application data.
       Flag naming convention: flags.<service>.<feature>
-      Example: flags.deejay_api.ai_evaluation_enabled
+      Example: flags.api.ai_evaluation_enabled
     checkable: false
     added: 2026-03
 
   - id: CD-002
-    title: Sentry for error tracking in all production services
+    title: Sentry for error tracking — all production services
     status: requirement
     dimension: cd_readiness
     severity: WARN
     description: >
-      All FastAPI services and Python processors running in production integrate
-      Sentry. Free tier is sufficient.
+      All production services integrate Sentry for unhandled exception
+      tracking. This includes FastAPI services, Hono services, Python
+      processors, and always-on worker services (cogs). Free tier is
+      sufficient. Sentry is initialised at service entry point before
+      any application logic runs. SENTRY_DSN is set as an environment
+      variable — never hardcoded. The same Sentry project may be shared
+      across related services or a dedicated project used per service.
+      Sentry covers Layer 3 observability (unhandled exceptions). It does
+      not replace structured logging (Layer 2) or liveness monitoring (Layer 1).
     checkable: true
     check_notes: >
-      Check for sentry-sdk in pyproject.toml dependencies and Sentry initialization
-      in the service entry point. Flag production services without Sentry.
+      Check for sentry-sdk in pyproject.toml (Python) or @sentry/node in
+      package.json (TypeScript). Check for sentry_sdk.init() or Sentry.init()
+      call at service entry point. Check for SENTRY_DSN in .env.example.
+      Flag any production service missing any of these three.
     added: 2026-03
 
   - id: CD-003
@@ -40,13 +49,35 @@ standards:
     dimension: cd_readiness
     severity: WARN
     description: >
-      common-utils logger used throughout Python services. kaiano-ts-utils
-      logger used throughout TypeScript services. JSON-formatted in production.
-      Emoji prefixes for human-readable local output. Never use print() in
-      production code paths.
+      All Python services use common-python-utils logger. All TypeScript
+      services use kaiano-ts-utils logger. Never use print() in production
+      code paths. Log output is JSON-formatted in production.
+
+      Standard log event shape (all services):
+        timestamp: ISO 8601
+        service:   repo name (e.g. watcher-cog, api-kaianolevine-com)
+        level: DEBUG | INFO | WARN | ERROR
+        category: infra | pipeline | data | api
+        event:     snake_case event name (e.g. trigger_fired, file_processed)
+        context: key-value pairs specific to the event
+
+      Category definitions:
+        infra:    service lifecycle, triggers fired/not fired, heartbeats,
+                  Drive poll results
+        pipeline: file processed/skipped/failed, pipeline completed/failed,
+                  Prefect flow run created
+        data:     data quality issues, schema violations, evaluation findings,
+                  duplicate detection
+        api:      HTTP errors (4xx/5xx), slow responses (>2s), external
+                  API failures, auth failures
+
+      Emoji prefixes used for human-readable local output only.
+      Structured JSON is the production format.
     checkable: true
     check_notes: >
-      Scan source files for print() statements in production code paths. Flag if found.
+      Scan source files for print() statements in production code paths.
+      Flag if found. Check that logger is imported from shared library,
+      not configured inline per-service.
     added: 2026-03
 
   # ─────────────────────────────────────────────
@@ -62,7 +93,7 @@ standards:
       All "uses: owner/repo@vN" references in .github/workflows/ must reference
       version tags that exist in the action's release history. Invalid version tags
       cause CI to fail silently. Current pinned versions (March 2026):
-      actions/checkout@v4, actions/setup-node@v4, astral-sh/setup-uv@v5.
+      actions/checkout@v6, actions/setup-node@v6, astral-sh/setup-uv@v5.
       Verify the tag exists before committing any version pin.
     checkable: true
     check_notes: >
@@ -167,15 +198,128 @@ standards:
     added: 2026-03
 
   - id: CD-006
-    title: GitHub Actions as trigger layer only
+    title: GitHub Actions is CI/CD only — not a trigger relay
     status: requirement
     dimension: structural_conformance
-    severity: INFO
+    severity: WARN
     description: >
-      GitHub Actions triggers Prefect flows via workflow_dispatch or repository_dispatch.
-      GitHub Actions is not the orchestrator — it is the trigger and CI/CD layer only.
-      Existing orchestration workflows migrate to this pattern when significantly reworked.
+      GitHub Actions handles lint, tests, deploys, and semantic-release.
+      It does not trigger pipeline flows. Drive-event triggers go through
+      watcher-cog. Scheduled and manual triggers go through Prefect
+      deployments. repository_dispatch as a trigger relay for processors
+      is a retired pattern.
     checkable: false
+    added: 2026-03
+
+  - id: CD-007
+    title: Healthchecks.io for always-on worker services
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    description: >
+      Always-on Railway worker services (services with no HTTP port that
+      run continuously) integrate Healthchecks.io as a dead man's switch.
+      The service pings HEALTHCHECKS_URL on every work cycle. If the ping
+      goes silent beyond the grace period, Healthchecks.io sends an email alert.
+      Recommended settings: period 1 minute, grace 5 minutes.
+      HEALTHCHECKS_URL is set as an environment variable — never hardcoded.
+      Free tier is sufficient.
+    checkable: true
+    check_notes: >
+      For worker services (no HTTP port in Railway config): check for
+      HEALTHCHECKS_URL in .env.example and a heartbeat ping call in the
+      main service loop. Flag worker services without this integration.
+    added: 2026-03
+
+  - id: CD-008
+    title: Log levels used consistently and intentionally
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    description: >
+      Log levels follow a strict contract across all services:
+        DEBUG: internal state useful for local debugging only.
+               Never emitted in production by default.
+        INFO:  meaningful lifecycle events — service started, file
+               processed, trigger fired, pipeline completed. Reviewable
+               weekly. Default production level.
+        WARN:  something unexpected happened but the service recovered.
+               Skipped files, retried calls, degraded behaviour. Reviewed
+               promptly.
+        ERROR: something failed and requires attention. Unhandled
+               exceptions, failed triggers, data integrity violations.
+               Reviewed immediately.
+      Never use ERROR for expected failure modes (e.g. file not found
+      when that is a valid outcome). Never use INFO for high-frequency
+      noise that would obscure meaningful events.
+    checkable: false
+    added: 2026-03
+
+  - id: CD-009
+    title: Structured log event shape — all services
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    description: >
+      All meaningful log events emitted by production services include
+      these fields:
+        timestamp: ISO 8601
+        service:   repo name (e.g. watcher-cog, api-kaianolevine-com)
+        level:     DEBUG | INFO | WARN | ERROR
+        category:  infra | pipeline | data | api
+        event:     snake_case event name (e.g. trigger_fired, file_processed)
+        context:   key-value pairs specific to the event
+
+      Category definitions:
+        infra:    service lifecycle, triggers fired/not fired, heartbeats,
+                  Drive poll results
+        pipeline: file processed/skipped/failed, pipeline completed/failed,
+                  Prefect flow run created
+        data:     data quality issues, schema violations, evaluation findings,
+                  duplicate detection
+        api:      HTTP errors (4xx/5xx), slow responses (>2s), external
+                  API failures, auth failures
+
+      Log output is JSON in production, human-readable with emoji prefixes
+      in local development. The shared library (common-python-utils for
+      Python, kaiano-ts-utils for TypeScript) provides the logger — services
+      do not configure logging inline.
+    checkable: true
+    check_notes: >
+      Check that log calls use the shared library logger, not a custom
+      inline configuration. Flag services importing logging directly and
+      configuring their own handler/formatter without using the shared library.
+    added: 2026-03
+
+  - id: CD-010
+    title: Three-layer observability stack — all production services
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    description: >
+      Every production service implements all three observability layers:
+        Layer 1 — Liveness:    Healthchecks.io for always-on workers.
+                               Railway auto-restart for all services.
+        Layer 2 — Structured logs: common-python-utils or kaiano-ts-utils
+                               logger emitting JSON events with standard shape.
+                               Queryable in Railway log viewer or Better Stack.
+        Layer 3 — Exceptions:  Sentry capturing all unhandled exceptions
+                               with full stack trace and context.
+      These three layers are non-overlapping and non-redundant:
+        Layer 1 catches: process died, service unreachable
+        Layer 2 catches: business logic errors, skipped work, slow operations
+        Layer 3 catches: unhandled exceptions and crashes
+      A service missing any layer has a blind spot in production.
+      Pipelines additionally require Prefect run history as a fourth layer
+      covering orchestration-level observability.
+    checkable: true
+    check_notes: >
+      For each production service, verify all three layers are present.
+      Layer 1: HEALTHCHECKS_URL in .env.example + ping call in main loop
+               (worker services only — HTTP services rely on Railway restart).
+      Layer 2: shared library logger imported and used throughout.
+      Layer 3: Sentry initialised at entry point, SENTRY_DSN in .env.example.
+      Flag any service missing any layer.
     added: 2026-03
 
   - id: VER-007

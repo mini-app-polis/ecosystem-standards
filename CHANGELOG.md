@@ -24,7 +24,7 @@
 Initial release. Migrated from `ecosystem_standards_v10.docx` into
 machine-readable YAML split across ten domain files.
 
-**Added from code review audit of `kaianolevine-api` and `kaiano-common-utils`:**
+**Added from code review audit of `kaianolevine-api` and `common-python-utils`:**
 - AUTH-001 — No unverified write endpoints reachable from the public internet
 - AUTH-002 — API auth scheme and HTTP client must match
 - CFG-001 — No getattr() access for undeclared Settings fields

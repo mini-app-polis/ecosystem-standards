@@ -64,7 +64,7 @@ standards:
       not enhancements. Every production service must have all three.
     checkable: true
     check_notes: >
-      Check for Sentry integration, structured logging via kaiano-common-utils
+      Check for Sentry integration, structured logging via common-python-utils
       or kaiano-ts-utils, and Prefect run history (for pipelines). Flag any
       production service missing any of these three.
     added: 2026-03

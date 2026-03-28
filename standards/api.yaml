@@ -140,17 +140,17 @@ standards:
     dimension: cross_repo_coherence
     severity: ERROR
     description: >
-      When kaianolevine-api's auth scheme changes, KaianoApiClient._headers() in
-      kaiano-common-utils must change in the same release. A mismatch causes all
+      When kaianolevine-api's auth scheme changes, CommonPythonApiClient._headers() in
+      common-python-utils must change in the same release. A mismatch causes all
       pipeline writes to return 401. Auth mechanism used by the API and sent by its
       client must be documented in the same location (auth.py cross-referencing
-      kaiano-common-utils and vice versa).
+      common-python-utils and vice versa).
     checkable: true
     check_notes: >
-      Compare auth header set in KaianoApiClient._headers() against auth header
+      Compare auth header set in CommonPythonApiClient._headers() against auth header
       expected by kaianolevine-api routes. Flag if they differ. Check auth.py for
-      cross-reference comment to kaiano-common-utils.
+      cross-reference comment to common-python-utils.
     origin: >
-      kaiano-common-utils references KAIANO_API_CLERK_TOKEN in .env.example but
+      common-python-utils references KAIANO_API_CLERK_TOKEN in .env.example but
       _headers() does not read it — a forward-reference that looks like a live feature.
     added: 2026-03

@@ -1,0 +1,171 @@
+# ecosystem-standards / ecosystem.yaml
+# Authoritative inventory of all services, libraries, and canonical patterns
+# in the MiniAppPolis ecosystem. Updated whenever a service is added, renamed,
+# archived, or changes role.
+#
+# This file is the single source of truth for service names. Standards rules
+# reference concepts documented here rather than hardcoding service names.
+# When a rename or retirement happens, update this file first — then the
+# standards files will reference it correctly.
+#
+# Version: 1.0.0 · 2026-03
+
+version: 1.0.0
+updated: 2026-03
+maintainer: mini-app-polis
+
+services:
+
+  # ── Always-on workers (cogs) ──────────────────────────────────
+
+  - id: watcher-cog
+    type: worker
+    status: active
+    language: python
+    host: railway
+    description: >
+      Config-driven Google Drive folder watcher. Polls Drive API on a
+      1-minute interval, fires Prefect flow runs when new files are detected.
+    replaces: google-app-script-trigger
+    added: 2026-03
+
+  - id: deejay-cog
+    type: worker
+    status: active
+    language: python
+    host: railway
+    description: >
+      DJ set CSV processor. Normalizes, validates, and ingests DJ set data
+      into PostgreSQL via api-kaianolevine-com.
+    replaces: deejay-set-processor-dev
+    added: 2026-03
+
+  - id: evaluator-cog
+    type: worker
+    status: active
+    language: python
+    host: railway
+    description: >
+      Post-pipeline AI evaluation. Assesses run conformance against the
+      current ecosystem standards version and writes findings to
+      pipeline_evaluations table.
+    added: 2026-03
+
+  # ── API services ──────────────────────────────────────────────
+
+  - id: api-kaianolevine-com
+    type: api
+    status: active
+    language: python
+    framework: fastapi
+    host: railway
+    description: >
+      Primary ecosystem API. DJ sets, tracks, catalog, evaluations, feature
+      flags, contact form, resume endpoints. Sole API for the kaianolevine.com
+      ecosystem.
+    replaces: deejay-marvel-api
+    added: 2026-03
+
+  # ── Shared libraries ──────────────────────────────────────────
+
+  - id: common-python-utils
+    type: library
+    status: active
+    language: python
+    description: >
+      Shared Python utilities. Google API client (Drive, Sheets), LLM client
+      (Anthropic, OpenAI), structured logging, API client, metadata helpers.
+      All Python processors and cogs declare this as a dependency.
+    replaces: kaiano-common-utils
+    added: 2026-03
+
+  - id: kaiano-ts-utils
+    type: library
+    status: active
+    language: typescript
+    description: >
+      Shared TypeScript utilities. Clerk auth middleware, response envelope
+      helpers, logging. All Hono services declare this as a dependency.
+    added: 2026-03
+
+  # ── Static sites ──────────────────────────────────────────────
+
+  - id: website-astro-software
+    type: site
+    status: active
+    language: astro
+    host: cloudflare-pages
+    description: >
+      Software portfolio site. Queries api-kaianolevine-com live for DJ sets,
+      catalog, stats, and evaluation findings.
+    added: 2026-03
+
+  - id: kaiano-wcs-website
+    type: site
+    status: active
+    language: astro
+    host: cloudflare-pages
+    description: West Coast Swing personal site. wcs.kaianolevine.com.
+    added: 2026-03
+
+  # ── Retired / archived ────────────────────────────────────────
+
+  - id: google-app-script-trigger
+    type: infra
+    status: retired
+    retired_date: 2026-03
+    replaced_by: watcher-cog
+    description: >
+      Apps Script + GitHub Actions bridge for Drive-triggered workflows.
+      Replaced by watcher-cog which polls Drive directly and fires Prefect
+      flow runs without an intermediate GitHub Actions step.
+
+  - id: kaiano-common-utils
+    type: library
+    status: retired
+    retired_date: 2026-03
+    replaced_by: common-python-utils
+    description: Former shared Python utilities library.
+
+  - id: deejay-set-processor-dev
+    type: worker
+    status: retired
+    retired_date: 2026-03
+    replaced_by: deejay-cog
+    description: Former DJ set CSV processor. Replaced by deejay-cog.
+
+  - id: deejay-marvel-api
+    type: api
+    status: retired
+    retired_date: 2026-03
+    replaced_by: api-kaianolevine-com
+    description: >
+      Former DJ data API. Fully merged into api-kaianolevine-com.
+
+# ── Canonical patterns ────────────────────────────────────────
+
+patterns:
+
+  drive_trigger:
+    description: How Drive file drops trigger processor flows
+    current: watcher-cog polls Drive API → fires Prefect create_flow_run
+    retired: Apps Script → repository_dispatch → GitHub Actions
+    changed: 2026-03
+
+  orchestration:
+    description: How pipelines are scheduled and executed
+    current: Prefect Cloud deployments — watcher-cog fires triggers, Prefect executes flows
+    retired: GitHub Actions as orchestrator
+    changed: 2026-03
+
+  python_shared_library:
+    description: Shared Python utility library name
+    current: common-python-utils
+    retired: kaiano-common-utils
+    changed: 2026-03
+
+  api_services:
+    description: Active API services
+    current: api-kaianolevine-com (sole API for kaianolevine.com ecosystem)
+    retired: deejay-marvel-api (merged into api-kaianolevine-com)
+    changed: 2026-03

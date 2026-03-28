@@ -3,7 +3,7 @@
 # Version: 1.0.0 · 2026-03
 #
 # GAP: Most existing processors currently have import-level tests only.
-# Remediation order: deejay-set-processor-dev first, then by activity level.
+# Remediation order: deejay-cog first, then by activity level.
 
 standards:
 
@@ -206,7 +206,7 @@ standards:
     description: >
       Most existing processors currently have import-level tests only. This is a
       known gap with active remediation underway. Remediation order:
-      deejay-set-processor-dev first (new platform foundation), then by activity level.
+      deejay-cog first (new platform foundation), then by activity level.
       When a processor is remediated, this gap entry is closed and the processor
       is marked as compliant with TEST-001 through TEST-004.
     checkable: true

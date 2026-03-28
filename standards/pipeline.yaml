@@ -90,25 +90,28 @@ standards:
     severity: WARN
     description: >
       Tasks that call external APIs use retries=2, retry_delay_seconds=30. Tasks
-      calling Google APIs inherit kaiano-common-utils retry logic.
+      calling Google APIs inherit common-python-utils retry logic.
     checkable: false
     added: 2026-03
 
   - id: PIPE-008
-    title: Drive integration canonical pattern
+    title: watcher-cog as canonical Drive trigger
     status: requirement
     dimension: structural_conformance
-    severity: INFO
+    severity: WARN
     description: >
-      The canonical Drive ingestion flow until a direct API upload path is available:
-        File dropped in Drive source folder
-        → Apps Script trigger (google-app-script-trigger)
-        → repository_dispatch to GitHub
-        → Process pipeline: normalize → validate → move to year folder
-        → Collect pipeline: rebuild collection → write to DB + JSON snapshot
-        → AI evaluation step: assess run conformance
-      This pattern is maintained until superseded by a direct Prefect webhook trigger.
+      The canonical Drive-event trigger pattern is:
+        File appears in watched Drive folder
+        → watcher-cog detects change (1-minute poll via Drive API)
+        → watcher-cog calls Prefect API to create flow run
+        → Prefect executes the processor flow
+      watcher-cog is an always-on Railway worker service. Config-driven:
+      adding a new folder-to-processor mapping requires one WatcherConfig
+      entry — no code changes. The previous pattern (Apps Script →
+      repository_dispatch → GitHub Actions) is retired. google-app-script-trigger
+      is archived.
     checkable: false
+    supersedes: "Apps Script → repository_dispatch → GitHub Actions (retired 2026-03)"
     added: 2026-03
 
   - id: PIPE-009
