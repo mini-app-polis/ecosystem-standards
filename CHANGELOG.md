@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.2.1...v1.2.2) (2026-03-28)
+
+
+### Bug Fixes
+
+* updating with use findings ([32b3e32](https://github.com/mini-app-polis/ecosystem-standards/commit/32b3e32235939d2c80fb896df8e835d1105d71f0))
+
 ## [1.2.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.2.0...v1.2.1) (2026-03-28)
 
 
