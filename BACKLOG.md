@@ -64,3 +64,45 @@ Once built, mid-flow captures will automatically land as labeled Issues
 in this repo for processing into standards when there is headspace.
 
 Reference: capture system design is in a separate conversation.
+
+---
+
+## Pipeline UI — shared finding card component
+
+The finding card is rendered independently in two places:
+`src/components/RecentFindings.astro` (homepage widget) and
+`src/pages/pipeline/index.astro` (full findings browser). These have
+already drifted — the repo badge fix had to be applied twice.
+
+Remediation: extract card rendering into a shared JS module or make
+`RecentFindings.astro` accept configuration (limit, filters) so the
+pipeline page can reuse it.
+
+Priority: low — functional but will drift further as UI evolves.
+
+---
+
+## evaluations endpoint — latest-run-only filter
+
+`GET /v1/evaluations` now returns only findings from the most recent
+run per `repo` + `source` combination. This is intentional — findings
+are advisory snapshots, not permanent records. Full history is preserved
+in the database but not exposed by default.
+
+If a verbose/history endpoint is ever needed, add
+`GET /v1/evaluations/history` rather than modifying the default behavior.
+
+---
+
+## Conformance checker — service-type-aware deterministic checks
+
+The deterministic engine (`engine/deterministic.py` in evaluator-cog)
+currently applies all checks to every repo regardless of type. Python
+checks (pyproject.toml, src layout, etc.) fire on frontend sites.
+Test checks fire on libraries.
+
+The LLM layer is already type-aware (domains filtered by service type).
+The deterministic layer should be too — pass `service_type` into
+`run_all_checks` and skip irrelevant checks per type.
+
+Priority: medium — causes noisy false positives on non-Python repos.

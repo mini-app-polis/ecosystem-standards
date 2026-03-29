@@ -88,18 +88,18 @@ standards:
     added: 2026-03
 
   - id: EVAL-GAP-001
-    title: Deterministic checks not fully implemented
+    title: Deterministic conformance checks — partial coverage
     status: gap
-    dimension: cd_readiness
-    severity: WARN
+    dimension: structural_conformance
+    severity: INFO
     description: >
-      engine/deterministic.py in evaluator-cog currently covers ~30 of the
-      ~50 checkable rules. Remaining checkable rules are assessed by the LLM
-      layer only, which is less reliable for binary structural checks. All
-      rules marked checkable: true with check_notes should have a corresponding
-      deterministic implementation in evaluator-cog.
-      LLM-first was chosen to get conformance running faster — deterministic
-      backfill is a priority follow-up, not an optional or as-needed task.
+      The conformance flow in evaluator-cog implements ~12 deterministic
+      checks covering file presence, pyproject.toml, CI YAML, AST scanning,
+      and test structure. Approximately 38 of the 50 checkable rules are not
+      yet covered deterministically and fall to LLM assessment only.
+      Remediation: backfill deterministic checks one domain at a time,
+      starting with delivery.yaml (CD-004 action version pinning) and
+      documentation.yaml (DOC-013 README completeness).
     checkable: false
     added: 2026-03
 

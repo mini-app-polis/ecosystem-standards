@@ -46,12 +46,12 @@ services:
     language: python
     host: railway
     description: >
-      Multi-mode AI evaluation cog. Houses all evaluation flows for the
-      ecosystem: post-pipeline behavioral evaluation (pipeline_eval),
-      structural conformance checking against ecosystem standards
-      (conformance), and ecosystem-wide drift reporting (monthly_report).
-      All findings written to pipeline_evaluations table via
-      api-kaianolevine-com with source field distinguishing evaluation type.
+      Multi-mode AI evaluation cog. Runs post-pipeline behavioral evaluation
+      (pipeline_eval flow) and daily structural conformance checking against
+      ecosystem standards (conformance flow). Fetches live ecosystem inventory
+      and standards rules at runtime. All findings written to
+      pipeline_evaluations table via api-kaianolevine-com with source field
+      distinguishing evaluation type.
     added: 2026-03
 
   # ── API services ──────────────────────────────────────────────
@@ -84,7 +84,7 @@ services:
 
   - id: kaiano-ts-utils
     type: library
-    status: active
+    status: planned
     language: typescript
     description: >
       Shared TypeScript utilities. Clerk auth middleware, response envelope
@@ -103,12 +103,13 @@ services:
       catalog, stats, and evaluation findings.
     added: 2026-03
 
-  - id: kaiano-wcs-website
+  - id: website-astro-wcs
     type: site
     status: active
     language: astro
     host: cloudflare-pages
     description: West Coast Swing personal site. wcs.kaianolevine.com.
+    replaces: kaiano-wcs-website
     added: 2026-03
 
   # ── Retired / archived ────────────────────────────────────────
@@ -144,6 +145,13 @@ services:
     replaced_by: api-kaianolevine-com
     description: >
       Former DJ data API. Fully merged into api-kaianolevine-com.
+
+  - id: kaiano-wcs-website
+    type: site
+    status: retired
+    retired_date: 2026-03
+    replaced_by: website-astro-wcs
+    description: Former WCS personal site. Replaced by website-astro-wcs.
 
 # ── Canonical patterns ────────────────────────────────────────
 
