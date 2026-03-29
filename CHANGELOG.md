@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.3.1...v1.4.0) (2026-03-29)
+
+
+### Features
+
+* mark kaiano-ts-utils as active ([3a68ca1](https://github.com/mini-app-polis/ecosystem-standards/commit/3a68ca142724fc28789e1cc290cedbc9514e1e5f))
+
 ## [1.3.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.3.0...v1.3.1) (2026-03-29)
 
 
