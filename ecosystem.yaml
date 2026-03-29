@@ -84,11 +84,14 @@ services:
 
   - id: kaiano-ts-utils
     type: library
-    status: planned
+    status: active
     language: typescript
+    repo: deejaytools-com
     description: >
       Shared TypeScript utilities. Clerk auth middleware, response envelope
-      helpers, logging. All Hono services declare this as a dependency.
+      helpers (success, successList, error, CommonErrors), structured logger
+      (createLogger), and shared Zod schemas. Lives in packages/ts-utils inside
+      deejaytools-com monorepo until stable, then extracts to its own repo.
     added: 2026-03
 
   # ── Static sites ──────────────────────────────────────────────
