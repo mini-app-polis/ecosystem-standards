@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.2.5...v1.3.0) (2026-03-29)
+
+
+### Features
+
+* adding content for feature flag and secret management ([f9d0166](https://github.com/mini-app-polis/ecosystem-standards/commit/f9d0166e8d747dadb7c907dc524e603a910e30e8))
+
 ## [1.2.5](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.2.4...v1.2.5) (2026-03-28)
 
 
