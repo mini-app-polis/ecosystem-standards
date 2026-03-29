@@ -76,7 +76,10 @@ standards:
     severity: WARN
     description: >
       Code and features are decoupled. Deployments are safe at any time.
-      Feature flags control what users see.
+      Feature flags control what users see. A flag should be the first
+      tool considered when a feature spans multiple services or when the
+      frontend needs to ship before the API is ready. See CD-001 for
+      the full feature flag standard.
     checkable: false
     added: 2026-03
 

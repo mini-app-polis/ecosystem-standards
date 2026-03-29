@@ -109,22 +109,16 @@ changelog:
   - version: 1.3.0
     date: 2026-03
     notes: >
-      Major update reflecting March 2026 architecture decisions.
-      Renames: kaiano-common-utils → common-python-utils throughout;
-      deejay-set-processor-dev → deejay-cog; deejay-marvel-api →
-      api-kaianolevine-com (retired). Architecture: PIPE-008 rewritten —
-      watcher-cog replaces Apps Script → repository_dispatch as canonical
-      Drive trigger. CD-006 updated: GitHub Actions is CI/CD only, not a
-      trigger relay. CD-004 updated: actions/checkout and actions/setup-node
-      pinned to v6. Observability: CD-002 expanded to all production service
-      types. CD-003 expanded with structured log event shape and four
-      categories (infra, pipeline, data, api). Added CD-007
-      (Healthchecks.io for worker services), CD-008 (log level contract),
-      CD-009 (structured log event shape), CD-010 (three-layer observability
-      stack). New DoD checklist: new_worker_service. Updated
-      new_python_processor and new_pipeline DoD checklists with Sentry and
-      structured logging requirements. New file: ecosystem.yaml — service
-      inventory and canonical pattern registry.
+      Secret management and feature flag standards formalized.
+      CD-001 rewritten: Unleash replaced by api-kaianolevine-com
+      feature_flags table as the canonical flag store. Flag use cases,
+      lifecycle contract, naming convention, and client caching pattern
+      documented. CD-011 added: Doppler as canonical secret store with
+      Railway/GitHub/Cloudflare sync pattern and Prefect carve-out
+      documented. CD-012 added: per-caller internal API key standard
+      with get_internal_headers() utility contract. CD-013 added:
+      feature flag admin panel standard in kaianolevine.com.
+      PRIN-006 updated to reference CD-001.
 
   - version: 1.2.0
     date: 2026-03

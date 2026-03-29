@@ -9,14 +9,63 @@ standards:
   # ─────────────────────────────────────────────
 
   - id: CD-001
-    title: Unleash for feature flags
+    title: Feature flags for major functionality toggles
     status: requirement
     dimension: cd_readiness
     severity: WARN
     description: >
-      Open source, self-hostable. Flags stored in Postgres alongside application data.
-      Flag naming convention: flags.<service>.<feature>
-      Example: flags.api.ai_evaluation_enabled
+      Feature flags are used to decouple deployment from release. They gate
+      major sections of functionality — not minor implementation details.
+      The canonical use cases are:
+
+        Kill switches: disable a risky integration (e.g. Anthropic API calls
+          in evaluator-cog) without a redeploy.
+        Readiness gates: API ships a new endpoint; frontend UI is hidden until
+          the flag is enabled. Allows frontend code to be merged and deployed
+          independently of API readiness.
+        Maintenance mode: return 503 gracefully during migrations without
+          touching code.
+
+      Flags are stored in the feature_flags table in api-kaianolevine-com's
+      PostgreSQL database and served via GET /v1/feature-flags.
+      The public read endpoint is unauthenticated. Write endpoints
+      (POST, PATCH, DELETE /v1/feature-flags/:key) require Clerk JWT auth
+      with admin role.
+
+      Flag naming convention: <service>.<feature>
+      Examples:
+        evaluator_cog.llm_soft_rules
+        evaluator_cog.conformance_check
+        watcher_cog.drive_polling
+        api.maintenance_mode
+
+      Flag anatomy — each flag must have:
+        key:         string identifier
+        enabled:     boolean
+        description: why it exists and when it should be deleted
+        permanent:   boolean — true for infrastructure flags (maintenance_mode),
+                     false for rollout/readiness flags (must be deleted post-rollout)
+
+      Lifecycle contract:
+        1. Ship code with flag check
+        2. Deploy and activate when ready by flipping the flag via the admin panel
+        3. For non-permanent flags: ship a follow-up PR removing the flag check
+           once the feature is fully rolled out and stable
+        4. Delete the DB row after the cleanup PR merges
+        Include a comment in code pointing to the flag key so it is easy to find:
+          # feature flag: evaluator_cog.llm_soft_rules
+
+      Flags are NOT used for:
+        - Fine-grained A/B testing or percentage rollouts
+        - Per-user targeting
+        - Replacing Prefect flow configuration
+        - Gating minor implementation details
+
+      Clients check flags at runtime (not build time) via a short-TTL
+      in-memory cache (30–60 seconds per process) to avoid hitting the API
+      on every request. Astro static sites fetch flags client-side on load.
+      Fail-open or fail-closed behavior must be intentional and documented
+      per flag.
     checkable: false
     added: 2026-03
 
@@ -320,6 +369,104 @@ standards:
       Layer 2: shared library logger imported and used throughout.
       Layer 3: Sentry initialised at entry point, SENTRY_DSN in .env.example.
       Flag any service missing any layer.
+    added: 2026-03
+
+  - id: CD-011
+    title: Doppler as canonical secret store
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    description: >
+      Doppler is the single source of truth for all infrastructure secrets
+      across the MiniAppPolis ecosystem. This includes API keys, database
+      URLs, service tokens, internal API keys, Sentry DSNs, Healthchecks
+      URLs, and Clerk credentials.
+
+      Doppler syncs automatically to:
+        Railway:        all API services and cogs receive secrets via
+                        the Doppler → Railway native sync
+        GitHub Actions: CI secrets synced via Doppler → GitHub integration
+        Cloudflare Pages: secrets synced via Doppler CLI in CI/CD
+
+      Secret management workflow:
+        - All secret changes are made in Doppler only
+        - Doppler pushes changes to downstream platforms automatically
+        - Never manually set secrets in Railway, GitHub, or Cloudflare
+          if Doppler is managing that service
+        - .env.example lists all required secret keys with no values —
+          this file is the human-readable contract of what a service needs
+
+      Doppler project structure:
+        One Doppler project per service or cog.
+        Environments: development, staging, production (minimum).
+
+      The only known carve-out is Prefect Cloud. Prefect uses its own
+      encrypted Blocks for flow-level secrets. Prefect Blocks are managed
+      directly in Prefect Cloud and are not synced from Doppler. When a
+      secret used in a Prefect Block is rotated, Prefect must be updated
+      manually. This is a known limitation — document it per-secret in
+      Doppler's description field.
+    checkable: true
+    check_notes: >
+      Check that .env.example exists and lists all required secret keys.
+      Flag any service with secrets hardcoded in source or committed
+      .env files. Flag any service manually setting Railway env vars
+      that should be Doppler-managed.
+    added: 2026-03
+
+  - id: CD-012
+    title: Internal service-to-service auth via per-caller API keys
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    description: >
+      Internal calls between Railway services and cogs use per-caller
+      API keys passed via the X-Internal-API-Key header. Each caller
+      (each cog or service making internal API calls) has its own key —
+      not a single shared secret across all callers.
+
+      Per-caller keys allow:
+        - Independent rotation without touching all callers
+        - Caller identity logging on every internal request
+        - Revocation of a single caller's access without affecting others
+
+      All internal API keys are stored in Doppler and injected at runtime.
+      The receiving service (api-kaianolevine-com) validates the key and
+      logs the caller identity on every internal request.
+
+      common-python-utils provides get_internal_headers() returning the
+      correct header dict for outgoing internal requests. All Python cogs
+      use this utility — never construct the header inline.
+
+      Clerk JWT auth is for user-facing requests only. Internal
+      service-to-service calls never use Clerk JWTs.
+    checkable: false
+    added: 2026-03
+
+  - id: CD-013
+    title: Feature flag admin panel in kaianolevine.com
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    description: >
+      The admin control panel for feature flags lives at an /admin route
+      in the kaianolevine.com software portfolio site. It is gated behind
+      Clerk authentication with admin role verification.
+
+      Capabilities:
+        - View all flags and their current state
+        - Toggle flags on/off
+        - Create new flags (key, description, permanent boolean)
+        - Delete flags (permanent flags require confirmation)
+
+      The admin panel calls authenticated write endpoints on
+      api-kaianolevine-com. The public GET /v1/feature-flags endpoint
+      remains unauthenticated for use by Astro sites and cogs.
+
+      Each site (kaianolevine.com, wcs.kaianolevine.com, deejaytools.com)
+      has its own Clerk application and independent user pool. Admin access
+      to the flag panel is scoped to the kaianolevine.com Clerk app only.
+    checkable: false
     added: 2026-03
 
   - id: VER-007
