@@ -87,6 +87,22 @@ standards:
       most recent evaluation against current index.yaml version. Flag if behind.
     added: 2026-03
 
+  - id: EVAL-GAP-001
+    title: Deterministic checks not fully implemented
+    status: gap
+    dimension: cd_readiness
+    severity: WARN
+    description: >
+      engine/deterministic.py in evaluator-cog currently covers ~30 of the
+      ~50 checkable rules. Remaining checkable rules are assessed by the LLM
+      layer only, which is less reliable for binary structural checks. All
+      rules marked checkable: true with check_notes should have a corresponding
+      deterministic implementation in evaluator-cog.
+      LLM-first was chosen to get conformance running faster — deterministic
+      backfill is a priority follow-up, not an optional or as-needed task.
+    checkable: false
+    added: 2026-03
+
   # ─────────────────────────────────────────────
   # EVALUATION TRIGGERS
   # ─────────────────────────────────────────────
