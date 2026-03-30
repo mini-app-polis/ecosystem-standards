@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.4.0...v1.5.0) (2026-03-30)
+
+
+### Features
+
+* add deejaytools-com to ecosystem inventory, mark kaiano-ts-utils active. ([228c6f2](https://github.com/mini-app-polis/ecosystem-standards/commit/228c6f235b9be15e8a8b44a32db0b447f5331da7))
+
 # [1.4.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.3.1...v1.4.0) (2026-03-29)
 
 
