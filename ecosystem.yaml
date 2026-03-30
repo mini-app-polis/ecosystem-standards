@@ -88,10 +88,40 @@ services:
     language: typescript
     repo: deejaytools-com
     description: >
-      Shared TypeScript utilities. Clerk auth middleware, response envelope
-      helpers (success, successList, error, CommonErrors), structured logger
-      (createLogger), and shared Zod schemas. Lives in packages/ts-utils inside
-      deejaytools-com monorepo until stable, then extracts to its own repo.
+      Shared TypeScript utilities. Clerk auth middleware (verifyClerkToken),
+      response envelope helpers (success, successList, error, CommonErrors),
+      structured logger (createLogger) emitting standard log shape, and shared
+      Zod schemas. Lives in packages/ts-utils inside the deejaytools-com
+      monorepo until stable, then extracts to its own repo.
+    added: 2026-03
+
+  # ── Web applications ──────────────────────────────────────────
+
+  - id: deejaytools-com-api
+    type: api
+    status: active
+    language: typescript
+    framework: hono
+    host: railway
+    repo: deejaytools-com
+    description: >
+      Hono on Node API for deejaytools.com. Manages WCS routine registration,
+      floor trial sessions, check-ins, slot assignment, partners, and songs.
+      PostgreSQL on Railway. Clerk auth. Part of the deejaytools-com monorepo.
+    added: 2026-03
+
+  - id: deejaytools-com-app
+    type: site
+    status: active
+    language: typescript
+    framework: react
+    host: cloudflare-pages
+    repo: deejaytools-com
+    description: >
+      React web application for deejaytools.com. WCS routine management
+      platform — events, sessions, floor trials, check-in queue, partner
+      and song management. Vite + React + Tailwind + shadcn/ui.
+      Part of the deejaytools-com monorepo.
     added: 2026-03
 
   # ── Static sites ──────────────────────────────────────────────
