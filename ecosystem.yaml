@@ -22,10 +22,15 @@ services:
     type: worker
     status: active
     language: python
+    cog_subtype: trigger
     host: railway
     description: >
       Config-driven Google Drive folder watcher. Polls Drive API on a
       1-minute interval, fires Prefect flow runs when new files are detected.
+    check_exceptions:
+      - TEST-001  # trigger cog — no data normalization
+      - TEST-002  # trigger cog — no deduplication
+      - TEST-004  # trigger cog — no data output shape
     replaces: google-app-script-trigger
     added: 2026-03
 
@@ -33,6 +38,7 @@ services:
     type: worker
     status: active
     language: python
+    cog_subtype: pipeline
     host: railway
     description: >
       DJ set CSV processor. Normalizes, validates, and ingests DJ set data
@@ -44,6 +50,7 @@ services:
     type: worker
     status: active
     language: python
+    cog_subtype: pipeline
     host: railway
     description: >
       Multi-mode AI evaluation cog. Runs post-pipeline behavioral evaluation
@@ -52,6 +59,10 @@ services:
       and standards rules at runtime. All findings written to
       pipeline_evaluations table via api-kaianolevine-com with source field
       distinguishing evaluation type.
+    check_exceptions:
+      - TEST-001  # evaluation cog — no normalization of external data
+      - TEST-002  # evaluation cog — no deduplication of external data
+      - TEST-004  # evaluation cog — output shape tested via LLM parsing tests
     added: 2026-03
 
   # ── API services ──────────────────────────────────────────────
@@ -79,6 +90,13 @@ services:
       Shared Python utilities. Google API client (Drive, Sheets), LLM client
       (Anthropic, OpenAI), structured logging, API client, metadata helpers.
       All Python processors and cogs declare this as a dependency.
+    check_exceptions:
+      - PY-006  # this repo IS common-python-utils — cannot depend on itself
+      - CD-002  # shared library, no service entry point for Sentry initialisation
+      - CD-010  # shared library, three-layer observability does not apply
+      - TEST-001  # library, not a pipeline cog — normalization tests not applicable
+      - TEST-002  # library, not a pipeline cog — deduplication tests not applicable
+      - TEST-004  # library, not a pipeline cog — output shape tests not applicable
     replaces: kaiano-common-utils
     added: 2026-03
 
@@ -93,6 +111,17 @@ services:
       structured logger (createLogger) emitting standard log shape, and shared
       Zod schemas. Lives in packages/ts-utils inside the deejaytools-com
       monorepo until stable, then extracts to its own repo.
+    check_exceptions:
+      - PY-005  # TypeScript — no src/ layout requirement
+      - PY-006  # TypeScript — no common-python-utils dependency
+      - PY-007  # TypeScript — no pyproject.toml
+      - PY-008  # TypeScript — no pre-commit with ruff hooks
+      - CD-002  # TypeScript — sentry-sdk is Python specific
+      - TEST-005  # TypeScript — no pytest config
+      - TEST-006  # TypeScript — pytest coverage not applicable
+      - TEST-001  # library — normalization tests not applicable
+      - TEST-002  # library — deduplication tests not applicable
+      - TEST-004  # library — output shape tests not applicable
     added: 2026-03
 
   # ── Web applications ──────────────────────────────────────────
@@ -108,6 +137,17 @@ services:
       Hono on Node API for deejaytools.com. Manages WCS routine registration,
       floor trial sessions, check-ins, slot assignment, partners, and songs.
       PostgreSQL on Railway. Clerk auth. Part of the deejaytools-com monorepo.
+    check_exceptions:
+      - PY-005  # TypeScript — no src/ layout requirement
+      - PY-006  # TypeScript — no common-python-utils dependency
+      - PY-007  # TypeScript — no pyproject.toml
+      - PY-008  # TypeScript — no pre-commit with ruff hooks
+      - CD-002  # TypeScript — sentry-sdk is Python specific
+      - TEST-005  # TypeScript — no pytest config
+      - TEST-006  # TypeScript — pytest coverage not applicable
+      - TEST-001  # API service — normalization tests not applicable
+      - TEST-002  # API service — deduplication tests not applicable
+      - TEST-004  # API service — output shape tests not applicable
     added: 2026-03
 
   - id: deejaytools-com-app
@@ -122,6 +162,19 @@ services:
       platform — events, sessions, floor trials, check-in queue, partner
       and song management. Vite + React + Tailwind + shadcn/ui.
       Part of the deejaytools-com monorepo.
+    check_exceptions:
+      - PY-005  # TypeScript/React — no src/ layout requirement
+      - PY-006  # TypeScript — no common-python-utils dependency
+      - PY-007  # TypeScript — no pyproject.toml
+      - PY-008  # TypeScript — no pre-commit with ruff hooks
+      - CD-002  # TypeScript — sentry-sdk is Python specific
+      - TEST-005  # TypeScript — no pytest config
+      - TEST-006  # TypeScript — pytest coverage not applicable
+      - TEST-001  # frontend app — normalization tests not applicable
+      - TEST-002  # frontend app — deduplication tests not applicable
+      - TEST-003  # frontend app — failure path tests not applicable
+      - TEST-004  # frontend app — output shape tests not applicable
+      - DOC-004  # frontend app — no .env.example convention for Vite apps (uses .env)
     added: 2026-03
 
   # ── Static sites ──────────────────────────────────────────────
@@ -134,6 +187,18 @@ services:
     description: >
       Software portfolio site. Queries api-kaianolevine-com live for DJ sets,
       catalog, stats, and evaluation findings.
+    check_exceptions:
+      - PY-005  # Astro — no src/ layout requirement (uses src/ differently)
+      - PY-006  # Astro — no common-python-utils dependency
+      - PY-007  # Astro — no pyproject.toml
+      - PY-008  # Astro — no pre-commit with ruff hooks
+      - CD-002  # Astro — sentry-sdk is Python specific
+      - TEST-005  # Astro — no pytest config
+      - TEST-006  # Astro — pytest coverage not applicable
+      - TEST-001  # static site — normalization tests not applicable
+      - TEST-002  # static site — deduplication tests not applicable
+      - TEST-003  # static site — failure path tests not applicable
+      - TEST-004  # static site — output shape tests not applicable
     added: 2026-03
 
   - id: website-astro-wcs
@@ -142,6 +207,18 @@ services:
     language: astro
     host: cloudflare-pages
     description: West Coast Swing personal site. wcs.kaianolevine.com.
+    check_exceptions:
+      - PY-005  # Astro — no src/ layout requirement (uses src/ differently)
+      - PY-006  # Astro — no common-python-utils dependency
+      - PY-007  # Astro — no pyproject.toml
+      - PY-008  # Astro — no pre-commit with ruff hooks
+      - CD-002  # Astro — sentry-sdk is Python specific
+      - TEST-005  # Astro — no pytest config
+      - TEST-006  # Astro — pytest coverage not applicable
+      - TEST-001  # static site — normalization tests not applicable
+      - TEST-002  # static site — deduplication tests not applicable
+      - TEST-003  # static site — failure path tests not applicable
+      - TEST-004  # static site — output shape tests not applicable
     replaces: kaiano-wcs-website
     added: 2026-03
 
