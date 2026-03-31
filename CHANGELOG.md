@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.5.0...v1.6.0) (2026-03-31)
+
+
+### Features
+
+* add check_exceptions and cog_subtype to ecosystem inventory ([a390c27](https://github.com/mini-app-polis/ecosystem-standards/commit/a390c270ea6fe73fd3fe28cd20f8a4476f57bf9a))
+
 # [1.5.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.4.0...v1.5.0) (2026-03-30)
 
 
