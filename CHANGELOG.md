@@ -1,3 +1,10 @@
+## [1.6.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.6.1...v1.6.2) (2026-04-02)
+
+
+### Bug Fixes
+
+* static site detection ([d54f674](https://github.com/mini-app-polis/ecosystem-standards/commit/d54f67456e2d24714408aa6f032ff5b7082c7444))
+
 ## [1.6.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.6.0...v1.6.1) (2026-04-02)
 
 
