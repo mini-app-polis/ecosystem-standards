@@ -105,6 +105,8 @@ services:
     status: active
     language: typescript
     repo: deejaytools-com
+    check_exceptions:
+      - DOC-013   # Python-specific README commands — TypeScript library
     description: >
       Shared TypeScript utilities. Clerk auth middleware (verifyClerkToken),
       response envelope helpers (success, successList, error, CommonErrors),
@@ -133,6 +135,8 @@ services:
     framework: hono
     host: railway
     repo: deejaytools-com
+    check_exceptions:
+      - DOC-013   # Python-specific README commands (uv sync, pytest) — TypeScript service
     description: >
       Hono on Node API for deejaytools.com. Manages WCS routine registration,
       floor trial sessions, check-ins, slot assignment, partners, and songs.
@@ -157,6 +161,8 @@ services:
     framework: react
     host: cloudflare-pages
     repo: deejaytools-com
+    check_exceptions:
+      - DOC-013   # Python-specific README commands — TypeScript frontend
     description: >
       React web application for deejaytools.com. WCS routine management
       platform — events, sessions, floor trials, check-in queue, partner
