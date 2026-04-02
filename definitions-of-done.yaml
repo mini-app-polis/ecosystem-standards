@@ -16,17 +16,17 @@ definitions_of_done:
       - Bootstrapped following playbooks/new-cog.md in this repo
       - uv for dependency management, ruff for linting
       - common-python-utils declared as dependency
-      - If pipeline cog: four critical path tests per module —
-        normalization, deduplication, failure path, output shape
-      - If trigger cog: critical path tests cover — poll cycle happy path,
+      - "If pipeline cog: four critical path tests per module —
+        normalization, deduplication, failure path, output shape"
+      - "If trigger cog: critical path tests cover — poll cycle happy path,
         new file detection, no-new-files no-trigger, error recovery,
-        heartbeat integration
+        heartbeat integration"
       - "CI workflow configured: ci.yml with test + release jobs using semantic-release"
       - .releaserc.json present with correct plugin configuration
       - README documents purpose, inputs, outputs, environment variables, how to run locally
-      - README includes "Running locally" section per DOC-013: prerequisites,
+      - "README includes \"Running locally\" section per DOC-013: prerequisites,
         uv sync --all-extras, pre-commit install + run --all-files, run
-        commands, uv run pytest
+        commands, uv run pytest"
       - .env.example present and current
       - docs/PIPELINE.md describes where this cog fits in the broader flow
       - docs/CONFIGURATION.md documents every environment variable
@@ -34,11 +34,11 @@ definitions_of_done:
       - Pydantic models used for all external data validation unless external
         data is consumed exclusively via common-python-utils wrappers which
         handle validation internally (e.g. Drive API via DriveFacade)
-      - If cog runs a pipeline: main entry point wrapped in @flow decorator
-        and connected to Prefect Cloud
-      - If cog is a trigger service (e.g. watcher-cog): connects to Prefect
-        Cloud via API to create flow runs — no @flow decorator required
-      - Sentry integration configured — sentry_sdk.init() at entry point, SENTRY_DSN in .env.example
+      - "If cog runs a pipeline: main entry point wrapped in @flow decorator
+        and connected to Prefect Cloud"
+      - "If cog is a trigger service (e.g. watcher-cog): connects to Prefect
+        Cloud via API to create flow runs — no @flow decorator required"
+      - "Sentry integration configured — sentry_sdk.init() at entry point, SENTRY_DSN in .env.example"
       - Structured logging via common-python-utils logger — not inline logging configuration
 
   new_fastapi_service:
