@@ -80,20 +80,42 @@ standards:
     dimension: documentation_coverage
     severity: WARN
     description: >
-      Every repo's README includes a "Running locally" section that covers:
-      (1) prerequisites — Python version (≥3.11) and uv;
-      (2) install — `uv sync --all-extras`;
-      (3) pre-commit — `uv run pre-commit install` (run once after cloning)
-      and `uv run pre-commit run --all-files` (run manually at any time);
-      (4) run — the exact command(s) to execute the service or scripts;
-      (5) test — `uv run pytest` and the coverage variant.
-      The section must be kept current. Copy-paste from the README must work
-      on a clean clone with no prior knowledge of the repo.
+      Every repo's README includes a "Running locally" section that covers
+      five conceptual elements, expressed in the idioms of the repo's stack.
+
+      Python repos (cogs, FastAPI services, libraries):
+        (1) prerequisites — Python version (≥3.11) and uv
+        (2) install — `uv sync --all-extras`
+        (3) pre-commit — `uv run pre-commit install` and
+            `uv run pre-commit run --all-files`
+        (4) run — the exact command(s) to start the service or scripts
+        (5) test — `uv run pytest` and the coverage variant
+
+      TypeScript API services (Hono):
+        (1) prerequisites — Node.js version and pnpm
+        (2) install — `pnpm install`
+        (3) lint/type-check — `pnpm lint` and `pnpm typecheck`
+        (4) run — `pnpm dev` or equivalent dev server command
+        (5) test — `pnpm test`
+
+      Frontend sites and apps (Astro, React/Vite):
+        (1) prerequisites — Node.js version and pnpm (or npm)
+        (2) install — `pnpm install`
+        (3) environment — copy `.env.example` to `.env` and fill values
+        (4) run — `pnpm dev` or `astro dev`
+        (5) build — `pnpm build` and confirm it succeeds
+
+      The section must be kept current. Copy-paste from the README must
+      work on a clean clone with no prior knowledge of the repo.
     checkable: true
     check_notes: >
-      Scan README.md for a section containing uv sync, pre-commit install,
-      pre-commit run --all-files, uv run pytest, and a prerequisites mention
-      (Python version or uv). Flag if any of the five elements are missing.
+      For Python repos: scan README.md for uv sync, pre-commit install,
+      pre-commit run --all-files, uv run pytest, and a prerequisites
+      mention (Python version or uv). Flag if any of the five are missing.
+      For TypeScript API repos: scan for pnpm install, pnpm dev (or
+      equivalent), pnpm test, and a Node.js prerequisites mention.
+      For frontend repos: scan for pnpm install, pnpm dev or astro dev,
+      pnpm build, and .env.example reference. Flag if any are missing.
     added: 2026-03
 
   # ─────────────────────────────────────────────
