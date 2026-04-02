@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.6.0...v1.6.1) (2026-04-02)
+
+
+### Bug Fixes
+
+* suppress DOC-013 Python README check on TypeScript services ([4139e96](https://github.com/mini-app-polis/ecosystem-standards/commit/4139e96648b64f3f6df298061fad5a3580476436))
+
 # [1.6.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.5.0...v1.6.0) (2026-03-31)
 
 

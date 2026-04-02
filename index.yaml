@@ -7,8 +7,8 @@
 #   2. GET standards/<file>.yaml  → fetch relevant domain(s)
 #   3. Pin standards_version in evaluation output for auditability
 
-version: 1.6.0
-updated: 1.6.0
+version: 1.6.1
+updated: 1.6.1
 maintainer: mini-app-polis
 
 # Dimensions used across all standards files.
