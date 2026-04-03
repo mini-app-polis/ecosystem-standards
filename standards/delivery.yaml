@@ -261,23 +261,32 @@ standards:
     added: 2026-03
 
   - id: CD-007
-    title: Healthchecks.io for always-on worker services
+    title: Healthchecks.io for trigger cogs
     status: requirement
     dimension: cd_readiness
     severity: WARN
     description: >
-      Always-on Railway worker services (services with no HTTP port that
-      run continuously) integrate Healthchecks.io as a dead man's switch.
-      The service pings HEALTHCHECKS_URL on every work cycle. If the ping
-      goes silent beyond the grace period, Healthchecks.io sends an email alert.
+      Trigger cogs — services running their own continuous polling loop without
+      external orchestration visibility — integrate Healthchecks.io as a dead
+      man's switch. If a trigger cog silently dies, no flow runs are triggered
+      and the failure is invisible to Prefect Cloud.
+      The service pings HEALTHCHECKS_URL on every poll cycle. If the ping goes
+      silent beyond the grace period, Healthchecks.io sends an email alert.
       Recommended settings: period 1 minute, grace 5 minutes.
       HEALTHCHECKS_URL is set as an environment variable — never hardcoded.
       Free tier is sufficient.
+      Pipeline cogs using prefect.serve() are exempt — Prefect Cloud provides
+      run-level liveness monitoring and Railway provides process-level restart.
+      The test: if a silent crash would cause work to stop being triggered with
+      no external visibility, Healthchecks is required. If Prefect would surface
+      the failure anyway, it is not.
     checkable: true
     check_notes: >
-      For worker services (no HTTP port in Railway config): check for
-      HEALTHCHECKS_URL in .env.example and a heartbeat ping call in the
-      main service loop. Flag worker services without this integration.
+      Apply only to trigger cogs (cog_subtype: trigger in ecosystem.yaml).
+      For those services: check for HEALTHCHECKS_URL in .env.example and a
+      heartbeat ping call in the main poll loop. Flag trigger cogs missing
+      this integration. Do not flag pipeline cogs (cog_subtype: pipeline)
+      — they are exempt by design.
     added: 2026-03
 
   - id: CD-008
