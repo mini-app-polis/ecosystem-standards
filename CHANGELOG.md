@@ -1,3 +1,10 @@
+## [1.6.3](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.6.2...v1.6.3) (2026-04-03)
+
+
+### Bug Fixes
+
+* scope CD-007 to trigger cogs only ([5ee6718](https://github.com/mini-app-polis/ecosystem-standards/commit/5ee6718524f790d08c4182f3531e1f4973acd534))
+
 ## [1.6.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.6.1...v1.6.2) (2026-04-02)
 
 
