@@ -106,8 +106,3 @@ Evaluation dimensions map directly to the `pipeline_evaluations` table:
 | `cross_repo_coherence` | naming, data shapes consistent across repos |
 | `standards_currency` | evaluated against current standards version |
 
----
-
-## Version
-
-Current version: **1.0.0** — see `index.yaml` changelog for history.

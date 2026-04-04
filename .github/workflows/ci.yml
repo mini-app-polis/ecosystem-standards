@@ -37,6 +37,22 @@ jobs:
           except Exception as e:
               errors.append(f"❌ index.yaml: {e}")
 
+          # Validate ecosystem.yaml
+          try:
+              data = yaml.safe_load(open('ecosystem.yaml'))
+              assert 'services' in data, "ecosystem.yaml missing services"
+              print(f"✅ ecosystem.yaml")
+          except Exception as e:
+              errors.append(f"❌ ecosystem.yaml: {e}")
+
+          # Validate definitions-of-done.yaml
+          try:
+              data = yaml.safe_load(open('definitions-of-done.yaml'))
+              assert 'definitions_of_done' in data, "definitions-of-done.yaml missing definitions_of_done"
+              print(f"✅ definitions-of-done.yaml")
+          except Exception as e:
+              errors.append(f"❌ definitions-of-done.yaml: {e}")
+
           # Validate each standards file
           all_ids = []
           for f in sorted(glob.glob('standards/*.yaml')):

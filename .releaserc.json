@@ -12,7 +12,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "node -e \"const fs=require('fs');const f='index.yaml';let c=fs.readFileSync(f,'utf8');c=c.replace(/^version: .+$/m,'version: ${nextRelease.version}');c=c.replace(/^updated: .+$/m,'updated: ${nextRelease.version}');fs.writeFileSync(f,c);\""
+        "prepareCmd": "node -e \"const fs=require('fs');const f='index.yaml';let c=fs.readFileSync(f,'utf8');c=c.replace(/^version: .+$/m,'version: ${nextRelease.version}');fs.writeFileSync(f,c);\""
       }
     ],
     [
