@@ -8,7 +8,6 @@
 #   3. Pin standards_version in evaluation output for auditability
 
 version: 1.6.3
-updated: 1.6.3
 maintainer: mini-app-polis
 
 # Dimensions used across all standards files.
