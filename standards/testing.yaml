@@ -123,7 +123,13 @@ standards:
     description: >
       respx/httpx used for mocking HTTP calls in integration tests. No real external
       calls to Drive, Sheets, or any external API in unit or integration tests.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Check pyproject.toml dev dependencies for respx. Search test files for
+      any use of requests.get, httpx.get, or similar real HTTP calls outside
+      of a respx.mock context. Flag any test file importing httpx or requests
+      without a corresponding respx mock. Also flag if respx is absent from
+      dev dependencies entirely.
     added: 2026-03
 
   - id: TEST-012
@@ -157,7 +163,12 @@ standards:
     description: >
       FastAPI's TestClient via httpx used for all API endpoint tests.
       Tests run without a live server.
-    checkable: false
+    checkable: true
+    check_notes: >
+      For FastAPI services, search test files for 'from fastapi.testclient
+      import TestClient' or 'from httpx import AsyncClient'. Flag any test
+      file testing API endpoints without TestClient — look for test functions
+      containing endpoint path strings (/v1/) without a client fixture.
     added: 2026-03
 
   - id: TEST-009
@@ -168,7 +179,13 @@ standards:
     description: >
       Tests use a separate test database or in-memory SQLite with transaction
       rollback. Never run against the production database.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Search conftest.py for database fixture definitions. Look for patterns
+      establishing a test database (DATABASE_URL override, SQLite in-memory,
+      or transaction rollback fixture). Flag if no db fixture is found in a
+      repo that has SQLAlchemy models. Also flag any hardcoded production
+      DATABASE_URL strings in test files.
     added: 2026-03
 
   - id: TEST-010
@@ -195,7 +212,13 @@ standards:
     description: >
       Every mock in a test must be verified with assert_called() or assert_called_once().
       Tests that pass because a mock was never called are false positives.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Search all test files for MagicMock, AsyncMock, patch, and mock_object
+      usage. For each mock assignment, confirm a corresponding assert_called(),
+      assert_called_once(), assert_called_once_with(), or assert_called_with()
+      exists in the same test function. Flag test functions that create mocks
+      but have no assertion on the mock object.
     added: 2026-03
 
   - id: TEST-GAP-001

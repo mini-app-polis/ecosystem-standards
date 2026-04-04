@@ -54,7 +54,13 @@ standards:
     description: >
       Pipelines writing to shared resources declare a concurrency group.
       cancel-in-progress: false for data pipelines.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Search Python source files for @flow decorated functions. For each flow
+      that writes to a shared resource (database writes, Drive moves, API
+      POST/PATCH calls), check for a concurrency_limit parameter on the flow
+      or a task_runner with concurrency controls. Flag flows with database
+      writes that have no concurrency_limit declared.
     added: 2026-03
 
   - id: PIPE-005
@@ -91,7 +97,14 @@ standards:
     description: >
       Tasks that call external APIs use retries=2, retry_delay_seconds=30. Tasks
       calling Google APIs inherit common-python-utils retry logic.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Search Python source files for @task decorated functions. For each task
+      that makes an external API call (httpx, Drive API, Sheets API, Anthropic
+      API), check for retries= parameter on the @task decorator. Flag any
+      external-calling task missing retries=2 unless it explicitly inherits
+      retry logic from common-python-utils (check for DriveFacade or
+      LLMClient usage, which have internal retry handling).
     added: 2026-03
 
   - id: PIPE-008
@@ -123,5 +136,11 @@ standards:
       All production pipelines include an AI evaluation step as the final task.
       The step assesses run conformance against the current standards version and
       writes findings to the pipeline_evaluations table.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Search the main flow file for a final @task call that references
+      evaluation, pipeline_eval, or writes to pipeline_evaluations. Check
+      for imports of the evaluation client from common-python-utils or direct
+      POST to /v1/evaluations. Flag if no evaluation task is found as the
+      last substantive task in the flow. Exempt evaluator-cog itself.
     added: 2026-03

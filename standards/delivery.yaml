@@ -163,7 +163,13 @@ standards:
     description: >
       All commit messages follow: type: description.
       Types: feat, fix, docs, refactor, chore, test, ci.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Fetch the last 20 commit messages from the repo's git log. Check each
+      message against the conventional commits pattern: ^(feat|fix|docs|
+      refactor|chore|test|ci|perf|build)(\(.+\))?: .+. Flag commits that
+      do not match. Exempt merge commits and semantic-release chore commits
+      (chore(release):).
     added: 2026-03
 
   - id: VER-002
@@ -175,7 +181,12 @@ standards:
       Use explicit BREAKING CHANGE in commit body for major version bumps.
       The feat!: shorthand is unreliable. Correct pattern using two -m flags:
         git commit -m 'feat: description' -m 'BREAKING CHANGE: explanation'
-    checkable: false
+    checkable: true
+    check_notes: >
+      Scan CHANGELOG.md for major version entries (lines matching ## [X.0.0]).
+      For each major version entry, check the corresponding git tag commit
+      message for a BREAKING CHANGE footer. Flag any major version bump where
+      the triggering commit lacks a BREAKING CHANGE footer.
     added: 2026-03
 
   - id: VER-003
@@ -201,7 +212,14 @@ standards:
     description: >
       Never manually edit version in pyproject.toml or package.json. Never manually
       edit CHANGELOG.md. Both are owned by semantic-release.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Check CHANGELOG.md for lines that do not follow the semantic-release
+      output format (## [X.Y.Z](...) (YYYY-MM-DD) headers, ### Features /
+      ### Bug Fixes sections). Hand-written entries have prose paragraphs
+      or ## X.Y.Z — date formats. Flag if any section deviates from the
+      machine-generated format. Also check pyproject.toml version — if it
+      does not match the latest CHANGELOG.md version, flag as manually edited.
     added: 2026-03
 
   - id: VER-005
@@ -310,7 +328,15 @@ standards:
       Never use ERROR for expected failure modes (e.g. file not found
       when that is a valid outcome). Never use INFO for high-frequency
       noise that would obscure meaningful events.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Search all Python source files for logger.debug, logger.info,
+      logger.warning, logger.error calls. Flag logger.error used for
+      file-not-found or similar expected outcomes (look for patterns like
+      'not found', 'no files', 'skipping' adjacent to error calls). Flag
+      logger.info calls inside tight loops or per-item processing that would
+      produce high-frequency noise. Flag logger.debug calls that are present
+      in production code paths without a DEBUG guard.
     added: 2026-03
 
   - id: CD-009

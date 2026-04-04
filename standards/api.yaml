@@ -83,7 +83,14 @@ standards:
     description: >
       Every table includes owner_id (Clerk user ID). Not enforced as FK today
       but present for future multi-tenant use.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Search Python source files for SQLAlchemy model class definitions
+      (subclasses of Base or DeclarativeBase). For each model, check that
+      an owner_id column is declared. Flag any model missing owner_id unless
+      it is explicitly a join table, lookup table, or internal-only table
+      (check for a comment or naming convention indicating this — e.g. _lookup,
+      _config suffix).
     added: 2026-03
 
   - id: API-007

@@ -57,7 +57,14 @@ standards:
     description: >
       All external data (CSV rows, API responses, Drive file metadata) validated
       through Pydantic models before processing. Replaces ad-hoc dict access.
-    checkable: false
+    checkable: true
+    check_notes: >
+      In each Python source file under src/, check for Pydantic model imports
+      (from pydantic import BaseModel). Flag any module that accesses external
+      data (CSV parsing, Drive API responses, HTTP responses) using raw dict
+      access or positional indexing without a corresponding Pydantic model
+      definition in the same repo. Look for patterns like row[0], data['key'],
+      response.json() assigned directly to variables without model validation.
     added: 2026-03
 
   # ─────────────────────────────────────────────
@@ -162,7 +169,13 @@ standards:
       Constants: UPPER_SNAKE_CASE in config module.
       Pydantic models: PascalCase nouns (DjSetRecord, TrackRow).
       Log messages: emoji prefix for lifecycle events (🚀 start ✅ success ❌ failure).
-    checkable: false
+    checkable: true
+    check_notes: >
+      Check the package name in pyproject.toml matches the repo name with
+      hyphens converted to underscores. Check that the src/ directory name
+      matches. Check that all .py filenames under src/ are snake_case.
+      Check that Pydantic model class names in source files are PascalCase.
+      Flag any module file using CamelCase or kebab-case naming.
     added: 2026-03
 
   # ─────────────────────────────────────────────
@@ -177,7 +190,13 @@ standards:
     description: >
       Files that fail processing are renamed FAILED_<original> in the source folder
       for manual retry. Failed files must not be silently deleted or left unmarked.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Search all Python source files for the string 'FAILED_' in rename or
+      move operations (shutil.move, os.rename, Path.rename). If the cog
+      processes files and no FAILED_ rename pattern is found, flag as missing.
+      Confirm FAILED_ prefix is applied in exception handlers, not just happy
+      path code.
     added: 2026-03
 
   - id: PY-013
@@ -188,7 +207,11 @@ standards:
     description: >
       Duplicate files are renamed rather than overwritten or deleted.
       Human review required.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Search all Python source files for the string 'possible_duplicate_' in
+      rename or move operations. If the cog performs deduplication logic and
+      no possible_duplicate_ rename pattern is found, flag as missing.
     added: 2026-03
 
   - id: PY-014
@@ -199,7 +222,12 @@ standards:
     description: >
       Temp files created during processing are always cleaned up in a finally
       block regardless of success or failure.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Search all Python source files for temp file creation patterns (tempfile,
+      NamedTemporaryFile, tmp_ prefixed paths). For each occurrence, confirm
+      cleanup is performed inside a finally block. Flag any temp file creation
+      not covered by a finally or context manager.
     added: 2026-03
 
   # ─────────────────────────────────────────────

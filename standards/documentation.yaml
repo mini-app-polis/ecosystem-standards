@@ -31,7 +31,13 @@ standards:
     description: >
       For processors: what files are expected, where they come from, what is
       produced and where it goes. For APIs: what endpoints exist and what they serve.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Search README.md for sections or keywords describing inputs and outputs.
+      For cogs: look for mentions of source folder, Drive folder, input files,
+      output, produces, writes to, or similar. For APIs: look for endpoint
+      listings or links to OpenAPI docs. Flag if README contains fewer than
+      two of these signals.
     added: 2026-03
 
   - id: DOC-003
@@ -144,7 +150,13 @@ standards:
     description: >
       Pydantic model fields use the description parameter. Models are
       self-documenting — no separate documentation needed for data shapes.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Search all Python source files for Pydantic BaseModel subclasses. For
+      each model field definition, check whether a Field(..., description=...)
+      or Field(description=...) call is present. Flag any model field using
+      plain type annotation without a Field description. Allow exemptions for
+      private fields prefixed with underscore.
     added: 2026-03
 
   - id: DOC-008
@@ -209,7 +221,13 @@ standards:
     description: >
       Public (unauthenticated) endpoints include a note in their description
       confirming they are intentionally public.
-    checkable: false
+    checkable: true
+    check_notes: >
+      For FastAPI services, identify routes with no auth dependency (no
+      Depends(verify_token) or equivalent in the route signature). For each
+      such route, check the OpenAPI description field contains a phrase
+      confirming intent — e.g. "intentionally public", "no auth required",
+      "read-only public". Flag unauthenticated routes with no such note.
     added: 2026-03
 
   # ─────────────────────────────────────────────
