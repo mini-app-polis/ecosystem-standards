@@ -504,6 +504,48 @@ standards:
     checkable: false
     added: 2026-03
 
+  - id: CD-014
+    title: Cloudflare Pages for all static site deployments
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    description: >
+      All Astro static sites deploy to Cloudflare Pages. Not Netlify, not
+      Vercel, not GitHub Pages. Cloudflare Pages provides dev/prod environment
+      split via branch deploy previews, zero-config CDN, and consistent with
+      the broader ecosystem's Cloudflare footprint (Workers, DNS). New static
+      sites are connected to Cloudflare Pages before being considered deployed.
+    checkable: true
+    check_notes: >
+      For Astro site repos, check ci.yml for Cloudflare Pages deploy steps or
+      wrangler references. Check README for Cloudflare Pages deploy instructions
+      or URLs (pages.dev domain). Flag if a different deployment target is
+      referenced (netlify.toml, vercel.json, .github/workflows with gh-pages).
+      If no deployment target is detectable, flag as unverified.
+    added: 2026-04
+
+  - id: CD-015
+    title: Prefect serve() — no work pool
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    description: >
+      Cogs register flows using prefect.serve() running in-process on Railway.
+      The Prefect work pool architecture is not used — it requires an external
+      agent process and adds infrastructure complexity with no benefit at this
+      scale. prefect.serve() runs the flow directly in the cog's Railway
+      process with full access to environment variables and the filesystem.
+      Any cog using flow.deploy() targeting a work pool, or referencing a
+      work pool name in its Prefect configuration, is violating this pattern.
+    checkable: true
+    check_notes: >
+      Search Python source files for flow.deploy() calls or work_pool_name
+      references. Search prefect.yaml if present for work pool configuration.
+      Flag any found. Confirm prefect.serve() is used as the flow registration
+      mechanism in the cog's main entry point. Flag if neither serve() nor
+      deploy() is found — the registration pattern is missing entirely.
+    added: 2026-04
+
   - id: VER-007
     title: Pull before branching
     status: convention
@@ -515,3 +557,26 @@ standards:
       (chore(release): X.Y.Z [skip ci]) that land on main after every release.
     checkable: false
     added: 2026-03
+
+  - id: VER-008
+    title: .releaserc.json assets must include all version-managed files
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    description: >
+      The assets array in the @semantic-release/git plugin must include every
+      file that semantic-release modifies during a release. At minimum:
+      CHANGELOG.md plus whichever version file the exec plugin updates —
+      index.yaml for ecosystem-standards, pyproject.toml for Python services,
+      package.json for TypeScript services. If a file is bumped by the exec
+      prepareCmd but not listed in assets, semantic-release commits back to
+      main without it, creating a version drift that is invisible until the
+      next clone.
+    checkable: true
+    check_notes: >
+      Parse .releaserc.json. Find the @semantic-release/exec plugin and extract
+      the prepareCmd. Identify which files the prepareCmd writes to (pyproject.toml,
+      index.yaml, package.json, etc). Find the @semantic-release/git plugin and
+      extract its assets array. Flag any file written by prepareCmd that is not
+      present in assets. Also flag if CHANGELOG.md is absent from assets.
+    added: 2026-04

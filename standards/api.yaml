@@ -141,6 +141,69 @@ standards:
       specific data endpoint with no auth).
     added: 2026-03
 
+  - id: API-009
+    title: CORS configured via env var — never hardcoded
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    description: >
+      All API services configure CORS origins via a CORS_ORIGINS environment
+      variable. Never hardcode allowed origins in source code. The env var
+      holds a comma-separated list of allowed origins. Applies to both FastAPI
+      (Python) and Hono (TypeScript) services. CORS_ORIGINS must be present
+      in .env.example with a documented default.
+    checkable: true
+    check_notes: >
+      Search source files for CORS configuration — CORSMiddleware in FastAPI,
+      cors() middleware in Hono. Check that the allowed origins value reads
+      from an environment variable (os.getenv, process.env) rather than a
+      hardcoded string or list. Check .env.example for CORS_ORIGINS entry.
+      Flag if origins are hardcoded or if CORS_ORIGINS is absent from
+      .env.example.
+    added: 2026-04
+
+  - id: API-010
+    title: /health endpoint on all API services
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    description: >
+      All Railway-hosted API services expose a GET /health endpoint returning
+      {"status": "ok"} with HTTP 200. No authentication required. Used by
+      Railway for health checks and as the liveness layer of the three-layer
+      observability stack (CD-010). The endpoint must respond even if
+      downstream dependencies (database, external APIs) are unavailable —
+      it signals process liveness only, not dependency health.
+    checkable: true
+    check_notes: >
+      Search route definitions for a /health path. Confirm it is a GET route
+      with no auth dependency. Check the response returns a 200 status with
+      a body containing "status". Flag if no /health route is found. Flag if
+      /health requires authentication. Flag if /health performs database
+      queries or external calls — it should be a static response only.
+    added: 2026-04
+
+  - id: API-011
+    title: Database migrations run via CI — never manually
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    description: >
+      Alembic (Python) and Drizzle Kit (TypeScript) migrations are applied
+      as a CI/CD step before the new service version is live. Never run
+      migrations manually against a Railway database. Manual migration against
+      production bypasses the audit trail, risks applying the wrong version,
+      and cannot be rolled back cleanly. The migration step in CI runs after
+      tests pass and before the Railway deploy completes.
+    checkable: true
+    check_notes: >
+      For Python services: check ci.yml for an alembic upgrade head step or
+      equivalent. For TypeScript services: check for drizzle-kit push or
+      migrate step in ci.yml. Flag if no migration step is found in CI for
+      a repo that has an alembic/ directory or drizzle.config.ts. Also flag
+      if README documents a manual migration process as the primary approach.
+    added: 2026-04
+
   # ─────────────────────────────────────────────
   # AUTH (from code review audit)
   # ─────────────────────────────────────────────

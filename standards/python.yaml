@@ -230,6 +230,28 @@ standards:
       not covered by a finally or context manager.
     added: 2026-03
 
+  - id: PY-015
+    title: SQLAlchemy async pattern required in FastAPI services
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    description: >
+      FastAPI services use SQLAlchemy's async engine and session — AsyncEngine,
+      async_sessionmaker, AsyncSession, and await session.execute(). Sync
+      SQLAlchemy sessions (Session, sessionmaker) must not be used in an async
+      FastAPI context. Sync sessions block the event loop and cause connection
+      pool exhaustion under load. The asyncpg driver is required alongside
+      SQLAlchemy async.
+    checkable: true
+    check_notes: >
+      Search Python source files for SQLAlchemy imports. Flag any import of
+      Session or sessionmaker from sqlalchemy.orm without the Async prefix.
+      Flag any create_engine() call without create_async_engine(). Check
+      pyproject.toml dependencies for asyncpg — flag if sqlalchemy is present
+      but asyncpg is absent. Flag any session usage without await on execute,
+      commit, or refresh calls.
+    added: 2026-04
+
   # ─────────────────────────────────────────────
   # CONFIGURATION (from code review audit)
   # ─────────────────────────────────────────────

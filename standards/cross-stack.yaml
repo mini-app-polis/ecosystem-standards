@@ -52,3 +52,48 @@ standards:
       Defined in kaiano-ts-utils for TypeScript. Enforced by response_model in FastAPI.
     checkable: false
     added: 2026-03
+
+  - id: XSTACK-003
+    title: pnpm for all TypeScript projects
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    description: >
+      All TypeScript projects — monorepos and standalone services — use pnpm
+      as the package manager. Not npm, not yarn. pnpm-lock.yaml is the
+      lockfile. package-lock.json and yarn.lock must not be present. This is
+      the TypeScript equivalent of PY-001 (uv for Python). pnpm workspaces
+      are used for monorepo package management (deejaytools-com).
+    checkable: true
+    check_notes: >
+      Check for pnpm-lock.yaml in the repo root. Flag if package-lock.json
+      or yarn.lock is present instead. Check ci.yml for pnpm setup steps —
+      look for uses of pnpm/action-setup or corepack enable. Flag if npm
+      install or yarn install appears in CI steps. For monorepos, check
+      pnpm-workspace.yaml exists.
+    added: 2026-04
+
+  - id: XSTACK-004
+    title: Env var naming conventions by runtime
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    description: >
+      Environment variable naming follows runtime-specific prefix conventions:
+      PUBLIC_ prefix for Astro client-exposed variables (e.g. PUBLIC_API_URL).
+      VITE_ prefix for Vite/React client-exposed variables (e.g. VITE_API_URL).
+      No prefix for Railway server-side variables accessible only at runtime.
+      Mixing these leaks server secrets into client bundles or causes builds
+      to fail silently. Each repo's .env.example must follow this convention
+      for all declared variables.
+    checkable: true
+    check_notes: >
+      For Astro repos: search source files for import.meta.env references.
+      Flag any that do not use the PUBLIC_ prefix for variables passed to
+      client-side scripts. For Vite/React repos: search for import.meta.env
+      references and flag any client-side usage without the VITE_ prefix.
+      Check .env.example — flag any variable that appears to be client-exposed
+      (API URL, public keys) without the correct prefix for its runtime.
+      Flag any VITE_ variable in an Astro repo or PUBLIC_ variable in a
+      Vite repo.
+    added: 2026-04
