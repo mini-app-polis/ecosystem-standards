@@ -216,6 +216,15 @@ All cogs must include:
 - Sentry init at entry point before any application logic
 - Healthchecks.io ping on every work cycle
 
+For pipeline cogs, wrap external API calls in `@task` with retries per PIPE-007. Retry delays must use the `PYTEST_CURRENT_TEST` guard (PIPE-010):
+
+```python
+@task(
+    retries=2,
+    retry_delay_seconds=0 if os.getenv("PYTEST_CURRENT_TEST") else 30,
+)
+```
+
 ---
 
 ## Step 7 — Docs

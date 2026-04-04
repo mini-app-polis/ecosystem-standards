@@ -189,3 +189,30 @@ standards:
       POST to /v1/evaluations. Flag if no evaluation task is found as the
       last substantive task in the flow. Exempt evaluator-cog itself.
     added: 2026-03
+
+  - id: PIPE-010
+    title: Retry delay disabled in test context
+    status: convention
+    dimension: pipeline_consistency
+    severity: WARN
+    applies_to: [new_cog]
+    description: >
+      Prefect @task decorators with retry_delay_seconds= must zero out
+      the delay when running under pytest. Use os.getenv("PYTEST_CURRENT_TEST")
+      as the guard — pytest sets this automatically on every test run.
+      Retries still happen; only the wait between retries is zeroed out.
+      This prevents retry cooldowns from inflating test suite duration.
+      Correct pattern:
+        @task(
+            retries=2,
+            retry_delay_seconds=0 if os.getenv("PYTEST_CURRENT_TEST") else 30,
+        )
+      Never monkeypatch retry settings in tests — fix the decorator.
+    checkable: true
+    check_notes: >
+      Search src/**/*.py for @task decorators containing retry_delay_seconds=
+      with a hardcoded non-zero numeric value. Flag any that do not guard
+      the value with os.getenv("PYTEST_CURRENT_TEST"). Pass if the value
+      is already zero, sourced from a settings field, or uses the
+      PYTEST_CURRENT_TEST conditional pattern.
+    added: 2026-04

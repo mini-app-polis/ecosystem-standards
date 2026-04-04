@@ -160,6 +160,34 @@ standards:
     origin: "kaianolevine-api has no mypy CI step. common-python-utils does. Standard aligns them."
     added: 2026-03
 
+  - id: TEST-013
+    title: Operational delays sourced from config, not hardcoded
+    status: convention
+    dimension: testing_coverage
+    severity: INFO
+    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_react_app]
+    description: >
+      Deliberate delays and waits in production code — retry intervals,
+      poll sleeps, request timeouts — should be sourced from Settings or
+      environment variables rather than hardcoded. This allows them to be
+      set to zero or near-zero in test environments without modifying
+      source code, keeping test runs fast without changing behavior.
+      This is a quality-of-life convention, not a blocking requirement.
+      Python: source from Settings or os.getenv(), default to production value.
+      TypeScript: source from process.env, default to production value.
+    checkable: true
+    check_notes: >
+      Python: search src/**/*.py for hardcoded numeric arguments to
+      time.sleep(), retry_delay_seconds=, timeout=, and backoff/tenacity
+      wait parameters. Flag any non-zero literal value not read from a
+      settings field or os.getenv().
+      TypeScript: search src/**/*.ts for hardcoded numeric arguments to
+      setTimeout(), setInterval(), and retry/timeout parameters. Flag
+      any non-zero literal not sourced from process.env.
+      Remediation: move the value to Settings/env var with a sensible
+      production default. Tests override via environment.
+    added: 2026-04
+
   # ─────────────────────────────────────────────
   # FASTAPI TESTING
   # ─────────────────────────────────────────────

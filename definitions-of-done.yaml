@@ -36,6 +36,8 @@ definitions_of_done:
         handle validation internally (e.g. Drive API via DriveFacade)
       - "If cog runs a pipeline: main entry point wrapped in @flow decorator
         and connected to Prefect Cloud"
+      - "@task decorators with retry_delay_seconds= use PYTEST_CURRENT_TEST
+        guard to zero out delay in test context"
       - "If cog is a trigger service (e.g. watcher-cog): connects to Prefect
         Cloud via API to create flow runs — no @flow decorator required"
       - "Sentry integration configured — sentry_sdk.init() at entry point, SENTRY_DSN in .env.example"
