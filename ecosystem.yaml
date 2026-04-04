@@ -67,19 +67,19 @@ services:
 
 
   - id: notes-ingest-cog
-      type: worker
-      status: active
-      language: python
-      cog_subtype: pipeline
-      host: railway
-      description: >
-        WCS lesson transcript ingestion pipeline. Triggered by watcher-cog when
-        new transcript files land in the configured Google Drive input folder.
-        Reads transcripts, calls LLM to produce structured notes JSON, stores
-        raw transcripts and notes in Postgres via api-kaianolevine-com, and
-        archives processed files. Outputs to wcs_transcripts and wcs_notes
-        tables. Consumed by wcs.kaianolevine.com.
-      added: 2026-04
+    type: worker
+    status: active
+    language: python
+    cog_subtype: pipeline
+    host: railway
+    description: >
+      WCS lesson transcript ingestion pipeline. Triggered by watcher-cog when
+      new transcript files land in the configured Google Drive input folder.
+      Reads transcripts, calls LLM to produce structured notes JSON, stores
+      raw transcripts and notes in Postgres via api-kaianolevine-com, and
+      archives processed files. Outputs to wcs_transcripts and wcs_notes
+      tables. Consumed by wcs.kaianolevine.com.
+    added: 2026-04
 
   # ── API services ──────────────────────────────────────────────
 
