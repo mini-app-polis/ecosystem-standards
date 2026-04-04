@@ -1,3 +1,23 @@
+# [2.0.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.9.1...v2.0.0) (2026-04-04)
+
+
+* feat!: structured check_exceptions, dod_type mapping, applies_to on all rules ([f1e3ec5](https://github.com/mini-app-polis/ecosystem-standards/commit/f1e3ec5fb74c2342d45660717a615225e35b42b7))
+
+
+### Features
+
+* add 9 new rules — CORS, health endpoint, migrations, async SQLAlchemy, pnpm, env var naming, Cloudflare Pages, Prefect serve(), releaserc assets ([438e47a](https://github.com/mini-app-polis/ecosystem-standards/commit/438e47af7ab1444629fbee1b28e3fe5127688310))
+
+
+### BREAKING CHANGES
+
+* check_exceptions migrated from flat string list to
+{rule, reason} objects. ecosystem.yaml adds dod_type to all active
+services. All standards rules now have applies_to field. Evaluator-cog
+must be updated to handle new schema before conformance checks resume.
+
+Made-with: Cursor
+
 ## [1.9.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.9.0...v1.9.1) (2026-04-04)
 
 
