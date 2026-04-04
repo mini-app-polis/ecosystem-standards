@@ -17,6 +17,7 @@ standards:
     status: requirement
     dimension: pipeline_consistency
     severity: WARN
+    applies_to: [new_cog, new_fastapi_service]
     description: >
       Evaluation results are written to the database alongside pipeline outputs.
       They are reviewable, queryable, and feed the portfolio surface. Results
@@ -29,6 +30,7 @@ standards:
     status: requirement
     dimension: standards_currency
     severity: ERROR
+    applies_to: [new_cog, new_fastapi_service]
     description: >
       Every evaluation call includes a reference to the current version of the
       standards document being evaluated against. Without the rubric, evaluation
@@ -44,6 +46,7 @@ standards:
     status: requirement
     dimension: pipeline_consistency
     severity: WARN
+    applies_to: [new_cog, new_fastapi_service]
     description: >
       Findings reference a specific standard by ID, describe what was observed,
       and suggest a concrete remediation. Vague findings are not acceptable.
@@ -55,6 +58,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: INFO
+    applies_to: [new_cog, new_fastapi_service]
     description: >
       Evaluation dimension: does the repo/workflow follow the patterns in the
       standards? Covers src layout, naming conventions, error handling, tooling choices.
@@ -66,6 +70,7 @@ standards:
     status: requirement
     dimension: pipeline_consistency
     severity: INFO
+    applies_to: [new_cog, new_fastapi_service]
     description: >
       Evaluation dimension: did this run behave the same way as previous runs?
       Covers unexpected timing changes, new error types, missing steps.
@@ -77,6 +82,7 @@ standards:
     status: requirement
     dimension: standards_currency
     severity: INFO
+    applies_to: [new_cog, new_fastapi_service]
     description: >
       Evaluation dimension: has this repo been evaluated against the current version
       of the standards document? Is it behind? Flag if the last evaluation used a
@@ -92,6 +98,7 @@ standards:
     status: gap
     dimension: structural_conformance
     severity: INFO
+    applies_to: [new_cog, new_fastapi_service]
     description: >
       The conformance flow in evaluator-cog implements ~12 deterministic
       checks covering file presence, pyproject.toml, CI YAML, AST scanning,

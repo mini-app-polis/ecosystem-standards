@@ -16,6 +16,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
+    applies_to: [new_frontend_site]
     description: >
       All portfolio, technical, and community sites use Astro. Static-first,
       component islands for interactivity. If the primary product is content
@@ -35,6 +36,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
+    applies_to: [new_react_app]
     description: >
       Standard stack for all React web apps. Vite for bundling, React 19,
       TypeScript throughout. No exceptions.
@@ -53,6 +55,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
+    applies_to: [new_react_app]
     description: >
       Tailwind is the styling primitive for all React apps and Astro sites.
       No CSS modules, no styled-components, no other CSS framework.
@@ -72,6 +75,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
+    applies_to: [new_react_app]
     description: >
       shadcn/ui is the component library standard. Components are copied into
       src/components/ui/ — not installed as a dependency. Built on Radix UI
@@ -92,6 +96,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
+    applies_to: [new_react_app]
     description: >
       All forms use React Hook Form. All validation schemas use Zod. These are
       assumed by shadcn/ui form components and are the ecosystem standard.
@@ -115,6 +120,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
+    applies_to: [new_frontend_site, new_react_app]
     description: >
       Build succeeds with empty or unavailable API data. Site does not break if
       API is down.
@@ -133,6 +139,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
+    applies_to: [new_frontend_site, new_react_app]
     description: >
       No hardcoded API URLs. PUBLIC_API_URL (Astro) or VITE_API_URL (React)
       env var used throughout.
@@ -147,6 +154,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
+    applies_to: [new_frontend_site]
     description: >
       Astro sites pin their starter version. Upstream preserved in-repo for reference.
       Do not blindly upgrade starter versions — pin and document the version in use.
@@ -158,6 +166,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
+    applies_to: [new_frontend_site]
     description: >
       Infrequently-changing data (collections, summaries) fetched at build time via
       Astro data files. Do not make runtime API calls for content that could be
@@ -170,6 +179,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: INFO
+    applies_to: [new_frontend_site]
     description: >
       Live API queries reserved for search, filtering, and interactive demo surfaces.
       Implemented via Astro component islands. Document which endpoints are called

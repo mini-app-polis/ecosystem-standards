@@ -36,6 +36,24 @@ statuses:
   idea: "Under consideration. Not yet validated by a real issue. Not enforced."
   gap: "Known deficiency. Tracked for remediation."
 
+schema:
+  rule_fields:
+    applies_to: >
+      List of dod_type values this rule applies to. The conformance
+      checker skips rules where the service's dod_type is not in this
+      list. Use [all] to apply to every service type.
+  service_fields:
+    dod_type: >
+      The definitions-of-done checklist type that applies to this
+      service. Must match a key in definitions-of-done.yaml. Null for
+      libraries and standards repos.
+    check_exceptions:
+      format: "list of {rule: RULE-ID, reason: string} objects"
+      purpose: >
+        Per-service rule exceptions with machine-readable rule ID and
+        human-readable reason. The conformance checker skips excepted
+        rules and surfaces the reason in findings output.
+
 # Standards files — one per domain.
 # Agents may fetch all files or only the domains relevant to the artifact being evaluated.
 files:

@@ -13,6 +13,7 @@ standards:
     status: requirement
     dimension: documentation_coverage
     severity: ERROR
+    applies_to: [all]
     description: >
       Every repo has a README. It describes: purpose (one paragraph), inputs,
       outputs, environment variables, how to run locally, how to run tests,
@@ -28,6 +29,7 @@ standards:
     status: requirement
     dimension: documentation_coverage
     severity: WARN
+    applies_to: [all]
     description: >
       For processors: what files are expected, where they come from, what is
       produced and where it goes. For APIs: what endpoints exist and what they serve.
@@ -45,6 +47,7 @@ standards:
     status: requirement
     dimension: documentation_coverage
     severity: WARN
+    applies_to: [all]
     description: >
       Tracks meaningful changes per version. Not every commit — only changes that
       affect behavior, interface, or configuration. Managed by semantic-release.
@@ -59,6 +62,7 @@ standards:
     status: requirement
     dimension: documentation_coverage
     severity: WARN
+    applies_to: [all]
     description: >
       Every environment variable used by the service is documented in .env.example
       with a description and example value. Kept current — not a one-time artifact.
@@ -73,6 +77,7 @@ standards:
     status: requirement
     dimension: documentation_coverage
     severity: WARN
+    applies_to: [all]
     description: >
       When a significant architectural decision is made, the rationale is written
       down — in docs/DESIGN.md, a CHANGELOG entry, or a README note. Not just what
@@ -85,6 +90,7 @@ standards:
     status: requirement
     dimension: documentation_coverage
     severity: WARN
+    applies_to: [new_cog, new_fastapi_service, new_hono_service]
     description: >
       Every repo's README includes a "Running locally" section that covers
       five conceptual elements, expressed in the idioms of the repo's stack.
@@ -133,6 +139,7 @@ standards:
     status: requirement
     dimension: documentation_coverage
     severity: WARN
+    applies_to: [all]
     description: >
       All public functions and classes have docstrings. One sentence minimum
       describing what the function does, not how.
@@ -147,6 +154,7 @@ standards:
     status: requirement
     dimension: documentation_coverage
     severity: WARN
+    applies_to: [new_cog, new_fastapi_service]
     description: >
       Pydantic model fields use the description parameter. Models are
       self-documenting — no separate documentation needed for data shapes.
@@ -164,6 +172,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
+    applies_to: [all]
     description: >
       Commented-out code is removed, not left in place. Version control is the
       history — the codebase is the present.
@@ -178,6 +187,7 @@ standards:
     status: requirement
     dimension: documentation_coverage
     severity: WARN
+    applies_to: [all]
     description: >
       If a Python library's install name (pyproject.toml [project] name) differs
       from its import namespace (src/ directory name), both names and their
@@ -203,6 +213,7 @@ standards:
     status: requirement
     dimension: documentation_coverage
     severity: ERROR
+    applies_to: [new_fastapi_service, new_hono_service]
     description: >
       FastAPI's /docs is a deliverable, not a side effect. Every endpoint must
       be complete and accurate before the service is considered done. All endpoints
@@ -218,6 +229,7 @@ standards:
     status: requirement
     dimension: documentation_coverage
     severity: WARN
+    applies_to: [all]
     description: >
       Public (unauthenticated) endpoints include a note in their description
       confirming they are intentionally public.
@@ -239,6 +251,7 @@ standards:
     status: requirement
     dimension: standards_currency
     severity: ERROR
+    applies_to: [all]
     description: >
       Every update to the standards repo increments the version in index.yaml.
       The AI evaluator always references a specific version. Evaluations without

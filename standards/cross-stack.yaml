@@ -28,6 +28,7 @@ standards:
     status: requirement
     dimension: cross_repo_coherence
     severity: ERROR
+    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
     description: >
       Python services declare common-python-utils as a dependency.
       TypeScript services declare kaiano-ts-utils as a dependency.
@@ -45,6 +46,7 @@ standards:
     status: requirement
     dimension: cross_repo_coherence
     severity: ERROR
+    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
     description: >
       API response shapes are identical across Python and TypeScript services:
         success: { data: ..., meta: { count, version } }
@@ -58,6 +60,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
+    applies_to: [new_hono_service, new_react_app, new_frontend_site]
     description: >
       All TypeScript projects — monorepos and standalone services — use pnpm
       as the package manager. Not npm, not yarn. pnpm-lock.yaml is the
@@ -78,6 +81,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
+    applies_to: [new_frontend_site, new_react_app, new_hono_service]
     description: >
       Environment variable naming follows runtime-specific prefix conventions:
       PUBLIC_ prefix for Astro client-exposed variables (e.g. PUBLIC_API_URL).

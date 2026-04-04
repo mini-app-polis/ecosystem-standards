@@ -21,6 +21,7 @@ services:
   - id: watcher-cog
     type: worker
     status: active
+    dod_type: new_cog
     language: python
     cog_subtype: trigger
     host: railway
@@ -28,15 +29,19 @@ services:
       Config-driven Google Drive folder watcher. Polls Drive API on a
       1-minute interval, fires Prefect flow runs when new files are detected.
     check_exceptions:
-      - TEST-001  # trigger cog — no data normalization
-      - TEST-002  # trigger cog — no deduplication
-      - TEST-004  # trigger cog — no data output shape
+      - rule: TEST-001
+        reason: trigger cog — no data normalization step
+      - rule: TEST-002
+        reason: trigger cog — no deduplication step
+      - rule: TEST-004
+        reason: trigger cog — no data output shape to verify
     replaces: google-app-script-trigger
     added: 2026-03
 
   - id: deejay-cog
     type: worker
     status: active
+    dod_type: new_cog
     language: python
     cog_subtype: pipeline
     host: railway
@@ -49,6 +54,7 @@ services:
   - id: evaluator-cog
     type: worker
     status: active
+    dod_type: new_cog
     language: python
     cog_subtype: pipeline
     host: railway
@@ -60,15 +66,19 @@ services:
       pipeline_evaluations table via api-kaianolevine-com with source field
       distinguishing evaluation type.
     check_exceptions:
-      - TEST-001  # evaluation cog — no normalization of external data
-      - TEST-002  # evaluation cog — no deduplication of external data
-      - TEST-004  # evaluation cog — output shape tested via LLM parsing tests
+      - rule: TEST-001
+        reason: evaluation cog — no normalization of external data
+      - rule: TEST-002
+        reason: evaluation cog — no deduplication of external data
+      - rule: TEST-004
+        reason: evaluation cog — output shape tested via LLM parsing tests
     added: 2026-03
 
 
   - id: notes-ingest-cog
     type: worker
     status: active
+    dod_type: new_cog
     language: python
     cog_subtype: pipeline
     host: railway
@@ -80,9 +90,12 @@ services:
       archives processed files. Outputs to wcs_transcripts and wcs_notes
       tables. Consumed by wcs.kaianolevine.com.
     check_exceptions:
-      - TEST-001  # pipeline cog — no normalization of raw transcript data
-      - TEST-002  # pipeline cog — no deduplication of transcript data
-      - TEST-004  # pipeline cog — output shape tested via LLM parsing tests
+      - rule: TEST-001
+        reason: pipeline cog — no normalization of raw transcript data
+      - rule: TEST-002
+        reason: pipeline cog — no deduplication of transcript data
+      - rule: TEST-004
+        reason: pipeline cog — output shape tested via LLM parsing tests
     added: 2026-04
 
   # ── API services ──────────────────────────────────────────────
@@ -90,6 +103,7 @@ services:
   - id: api-kaianolevine-com
     type: api
     status: active
+    dod_type: new_fastapi_service
     language: python
     framework: fastapi
     host: railway
@@ -105,28 +119,34 @@ services:
   - id: common-python-utils
     type: library
     status: active
+    dod_type: null
     language: python
     description: >
       Shared Python utilities. Google API client (Drive, Sheets), LLM client
       (Anthropic, OpenAI), structured logging, API client, metadata helpers.
       All Python processors and cogs declare this as a dependency.
     check_exceptions:
-      - PY-006  # this repo IS common-python-utils — cannot depend on itself
-      - CD-002  # shared library, no service entry point for Sentry initialisation
-      - CD-010  # shared library, three-layer observability does not apply
-      - TEST-001  # library, not a pipeline cog — normalization tests not applicable
-      - TEST-002  # library, not a pipeline cog — deduplication tests not applicable
-      - TEST-004  # library, not a pipeline cog — output shape tests not applicable
+      - rule: PY-006
+        reason: this repo IS common-python-utils — cannot depend on itself
+      - rule: CD-002
+        reason: shared library — no service entry point for Sentry initialisation
+      - rule: CD-010
+        reason: shared library — three-layer observability does not apply
+      - rule: TEST-001
+        reason: library — normalization tests not applicable
+      - rule: TEST-002
+        reason: library — deduplication tests not applicable
+      - rule: TEST-004
+        reason: library — output shape tests not applicable
     replaces: kaiano-common-utils
     added: 2026-03
 
   - id: kaiano-ts-utils
     type: library
     status: active
+    dod_type: null
     language: typescript
     repo: deejaytools-com
-    check_exceptions:
-      - DOC-013   # Python-specific README commands — TypeScript library
     description: >
       Shared TypeScript utilities. Clerk auth middleware (verifyClerkToken),
       response envelope helpers (success, successList, error, CommonErrors),
@@ -134,16 +154,14 @@ services:
       Zod schemas. Lives in packages/ts-utils inside the deejaytools-com
       monorepo until stable, then extracts to its own repo.
     check_exceptions:
-      - PY-005  # TypeScript — no src/ layout requirement
-      - PY-006  # TypeScript — no common-python-utils dependency
-      - PY-007  # TypeScript — no pyproject.toml
-      - PY-008  # TypeScript — no pre-commit with ruff hooks
-      - CD-002  # TypeScript — sentry-sdk is Python specific
-      - TEST-005  # TypeScript — no pytest config
-      - TEST-006  # TypeScript — pytest coverage not applicable
-      - TEST-001  # library — normalization tests not applicable
-      - TEST-002  # library — deduplication tests not applicable
-      - TEST-004  # library — output shape tests not applicable
+      - rule: CD-002
+        reason: shared library — no service entry point for Sentry initialisation
+      - rule: TEST-001
+        reason: library — normalization tests not applicable
+      - rule: TEST-002
+        reason: library — deduplication tests not applicable
+      - rule: TEST-004
+        reason: library — output shape tests not applicable
     added: 2026-03
 
   # ── Standards & tooling ──────────────────────────────────────
@@ -151,6 +169,7 @@ services:
   - id: ecosystem-standards
     type: standards
     status: active
+    dod_type: null
     language: yaml
     host: github
     description: >
@@ -165,56 +184,52 @@ services:
   - id: deejaytools-com-api
     type: api
     status: active
+    dod_type: new_hono_service
     language: typescript
     framework: hono
     host: railway
     repo: deejaytools-com
-    check_exceptions:
-      - DOC-013   # Python-specific README commands (uv sync, pytest) — TypeScript service
     description: >
       Hono on Node API for deejaytools.com. Manages WCS routine registration,
       floor trial sessions, check-ins, slot assignment, partners, and songs.
       PostgreSQL on Railway. Clerk auth. Part of the deejaytools-com monorepo.
     check_exceptions:
-      - PY-005  # TypeScript — no src/ layout requirement
-      - PY-006  # TypeScript — no common-python-utils dependency
-      - PY-007  # TypeScript — no pyproject.toml
-      - PY-008  # TypeScript — no pre-commit with ruff hooks
-      - CD-002  # TypeScript — sentry-sdk is Python specific
-      - TEST-005  # TypeScript — no pytest config
-      - TEST-006  # TypeScript — pytest coverage not applicable
-      - TEST-001  # API service — normalization tests not applicable
-      - TEST-002  # API service — deduplication tests not applicable
-      - TEST-004  # API service — output shape tests not applicable
+      - rule: CD-002
+        reason: Hono service — sentry-sdk is Python specific, uses @sentry/node
+      - rule: TEST-001
+        reason: API service — normalization tests not applicable
+      - rule: TEST-002
+        reason: API service — deduplication tests not applicable
+      - rule: TEST-004
+        reason: API service — no pipeline output shape to verify
     added: 2026-03
 
   - id: deejaytools-com-app
     type: site
     status: active
+    dod_type: new_react_app
     language: typescript
     framework: react
     host: cloudflare-pages
     repo: deejaytools-com
-    check_exceptions:
-      - DOC-013   # Python-specific README commands — TypeScript frontend
     description: >
       React web application for deejaytools.com. WCS routine management
       platform — events, sessions, floor trials, check-in queue, partner
       and song management. Vite + React + Tailwind + shadcn/ui.
       Part of the deejaytools-com monorepo.
     check_exceptions:
-      - PY-005  # TypeScript/React — no src/ layout requirement
-      - PY-006  # TypeScript — no common-python-utils dependency
-      - PY-007  # TypeScript — no pyproject.toml
-      - PY-008  # TypeScript — no pre-commit with ruff hooks
-      - CD-002  # TypeScript — sentry-sdk is Python specific
-      - TEST-005  # TypeScript — no pytest config
-      - TEST-006  # TypeScript — pytest coverage not applicable
-      - TEST-001  # frontend app — normalization tests not applicable
-      - TEST-002  # frontend app — deduplication tests not applicable
-      - TEST-003  # frontend app — failure path tests not applicable
-      - TEST-004  # frontend app — output shape tests not applicable
-      - DOC-004  # frontend app — no .env.example convention for Vite apps (uses .env)
+      - rule: CD-002
+        reason: React app — client-side Sentry via @sentry/react, not sentry-sdk
+      - rule: TEST-001
+        reason: React app — normalization tests not applicable
+      - rule: TEST-002
+        reason: React app — deduplication tests not applicable
+      - rule: TEST-003
+        reason: React app — no pipeline failure path to test
+      - rule: TEST-004
+        reason: React app — no pipeline output shape to verify
+      - rule: DOC-004
+        reason: React app — no .env.example, uses Vite env var pattern
     added: 2026-03
 
   # ── Static sites ──────────────────────────────────────────────
@@ -222,43 +237,43 @@ services:
   - id: website-astro-software
     type: site
     status: active
+    dod_type: new_frontend_site
     language: astro
     host: cloudflare-pages
     description: >
       Software portfolio site. Queries api-kaianolevine-com live for DJ sets,
       catalog, stats, and evaluation findings.
     check_exceptions:
-      - PY-005  # Astro — no src/ layout requirement (uses src/ differently)
-      - PY-006  # Astro — no common-python-utils dependency
-      - PY-007  # Astro — no pyproject.toml
-      - PY-008  # Astro — no pre-commit with ruff hooks
-      - CD-002  # Astro — sentry-sdk is Python specific
-      - TEST-005  # Astro — no pytest config
-      - TEST-006  # Astro — pytest coverage not applicable
-      - TEST-001  # static site — normalization tests not applicable
-      - TEST-002  # static site — deduplication tests not applicable
-      - TEST-003  # static site — failure path tests not applicable
-      - TEST-004  # static site — output shape tests not applicable
+      - rule: CD-002
+        reason: static site — no server process for Sentry initialisation
+      - rule: TEST-001
+        reason: static site — normalization tests not applicable
+      - rule: TEST-002
+        reason: static site — deduplication tests not applicable
+      - rule: TEST-003
+        reason: static site — no pipeline failure path to test
+      - rule: TEST-004
+        reason: static site — no pipeline output shape to verify
     added: 2026-03
 
   - id: website-astro-wcs
     type: site
     status: active
+    dod_type: new_frontend_site
     language: astro
     host: cloudflare-pages
     description: West Coast Swing personal site. wcs.kaianolevine.com.
     check_exceptions:
-      - PY-005  # Astro — no src/ layout requirement (uses src/ differently)
-      - PY-006  # Astro — no common-python-utils dependency
-      - PY-007  # Astro — no pyproject.toml
-      - PY-008  # Astro — no pre-commit with ruff hooks
-      - CD-002  # Astro — sentry-sdk is Python specific
-      - TEST-005  # Astro — no pytest config
-      - TEST-006  # Astro — pytest coverage not applicable
-      - TEST-001  # static site — normalization tests not applicable
-      - TEST-002  # static site — deduplication tests not applicable
-      - TEST-003  # static site — failure path tests not applicable
-      - TEST-004  # static site — output shape tests not applicable
+      - rule: CD-002
+        reason: static site — no server process for Sentry initialisation
+      - rule: TEST-001
+        reason: static site — normalization tests not applicable
+      - rule: TEST-002
+        reason: static site — deduplication tests not applicable
+      - rule: TEST-003
+        reason: static site — no pipeline failure path to test
+      - rule: TEST-004
+        reason: static site — no pipeline output shape to verify
     replaces: kaiano-wcs-website
     added: 2026-03
 

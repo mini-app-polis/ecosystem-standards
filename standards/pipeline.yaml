@@ -13,6 +13,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
+    applies_to: [new_cog]
     description: >
       New event-driven pipelines use Prefect. Python-native, built-in observability,
       retry logic, run history. GitHub Actions is for CI/CD only — not pipeline
@@ -29,6 +30,7 @@ standards:
     status: requirement
     dimension: pipeline_consistency
     severity: ERROR
+    applies_to: [new_cog]
     description: >
       Every pipeline step can be safely re-run without side effects. Re-running a
       step produces the same result as running it once.
@@ -49,6 +51,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
+    applies_to: [new_cog]
     description: >
       Processing new inputs and rebuilding the collection are separate pipeline
       steps — not combined. Allows independent retry.
@@ -68,6 +71,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
+    applies_to: [new_cog]
     description: >
       Pipelines writing to shared resources declare a concurrency group.
       cancel-in-progress: false for data pipelines.
@@ -85,6 +89,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
+    applies_to: [new_cog]
     description: >
       Raw inputs are archived after processing, never deleted. Archive subfolder used.
     checkable: true
@@ -104,6 +109,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
+    applies_to: [new_cog]
     description: >
       Flow functions use get_run_logger() for Prefect-visible logs with fallback
       to standard logger for local runs:
@@ -120,6 +126,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
+    applies_to: [new_cog]
     description: >
       Tasks that call external APIs use retries=2, retry_delay_seconds=30. Tasks
       calling Google APIs inherit common-python-utils retry logic.
@@ -138,6 +145,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
+    applies_to: [new_cog]
     description: >
       The canonical Drive-event trigger pattern is:
         File appears in watched Drive folder
@@ -168,6 +176,7 @@ standards:
     status: requirement
     dimension: pipeline_consistency
     severity: WARN
+    applies_to: [new_cog]
     description: >
       All production pipelines include an AI evaluation step as the final task.
       The step assesses run conformance against the current standards version and

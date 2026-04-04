@@ -10,6 +10,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
+    applies_to: [all]
     description: >
       Work in one layer should have a clear path to surfacing in another.
       Cogs feed APIs. APIs feed sites. Shared libraries reduce duplication
@@ -22,6 +23,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
+    applies_to: [all]
     description: >
       Pipelines continue on per-file errors. One bad input does not abort a run.
       Failures are logged, prefixed, and left for retry — never silently dropped.
@@ -36,6 +38,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
+    applies_to: [all]
     description: >
       AI is infrastructure, not a feature. It runs during the pipeline to evaluate
       health and conformance — not to enrich output data for end users.
@@ -47,6 +50,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: INFO
+    applies_to: [all]
     description: >
       New things are built with the current best stack. Existing things migrate
       when the opportunity arises — not on a forced schedule.
@@ -58,6 +62,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
+    applies_to: [all]
     description: >
       If you cannot see what a system is doing in production, you cannot deploy
       it confidently. Logging, error tracking, and run history are requirements,
@@ -74,6 +79,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
+    applies_to: [all]
     description: >
       Code and features are decoupled. Deployments are safe at any time.
       Feature flags control what users see. A flag should be the first
@@ -88,6 +94,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: INFO
+    applies_to: [all]
     description: >
       Portfolio pieces are live, queryable, demonstrable systems — not case
       studies, READMEs, or screenshots.
@@ -99,6 +106,7 @@ standards:
     status: requirement
     dimension: testing_coverage
     severity: ERROR
+    applies_to: [all]
     description: >
       If a bug was found in production, a test is written that would have caught it.
       This is non-negotiable.
@@ -118,6 +126,7 @@ standards:
     status: requirement
     dimension: standards_currency
     severity: WARN
+    applies_to: [all]
     description: >
       This document is updated as the ecosystem evolves. Outdated standards are
       worse than no standards — they create confusion and erode trust in the process.
