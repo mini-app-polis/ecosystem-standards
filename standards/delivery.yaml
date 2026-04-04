@@ -260,7 +260,7 @@ standards:
     checkable: false
     added: 2026-03
 
-- id: CD-007
+  - id: CD-007
     title: Healthchecks.io for trigger cogs
     status: requirement
     dimension: cd_readiness
