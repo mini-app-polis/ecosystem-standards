@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.7.2...v1.8.0) (2026-04-04)
+
+
+### Features
+
+* add check_notes to 20 uncheckable rules — checkable coverage 46% → 65% ([9530f3f](https://github.com/mini-app-polis/ecosystem-standards/commit/9530f3ff889946b976f32f02ad68a40476cf8054))
+
 ## [1.7.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.7.1...v1.7.2) (2026-04-04)
 
 
