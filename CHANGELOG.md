@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.0.0...v2.1.0) (2026-04-04)
+
+
+### Features
+
+* add PIPE-010 and TEST-013 — retry delays and operational waits sourced from config ([b9f86f6](https://github.com/mini-app-polis/ecosystem-standards/commit/b9f86f666d4595a0dfd50b3a82bc1b019b13ff40))
+
 # [2.0.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.9.1...v2.0.0) (2026-04-04)
 
 
