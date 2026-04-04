@@ -1,3 +1,10 @@
+## [1.7.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.7.1...v1.7.2) (2026-04-04)
+
+
+### Bug Fixes
+
+* ecosystem cleanup — check_exceptions, retired services, index changelog, rule ordering ([3aee88b](https://github.com/mini-app-polis/ecosystem-standards/commit/3aee88b2c434f4d50f75056fceed5d2750444169))
+
 ## [1.7.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.7.0...v1.7.1) (2026-04-04)
 
 
