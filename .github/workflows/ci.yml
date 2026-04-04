@@ -55,6 +55,7 @@ jobs:
 
           # Validate each standards file
           all_ids = []
+          all_rules = []
           for f in sorted(glob.glob('standards/*.yaml')):
               try:
                   data = yaml.safe_load(open(f))
@@ -67,6 +68,7 @@ jobs:
                       assert 'severity' in r, f"Rule {r.get('id')} missing severity"
                       assert 'dimension' in r, f"Rule {r.get('id')} missing dimension"
                       all_ids.append(r['id'])
+                      all_rules.append(r)
                   print(f"✅ {f}: {len(rules)} rules")
               except Exception as e:
                   errors.append(f"❌ {f}: {e}")
@@ -75,6 +77,13 @@ jobs:
           dupes = [id for id in all_ids if all_ids.count(id) > 1]
           if dupes:
               errors.append(f"❌ Duplicate rule IDs found: {list(set(dupes))}")
+
+          # Check checkable: true rules have check_notes
+          for r in all_rules:
+              if r.get('checkable') is True and not r.get('check_notes'):
+                  errors.append(
+                      f"❌ {r['id']}: checkable: true but missing check_notes"
+                  )
 
           if errors:
               for e in errors:

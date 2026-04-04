@@ -146,6 +146,20 @@ services:
       - TEST-004  # library — output shape tests not applicable
     added: 2026-03
 
+  # ── Standards & tooling ──────────────────────────────────────
+
+  - id: ecosystem-standards
+    type: standards
+    status: active
+    language: yaml
+    host: github
+    description: >
+      Machine-readable ecosystem standards. Single source of truth for
+      all architectural decisions, patterns, and conventions. Versioned
+      YAML files consumed by evaluator-cog at runtime. Semantic-release
+      owns versioning via index.yaml.
+    added: 2026-03
+
   # ── Web applications ──────────────────────────────────────────
 
   - id: deejaytools-com-api
