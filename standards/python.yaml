@@ -60,36 +60,6 @@ standards:
     checkable: false
     added: 2026-03
 
-  - id: PY-009
-    title: hatchling as build backend
-    status: convention
-    dimension: structural_conformance
-    severity: INFO
-    description: >
-      hatchling is the ecosystem standard build backend for all Python packages.
-      Already used by common-python-utils. Requires no [tool.setuptools] config.
-      New repos must use hatchling from day one. Existing repos migrate as a chore commit.
-    decision: "Decided: hatchling. March 2026. Rationale: already used by shared library, simpler config, modern default."
-    checkable: true
-    check_notes: >
-      Check [build-system] requires in pyproject.toml. Flag if value is not hatchling.
-    added: 2026-03
-
-  - id: PY-010
-    title: ruff line length is 88
-    status: convention
-    dimension: structural_conformance
-    severity: INFO
-    description: >
-      All Python repos set line-length = 88 in [tool.ruff] in pyproject.toml.
-      Matches Python community default and Black. Ensures cross-repo consistency.
-    decision: "Decided: 88. March 2026. Rationale: Python community default, matches Black, lower cognitive load on diff review."
-    checkable: true
-    check_notes: >
-      Parse [tool.ruff] line-length in pyproject.toml. Flag if value is not 88
-      or if field is absent.
-    added: 2026-03
-
   # ─────────────────────────────────────────────
   # PROJECT STRUCTURE
   # ─────────────────────────────────────────────
@@ -144,6 +114,36 @@ standards:
     checkable: true
     check_notes: >
       Check for .pre-commit-config.yaml at repo root. Flag if absent.
+    added: 2026-03
+
+  - id: PY-009
+    title: hatchling as build backend
+    status: convention
+    dimension: structural_conformance
+    severity: INFO
+    description: >
+      hatchling is the ecosystem standard build backend for all Python packages.
+      Already used by common-python-utils. Requires no [tool.setuptools] config.
+      New repos must use hatchling from day one. Existing repos migrate as a chore commit.
+    decision: "Decided: hatchling. March 2026. Rationale: already used by shared library, simpler config, modern default."
+    checkable: true
+    check_notes: >
+      Check [build-system] requires in pyproject.toml. Flag if value is not hatchling.
+    added: 2026-03
+
+  - id: PY-010
+    title: ruff line length is 88
+    status: convention
+    dimension: structural_conformance
+    severity: INFO
+    description: >
+      All Python repos set line-length = 88 in [tool.ruff] in pyproject.toml.
+      Matches Python community default and Black. Ensures cross-repo consistency.
+    decision: "Decided: 88. March 2026. Rationale: Python community default, matches Black, lower cognitive load on diff review."
+    checkable: true
+    check_notes: >
+      Parse [tool.ruff] line-length in pyproject.toml. Flag if value is not 88
+      or if field is absent.
     added: 2026-03
 
   # ─────────────────────────────────────────────

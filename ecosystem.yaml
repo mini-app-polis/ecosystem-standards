@@ -79,6 +79,10 @@ services:
       raw transcripts and notes in Postgres via api-kaianolevine-com, and
       archives processed files. Outputs to wcs_transcripts and wcs_notes
       tables. Consumed by wcs.kaianolevine.com.
+    check_exceptions:
+      - TEST-001  # pipeline cog — no normalization of raw transcript data
+      - TEST-002  # pipeline cog — no deduplication of transcript data
+      - TEST-004  # pipeline cog — output shape tested via LLM parsing tests
     added: 2026-04
 
   # ── API services ──────────────────────────────────────────────
@@ -249,6 +253,8 @@ services:
   - id: google-app-script-trigger
     type: infra
     status: retired
+    language: javascript
+    added: 2026-03
     retired_date: 2026-03
     replaced_by: watcher-cog
     description: >
@@ -259,6 +265,8 @@ services:
   - id: kaiano-common-utils
     type: library
     status: retired
+    language: python
+    added: 2026-03
     retired_date: 2026-03
     replaced_by: common-python-utils
     description: Former shared Python utilities library.
@@ -266,6 +274,8 @@ services:
   - id: deejay-set-processor-dev
     type: worker
     status: retired
+    language: python
+    added: 2026-03
     retired_date: 2026-03
     replaced_by: deejay-cog
     description: Former DJ set CSV processor. Replaced by deejay-cog.
@@ -273,6 +283,8 @@ services:
   - id: deejay-marvel-api
     type: api
     status: retired
+    language: python
+    added: 2026-03
     retired_date: 2026-03
     replaced_by: api-kaianolevine-com
     description: >
@@ -281,6 +293,8 @@ services:
   - id: kaiano-wcs-website
     type: site
     status: retired
+    language: astro
+    added: 2026-03
     retired_date: 2026-03
     replaced_by: website-astro-wcs
     description: Former WCS personal site. Replaced by website-astro-wcs.

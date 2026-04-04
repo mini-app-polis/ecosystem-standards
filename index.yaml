@@ -87,7 +87,6 @@ files:
   - file: definitions-of-done.yaml
     domain: definitions-of-done
     description: Checklists used by AI evaluators for post-PR assessment. One checklist per artifact type — cog, FastAPI service, pipeline, frontend site, React app, Hono service.
-    rule_prefix: DOD
 
   - file: ecosystem.yaml
     domain: ecosystem
@@ -96,61 +95,8 @@ files:
       services, libraries, canonical patterns, and ecosystem terminology.
       Updated on every rename, retirement, new service addition, or
       terminology change.
-    rule_prefix: ECO
 
   - file: standards/cross-stack.yaml
     domain: cross-stack
     description: Standards that apply across both Python and TypeScript stacks. Shared library usage and response shape parity.
     rule_prefix: XSTACK
-
-# Changelog — why this version exists.
-changelog:
-  - version: 1.4.0
-    date: 2026-03
-    notes: >
-      Added EVAL-GAP-001: deterministic check backfill tracked as a priority
-      gap in evaluation.yaml.
-
-  - version: 1.3.0
-    date: 2026-03
-    notes: >
-      Secret management and feature flag standards formalized.
-      CD-001 rewritten: Unleash replaced by api-kaianolevine-com
-      feature_flags table as the canonical flag store. Flag use cases,
-      lifecycle contract, naming convention, and client caching pattern
-      documented. CD-011 added: Doppler as canonical secret store with
-      Railway/GitHub/Cloudflare sync pattern and Prefect carve-out
-      documented. CD-012 added: per-caller internal API key standard
-      with get_internal_headers() utility contract. CD-013 added:
-      feature flag admin panel standard in kaianolevine.com.
-      PRIN-006 updated to reference CD-001.
-
-  - version: 1.2.0
-    date: 2026-03
-    notes: >
-      Orchestration trigger architecture updated. watcher-cog replaces
-      Apps Script → repository_dispatch as canonical Drive trigger pattern
-      (PIPE-008 rewritten). CD-006 updated: GitHub Actions is CI/CD only,
-      not a trigger relay. CD-003 expanded with structured log event shape
-      and four event categories (infra, pipeline, data, api). Added CD-007:
-      Healthchecks.io requirement for always-on worker services.
-      CD-004 updated: actions/checkout and actions/setup-node pinned to v6.
-
-  - version: 1.1.0
-    date: 2026-03
-    notes: >
-      Added definitions-of-done.yaml (migrated from v10 docx Section 13, expanded
-      with Hono service DoD). Added missing rules: TEST-000 (testing pyramid),
-      TEST-GAP-001 (untested processors gap), PIPE-008 (Drive integration pattern),
-      PIPE-009 (AI evaluation as final task), CD-005/CD-006 (Prefect observability),
-      VER-007 (pull before branching), FE-008/FE-009/FE-010 (frontend data patterns),
-      EVAL-004/EVAL-005/EVAL-006 (evaluation dimensions formalized).
-
-  - version: 1.0.0
-    date: 2026-03
-    notes: >
-      Initial formalization. Migrated from ecosystem_standards_v10.docx
-      into machine-readable YAML. Added nine rules from kaianolevine-api and
-      common-python-utils code review audit (AUTH-001, AUTH-002, CFG-001, CFG-002,
-      PKG-002→PY-009, FMT-001→PY-010, CI-001→TEST-012, CI-002→CD-004, PKG-001→DOC-009).
-      Decisions made: build backend = hatchling, ruff line length = 88.
