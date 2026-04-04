@@ -1,3 +1,12 @@
+## [1.7.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.7.0...v1.7.1) (2026-04-04)
+
+
+### Bug Fixes
+
+* cleanup ([b3633a5](https://github.com/mini-app-polis/ecosystem-standards/commit/b3633a5ce4572c079aa0172de5a4bae7107b62e4))
+* cleanup ([c8df968](https://github.com/mini-app-polis/ecosystem-standards/commit/c8df96813319cee46f5ab3d6fd60ca2da145204c))
+* cleanup ([8770b53](https://github.com/mini-app-polis/ecosystem-standards/commit/8770b539ac6a99453b82d8caf39aee657cac3871))
+
 # [1.7.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.6.3...v1.7.0) (2026-04-04)
 
 
