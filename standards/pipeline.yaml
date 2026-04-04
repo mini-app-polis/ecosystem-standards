@@ -32,7 +32,16 @@ standards:
     description: >
       Every pipeline step can be safely re-run without side effects. Re-running a
       step produces the same result as running it once.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Search flow and task source files for database write operations (session.add,
+      session.execute INSERT/UPDATE, API POST/PATCH calls). For each write,
+      check whether it uses an upsert pattern (on_conflict_do_update,
+      merge, or equivalent) rather than a plain insert. Flag plain inserts
+      on tables that are likely to receive duplicate runs. LLM: assess
+      whether the overall flow design would produce duplicate records or
+      side effects if re-run — look for missing deduplication guards,
+      non-idempotent file moves, or stateful counters.
     added: 2026-03
 
   - id: PIPE-003
@@ -43,7 +52,15 @@ standards:
     description: >
       Processing new inputs and rebuilding the collection are separate pipeline
       steps — not combined. Allows independent retry.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Search the main flow file for @task decorated functions. Identify
+      tasks that process individual items versus tasks that build or update
+      a collection/summary. Flag if a single task appears to both process
+      a new item AND rebuild the full collection in the same function body.
+      LLM: assess whether the flow structure separates per-item processing
+      from collection rebuilds — look for rebuild logic (fetching all records,
+      generating summaries, updating indexes) mixed into item-processing tasks.
     added: 2026-03
 
   - id: PIPE-004
@@ -70,7 +87,16 @@ standards:
     severity: ERROR
     description: >
       Raw inputs are archived after processing, never deleted. Archive subfolder used.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Search all Python source files for Drive file operations — look for
+      move, delete, trash, or files().delete() calls on the Drive API.
+      Flag any files().delete() or trash() call on input files. Check for
+      a shutil.move or Drive files().copy() + delete pattern — confirm the
+      move targets an archive subfolder (named archive/, processed/, or
+      similar) rather than deletion. LLM: assess whether the archiving
+      pattern is consistently applied across all input file types handled
+      by the cog.
     added: 2026-03
 
   - id: PIPE-006
@@ -123,7 +149,17 @@ standards:
       entry — no code changes. The previous pattern (Apps Script →
       repository_dispatch → GitHub Actions) is retired. google-app-script-trigger
       is archived.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Search source files for any of the retired trigger patterns:
+      repository_dispatch, workflow_dispatch triggered from application code,
+      google-app-script-trigger references, or direct GitHub API calls to
+      trigger workflows. Flag any found. Check that the cog receives its
+      trigger via Prefect flow run creation (look for PrefectClient or
+      prefect.deployments.run_deployment calls in watcher-cog, not in the
+      cog itself). LLM: assess whether the trigger architecture matches the
+      canonical watcher-cog → Prefect → cog flow pattern described in the
+      rule.
     supersedes: "Apps Script → repository_dispatch → GitHub Actions (retired 2026-03)"
     added: 2026-03
 

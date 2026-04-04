@@ -20,7 +20,14 @@ standards:
       All portfolio, technical, and community sites use Astro. Static-first,
       component islands for interactivity. If the primary product is content
       delivery, use Astro. If it is an app with persistent UI state, use React.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Check package.json for astro in dependencies. Check astro.config.mjs
+      or astro.config.ts exists. Flag if the site type is static/community/
+      portfolio but the framework dependency is React-only (vite + react
+      without astro). LLM: given the repo name and README description, assess
+      whether this is a static site (should use Astro) or a web app with
+      persistent UI state (React is appropriate).
     added: 2026-03
 
   - id: FE-002
@@ -31,7 +38,14 @@ standards:
     description: >
       Standard stack for all React web apps. Vite for bundling, React 19,
       TypeScript throughout. No exceptions.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Check package.json for vite, react, and typescript in dependencies.
+      Check tsconfig.json exists. Flag if package.json has webpack, create-
+      react-app, or next as the bundler. Flag if TypeScript is absent from
+      a React app repo. LLM: assess whether the stack matches the standard
+      — look for any non-standard bundler or UI framework choices and flag
+      with explanation.
     added: 2026-03
 
   - id: FE-003
@@ -42,7 +56,15 @@ standards:
     description: >
       Tailwind is the styling primitive for all React apps and Astro sites.
       No CSS modules, no styled-components, no other CSS framework.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Check package.json for tailwindcss in dependencies. Check for
+      tailwind.config.js or tailwind.config.ts. Search source files for
+      className strings containing Tailwind utility classes. Flag if
+      styled-components, emotion, CSS modules (.module.css imports), or
+      another CSS framework is present alongside or instead of Tailwind.
+      LLM: assess whether Tailwind is the primary styling mechanism or
+      whether another approach is dominant.
     added: 2026-03
 
   - id: FE-004
@@ -54,7 +76,15 @@ standards:
       shadcn/ui is the component library standard. Components are copied into
       src/components/ui/ — not installed as a dependency. Built on Radix UI
       primitives and Tailwind.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Check package.json for @radix-ui dependencies (indirect signal for
+      shadcn). Check for a src/components/ui/ directory containing component
+      files. Flag if a ui/ directory is absent in a React app. Flag if
+      shadcn components appear to be installed as a package dependency rather
+      than copied into src/. LLM: assess whether the component patterns in
+      use match shadcn/ui conventions — look for Button, Dialog, Input
+      components in src/components/ui/.
     added: 2026-03
 
   - id: FE-005
@@ -65,7 +95,15 @@ standards:
     description: >
       All forms use React Hook Form. All validation schemas use Zod. These are
       assumed by shadcn/ui form components and are the ecosystem standard.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Check package.json for react-hook-form and zod in dependencies. Search
+      source files for useForm imports from react-hook-form and z. from zod.
+      Flag if a form element exists in JSX/TSX files without a corresponding
+      useForm hook. Flag if form validation is implemented with custom state
+      (useState for each field) rather than react-hook-form. LLM: assess
+      whether form handling is consistent — look for any forms bypassing
+      the standard pattern.
     added: 2026-03
 
   # ─────────────────────────────────────────────
@@ -80,7 +118,14 @@ standards:
     description: >
       Build succeeds with empty or unavailable API data. Site does not break if
       API is down.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Search Astro data files and page components for API fetch calls. Check
+      whether each fetch is wrapped in a try/catch with a fallback value (empty
+      array, null, default object). Flag any fetch without error handling that
+      would cause a build failure if the API is unavailable. LLM: assess
+      whether the fallback handling is substantive — a caught error that re-
+      throws or logs without returning a safe default does not satisfy this rule.
     added: 2026-03
 
   - id: FE-007

@@ -102,7 +102,15 @@ standards:
     description: >
       If a bug was found in production, a test is written that would have caught it.
       This is non-negotiable.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Fetch recent git commits with a fix: prefix. For each fix commit,
+      check whether a test file was added or modified in the same commit
+      or an immediately following commit. Flag fix commits that touch only
+      source files with no corresponding test file change. LLM: assess
+      whether the test changes in fix commits appear to be regression tests
+      for the specific bug — look for new test functions added (not just
+      modified existing ones) that target the module touched by the fix.
     added: 2026-03
 
   - id: PRIN-009

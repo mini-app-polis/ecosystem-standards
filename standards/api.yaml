@@ -40,7 +40,17 @@ standards:
       Alembic for migrations. TypeScript: Drizzle ORM with postgres.js driver,
       TypeScript-native schema definitions, Drizzle Kit for migrations.
       No raw SQL without ORM.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Python services: check pyproject.toml dependencies for sqlalchemy and
+      asyncpg. Check for alembic.ini or an alembic/ directory for migrations.
+      Search source files for raw cursor.execute() or connection.execute()
+      calls outside of ORM context — flag any found. TypeScript services:
+      check package.json for drizzle-orm and postgres dependencies, and
+      drizzle-kit in devDependencies. Check for a drizzle.config.ts file.
+      Flag if ORM dependency is absent entirely. LLM: assess whether the ORM
+      is used consistently or only partially — look for mixed raw SQL and ORM
+      patterns in the same file.
     added: 2026-03
 
   # ─────────────────────────────────────────────
@@ -100,7 +110,16 @@ standards:
     severity: WARN
     description: >
       Authentication via Clerk across all services. Consistent across the ecosystem.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Python services: search source files for clerk or verify_token imports.
+      Check for a Depends(verify_token) pattern on protected route definitions.
+      TypeScript services: check package.json for @clerk/clerk-sdk-node or
+      equivalent. Search for verifyClerkToken from kaiano-ts-utils on
+      protected routes. Flag if no Clerk dependency is found and the service
+      has non-public endpoints. LLM: assess whether auth is applied
+      consistently — check for routes that appear to handle user data but
+      lack an auth dependency.
     added: 2026-03
 
   - id: API-008
@@ -111,7 +130,15 @@ standards:
     description: >
       Public (unauthenticated) endpoints are explicitly documented and intentional —
       not accidental.
-    checkable: false
+    checkable: true
+    check_notes: >
+      Identify all FastAPI route definitions (Python) or Hono route handlers
+      (TypeScript) that have no auth dependency. Cross-reference with DOC-011:
+      check whether each unauthenticated route has an OpenAPI description
+      confirming intent. LLM: for each unauthed route found, assess whether
+      it is plausibly intentional (e.g. health check, public read endpoint,
+      contact form) or potentially accidental (e.g. write endpoint, user-
+      specific data endpoint with no auth).
     added: 2026-03
 
   # ─────────────────────────────────────────────
