@@ -1,3 +1,15 @@
+# [1.7.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.6.3...v1.7.0) (2026-04-04)
+
+
+### Bug Fixes
+
+* yaml formatting ([a831641](https://github.com/mini-app-polis/ecosystem-standards/commit/a8316410769b14e7a911ae37feac947f489f67a5))
+
+
+### Features
+
+* add notes-ingest-cog to ecosystem inventory and fix: scope CD-007 to trigger cogs only ([c6a809f](https://github.com/mini-app-polis/ecosystem-standards/commit/c6a809f2c283367bebce29baa04182cdf2a62aca))
+
 ## [1.6.3](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.6.2...v1.6.3) (2026-04-03)
 
 
