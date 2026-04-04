@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.9.0...v1.9.1) (2026-04-04)
+
+
+### Bug Fixes
+
+* remove hand-written CHANGELOG section, add repo to ecosystem inventory, enforce checkable/check_notes in CI ([dfff725](https://github.com/mini-app-polis/ecosystem-standards/commit/dfff725104bc7f51b45c1a6d41cb17bc9a6bc41c))
+
 # [1.9.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.8.0...v1.9.0) (2026-04-04)
 
 
@@ -163,4 +170,3 @@
 ### Features
 
 * first workable draft ([974f5d0](https://github.com/mini-app-polis/ecosystem-standards/commit/974f5d0b5e4ce5fd1be4a2979615888e7bc614c1))
-
