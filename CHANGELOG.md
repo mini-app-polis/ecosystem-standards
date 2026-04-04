@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.8.0...v1.9.0) (2026-04-04)
+
+
+### Features
+
+* add check_notes to 14 LLM-assisted rules — checkable coverage 65% → 77% ([f874824](https://github.com/mini-app-polis/ecosystem-standards/commit/f87482485c95d847ab9e564e174175619bd166b7))
+
 # [1.8.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v1.7.2...v1.8.0) (2026-04-04)
 
 
