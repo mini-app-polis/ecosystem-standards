@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.2.0...v2.3.0) (2026-04-05)
+
+
+### Features
+
+* addressing false positives ([86f242d](https://github.com/mini-app-polis/ecosystem-standards/commit/86f242d8371099aa4f347fe2475a99200b2454e2))
+
 # [2.2.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.1.0...v2.2.0) (2026-04-05)
 
 
