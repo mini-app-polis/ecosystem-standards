@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.3.1...v2.4.0) (2026-04-05)
+
+
+### Features
+
+* add monorepo evaluation schema and standards/evaluator drift detection ([3ab2bb9](https://github.com/mini-app-polis/ecosystem-standards/commit/3ab2bb964da1c0e7b6559811a13e3967c30ef1e4))
+
 ## [2.3.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.3.0...v2.3.1) (2026-04-05)
 
 
