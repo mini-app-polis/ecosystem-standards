@@ -257,13 +257,29 @@ standards:
     title: Standards document is versioned
     status: requirement
     dimension: standards_currency
-    severity: ERROR
+    severity: WARN
     applies_to: [all]
     description: >
       Every update to the standards repo increments the version in index.yaml.
       The AI evaluator always references a specific version. Evaluations without
       a standards version reference are invalid.
+
+      Adoption note (added 2026-04): This requirement was formalised in
+      standards v2.4.0. All existing repos are in a grace period — findings
+      for absent standards_version are advisory (WARN) until the next
+      major version of each repo ships with this field present. New repos
+      starting after v2.4.0 must comply from day one.
     checkable: true
     check_notes: >
-      Verify evaluation calls include a standards_version field. Flag if absent.
+      This rule has two distinct check surfaces:
+      (1) The standards repo itself: verify index.yaml has a version field
+          and it is incremented on every release. This is the authoring-side
+          check and should always pass.
+      (2) Evaluation call metadata: verify that evaluation records written
+          to pipeline_evaluations include a standards_version field matching
+          the current index.yaml version. This is a runtime check — look for
+          standards_version in the evaluation payload or submission code.
+          Flag if absent, but apply WARN severity during the grace period
+          (see adoption note in description). Do not flag the standards repo
+          itself for this — it is the source of truth, not a consumer of it.
     added: 2026-03

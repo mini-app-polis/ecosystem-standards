@@ -44,6 +44,14 @@ standards:
       whether the overall flow design would produce duplicate records or
       side effects if re-run — look for missing deduplication guards,
       non-idempotent file moves, or stateful counters.
+
+      Specific pattern to flag: plain session.add() or INSERT INTO calls on
+      tables that could receive duplicate rows on re-run (e.g. ingestion tables,
+      evaluation records, play history). The expected fix is
+      on_conflict_do_update targeting a stable unique key (source file ID,
+      content hash, or composite of run_id + repo). Flag if no such guard is
+      present. This rule should be cited as PIPE-002 in findings — not as a
+      nameless reliability concern.
     added: 2026-03
 
   - id: PIPE-003
@@ -79,9 +87,17 @@ standards:
     check_notes: >
       Search Python source files for @flow decorated functions. For each flow
       that writes to a shared resource (database writes, Drive moves, API
-      POST/PATCH calls), check for a concurrency_limit parameter on the flow
-      or a task_runner with concurrency controls. Flag flows with database
-      writes that have no concurrency_limit declared.
+      POST/PATCH calls), check for EITHER:
+        (a) concurrency_limit=N parameter on the @flow decorator, OR
+        (b) a 'with concurrency(...)' block from prefect.concurrency.sync
+            wrapping the scanning/processing logic (see PIPE-009 for the
+            preferred runtime slot approach).
+      Flag flows with shared-resource writes that have neither.
+      Flag flows that rely only on deployment-level concurrency_limit=1 —
+      this controls scheduling but not runtime execution overlap.
+      Note: PIPE-009 is the preferred implementation for pipeline cogs that
+      scan shared resources. PIPE-004 is the broader requirement that covers
+      all shared-resource writes including non-scanning writes.
     added: 2026-03
 
   - id: PIPE-005
@@ -168,6 +184,11 @@ standards:
       cog itself). LLM: assess whether the trigger architecture matches the
       canonical watcher-cog → Prefect → cog flow pattern described in the
       rule.
+
+      COG SUBTYPE: This rule applies to pipeline cogs (cog_subtype: pipeline)
+      only. Do not evaluate trigger cogs (cog_subtype: trigger) or watcher-cog
+      itself against this rule — they ARE the trigger mechanism, not consumers
+      of it. Skip this check for any cog with cog_subtype: trigger.
     supersedes: "Apps Script → repository_dispatch → GitHub Actions (retired 2026-03)"
     added: 2026-03
 
@@ -188,6 +209,11 @@ standards:
       for imports of the evaluation client from common-python-utils or direct
       POST to /v1/evaluations. Flag if no evaluation task is found as the
       last substantive task in the flow. Exempt evaluator-cog itself.
+
+      COG SUBTYPE: This rule applies to pipeline cogs (cog_subtype: pipeline)
+      only. Do not flag trigger cogs (cog_subtype: trigger) — they fire flow
+      runs but do not run pipelines themselves and have no evaluation step.
+      Skip this check for any cog with cog_subtype: trigger.
     added: 2026-03
 
   - id: PIPE-012

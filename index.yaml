@@ -1,13 +1,13 @@
 # ecosystem-standards / index.yaml
 # Manifest file — agents fetch this first to discover available standards files.
-# Version: 1.2.0 · 2026-04
+# Version: 1.3.0 · 2026-04
 #
 # Fetch pattern:
 #   1. GET index.yaml  → discover files and current version
 #   2. GET standards/<file>.yaml  → fetch relevant domain(s)
 #   3. Pin standards_version in evaluation output for auditability
 
-version: 2.4.2
+version: 2.5.0
 maintainer: mini-app-polis
 
 # Dimensions used across all standards files.

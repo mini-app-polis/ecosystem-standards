@@ -45,15 +45,12 @@ standards:
       No raw SQL without ORM.
     checkable: true
     check_notes: >
-      Python services: check pyproject.toml dependencies for sqlalchemy and
-      asyncpg. Check for alembic.ini or an alembic/ directory for migrations.
-      Search source files for raw cursor.execute() or connection.execute()
-      calls outside of ORM context — flag any found. TypeScript services:
-      check package.json for drizzle-orm and postgres dependencies, and
-      drizzle-kit in devDependencies. Check for a drizzle.config.ts file.
-      Flag if ORM dependency is absent entirely. LLM: assess whether the ORM
-      is used consistently or only partially — look for mixed raw SQL and ORM
-      patterns in the same file.
+      Python services: check pyproject.toml for sqlalchemy dependency and
+      src/ for SQLAlchemy model definitions. Flag if raw SQL strings are
+      used outside of ORM context.
+      TypeScript/Hono services: check package.json for drizzle-orm dependency
+      and src/ for drizzle-kit config (drizzle.config.ts). Flag if neither
+      is present for a service that interacts with PostgreSQL.
     added: 2026-03
 
   # ─────────────────────────────────────────────
@@ -71,8 +68,12 @@ standards:
       in production.
     checkable: true
     check_notes: >
-      Scan FastAPI route decorators and Hono route definitions for path patterns.
-      Flag any route without a /v1/ (or higher) version prefix.
+      Python/FastAPI: check route decorators (@app.get, @router.get, etc.)
+      for /v1/ prefix. Flag unversioned routes (except /health, /docs, /openapi.json).
+      TypeScript/Hono: check route handler registrations (app.get, app.post,
+      router.get, etc.) for /v1/ path prefix. Flag routes without it.
+      Exception: /health, /metrics, and OpenAPI spec endpoints do not require
+      versioning.
     added: 2026-03
 
   - id: API-005
@@ -163,12 +164,12 @@ standards:
       in .env.example with a documented default.
     checkable: true
     check_notes: >
-      Search source files for CORS configuration — CORSMiddleware in FastAPI,
-      cors() middleware in Hono. Check that the allowed origins value reads
-      from an environment variable (os.getenv, process.env) rather than a
-      hardcoded string or list. Check .env.example for CORS_ORIGINS entry.
-      Flag if origins are hardcoded or if CORS_ORIGINS is absent from
-      .env.example.
+      Python/FastAPI: check for CORSMiddleware in app setup and CORS_ORIGINS
+      env var usage — flag hardcoded origin strings.
+      TypeScript/Hono: check for cors() middleware import and usage in app
+      setup, with allowed origins sourced from process.env.CORS_ORIGINS.
+      Flag if CORS_ORIGINS is hardcoded or CORS middleware is absent entirely.
+      Check .env.example for CORS_ORIGINS entry.
     added: 2026-04
 
   - id: API-010
@@ -186,11 +187,11 @@ standards:
       it signals process liveness only, not dependency health.
     checkable: true
     check_notes: >
-      Search route definitions for a /health path. Confirm it is a GET route
-      with no auth dependency. Check the response returns a 200 status with
-      a body containing "status". Flag if no /health route is found. Flag if
-      /health requires authentication. Flag if /health performs database
-      queries or external calls — it should be a static response only.
+      Search route handler files for a GET /health route definition.
+      The route must: return HTTP 200, return a JSON body with at minimum
+      a 'status' field, require no authentication, and perform no database
+      queries or external calls. Flag if absent or if the route performs
+      DB queries (health endpoint must not depend on DB liveness).
     added: 2026-04
 
   - id: API-011
@@ -208,11 +209,13 @@ standards:
       tests pass and before the Railway deploy completes.
     checkable: true
     check_notes: >
-      For Python services: check ci.yml for an alembic upgrade head step or
-      equivalent. For TypeScript services: check for drizzle-kit push or
-      migrate step in ci.yml. Flag if no migration step is found in CI for
-      a repo that has an alembic/ directory or drizzle.config.ts. Also flag
-      if README documents a manual migration process as the primary approach.
+      Python/FastAPI (Alembic): check ci.yml for 'alembic upgrade head' step
+      in the deploy job. Flag if absent or if migration is run manually.
+      TypeScript/Hono (Drizzle): check ci.yml for 'drizzle-kit push' or
+      'drizzle-kit migrate' step. Flag if absent.
+      For monorepo services, check the workspace root ci.yml — the migration
+      step may be at root level rather than per-app. Do not flag if found
+      at the monorepo root CI.
     added: 2026-04
 
   # ─────────────────────────────────────────────
@@ -224,7 +227,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: [new_fastapi_service]
+    applies_to: [new_fastapi_service, new_hono_service]
     description: >
       Any FastAPI service with write endpoints (POST, PATCH, DELETE) that depend on
       an unverified header (X-Owner-Id or equivalent) must either be provably isolated
@@ -248,7 +251,7 @@ standards:
     status: requirement
     dimension: cross_repo_coherence
     severity: ERROR
-    applies_to: [new_fastapi_service]
+    applies_to: [new_fastapi_service, new_hono_service]
     description: >
       When kaianolevine-api's auth scheme changes, CommonPythonApiClient._headers() in
       common-python-utils must change in the same release. A mismatch causes all

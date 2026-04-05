@@ -187,6 +187,14 @@ standards:
       matches. Check that all .py filenames under src/ are snake_case.
       Check that Pydantic model class names in source files are PascalCase.
       Flag any module file using CamelCase or kebab-case naming.
+
+      SPLIT IDENTITY CARVE-OUT: Some repos intentionally use different
+      distribution names and import package names (e.g. the package is
+      published as common-python-utils but imported as mini_app_polis).
+      This is a legitimate pattern when DOC-009 is satisfied — both names
+      are documented in __init__.py and README.md. Do not flag PY-011 for
+      a name mismatch if DOC-009 passes for that repo. Only flag if the
+      mismatch is undocumented.
     added: 2026-03
 
   # ─────────────────────────────────────────────

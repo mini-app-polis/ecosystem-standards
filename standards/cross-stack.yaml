@@ -51,6 +51,11 @@ standards:
       per-app absence. If the dep is declared in the monorepo's `workspace_deps`
       list and present at the root, XSTACK-001 is satisfied for all apps in that
       monorepo. See MONO-001.
+      Additionally: for monorepo apps, file-presence checks (README.md,
+      CHANGELOG.md, .releaserc.json, .env.example, ci.yml) should check
+      BOTH the app subdirectory (monorepo_path) AND the monorepo root before
+      flagging absence. These files commonly live at the workspace root and
+      apply to all apps in the monorepo. Flag only if absent from both locations.
     added: 2026-03
 
   - id: XSTACK-002

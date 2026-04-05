@@ -8,9 +8,9 @@
 # When a rename or retirement happens, update this file first — then the
 # standards files will reference it correctly.
 #
-# Version: 1.0.0 · 2026-03
+# Version: 1.2.0 · 2026-04
 
-version: 1.0.0
+version: 1.2.0
 updated: 2026-04
 maintainer: mini-app-polis
 
@@ -112,6 +112,9 @@ services:
       flags, contact form, resume endpoints. Sole API for the kaianolevine.com
       ecosystem.
     replaces: deejay-marvel-api
+    check_exceptions:
+      - rule: PY-009
+        reason: api-kaianolevine-com predates hatchling standardisation and uses setuptools — migration is a low-priority backlog item
     added: 2026-03
 
   # ── Shared libraries ──────────────────────────────────────────
@@ -128,6 +131,8 @@ services:
     check_exceptions:
       - rule: PY-006
         reason: this repo IS common-python-utils — cannot depend on itself
+      - rule: CD-009
+        reason: src/mini_app_polis/logger.py is the logger implementation — this repo defines the logger primitive, it cannot consume itself
       - rule: CD-002
         reason: shared library — no service entry point for Sentry initialisation
       - rule: CD-010
@@ -165,6 +170,10 @@ services:
       structured logger (createLogger) emitting standard log shape, and shared
       Zod schemas. Published to npm as common-typescript-utils.
     check_exceptions:
+      - rule: XSTACK-001
+        reason: this repo IS common-typescript-utils — cannot depend on itself
+      - rule: CD-009
+        reason: src/logger.ts is the logger implementation — this repo defines the logger primitive, it cannot consume itself
       - rule: CD-002
         reason: shared library — no service entry point for Sentry initialisation
       - rule: TEST-001
@@ -188,6 +197,17 @@ services:
       all architectural decisions, patterns, and conventions. Versioned
       YAML files consumed by evaluator-cog at runtime. Semantic-release
       owns versioning via index.yaml.
+    check_exceptions:
+      - rule: XSTACK-001
+        reason: YAML-only standards repo — no TypeScript or Python service source, shared library requirement does not apply
+      - rule: CD-009
+        reason: no application source code — structured logging requirement does not apply
+      - rule: CD-010
+        reason: not a deployed service — three-layer observability does not apply
+      - rule: PIPE-008
+        reason: not a cog — no pipeline trigger pattern to evaluate
+      - rule: PIPE-011
+        reason: not a cog — no pipeline evaluation step required
     added: 2026-03
 
   # ── Web applications ──────────────────────────────────────────

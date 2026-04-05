@@ -421,6 +421,14 @@ standards:
       Layer 2: shared library logger imported and used throughout.
       Layer 3: Sentry initialised at entry point, SENTRY_DSN in .env.example.
       Flag any service missing any layer.
+
+      SUPERSESSION: When CD-010 fires and flags Layer 2 or Layer 3 as absent,
+      do not also raise separate findings for CD-009 (structured logging) or
+      CD-002 (Sentry) for the same service in the same run. CD-010 is the
+      composite rule — CD-002 and CD-009 are its sub-components. Raising all
+      three produces duplicate findings for one root cause. If CD-010 passes
+      (all layers present), CD-002 and CD-009 may still fire independently
+      for structural issues not captured by the composite check.
     added: 2026-03
 
   - id: CD-011
