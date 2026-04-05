@@ -31,7 +31,7 @@ standards:
     applies_to: [new_cog, new_fastapi_service, new_hono_service, new_react_app]
     description: >
       Python services declare common-python-utils as a dependency.
-      TypeScript services declare kaiano-ts-utils as a dependency.
+      TypeScript services declare common-typescript-utils as a dependency.
       Neither stack reimplements logging, auth verification, or response helpers
       provided by the shared library.
     checkable: true
@@ -41,7 +41,7 @@ standards:
       helper without using the shared library.
 
       STATIC-SITE EXCEPTION: Do not flag new_frontend_site repos (Astro / Cloudflare
-      Pages) for absence of kaiano-ts-utils. Static sites contain no server-side
+      Pages) for absence of common-typescript-utils. Static sites contain no server-side
       logic and cannot install monorepo-internal packages. The rule applies to
       new_hono_service and new_react_app only for the TypeScript side.
       Analogous to the CD-002 Sentry carve-out for static sites.

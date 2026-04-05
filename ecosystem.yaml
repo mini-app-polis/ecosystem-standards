@@ -245,7 +245,7 @@ services:
       catalog, stats, and evaluation findings.
     check_exceptions:
       - rule: CD-002
-        reason: static site — no server process for Sentry initialisation
+        reason: Static site — no server process for Sentry initialisation.
       - rule: TEST-001
         reason: static site — normalization tests not applicable
       - rule: TEST-002
@@ -255,12 +255,7 @@ services:
       - rule: TEST-004
         reason: static site — no pipeline output shape to verify
       - rule: XSTACK-001
-        reason: >
-          Static Astro site on Cloudflare Pages. kaiano-ts-utils is a
-          package internal to the deejaytools-com monorepo — it is not
-          published to npm and cannot be declared as a dependency of an
-          independent repo. No shared-library dependency is applicable
-          for static sites that perform no server-side logic.
+        reason: Static site — no server-side logic, common-typescript-utils not applicable per XSTACK-001 carve-out.
       - rule: XSTACK-003
         reason: >
           Static Astro site on Cloudflare Pages. Repo uses npm (not pnpm)

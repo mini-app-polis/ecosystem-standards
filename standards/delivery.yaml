@@ -102,7 +102,7 @@ standards:
     applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
     description: >
       All Python services use common-python-utils logger. All TypeScript
-      services use kaiano-ts-utils logger. Never use print() in production
+      services use common-typescript-utils logger. Never use print() in production
       code paths. Log output is JSON-formatted in production.
 
       Standard log event shape (all services):
@@ -382,7 +382,7 @@ standards:
 
       Log output is JSON in production, human-readable with emoji prefixes
       in local development. The shared library (common-python-utils for
-      Python, kaiano-ts-utils for TypeScript) provides the logger — services
+      Python, common-typescript-utils for TypeScript) provides the logger — services
       do not configure logging inline.
     checkable: true
     check_notes: >
