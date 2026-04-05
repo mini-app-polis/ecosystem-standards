@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.1.0...v2.2.0) (2026-04-05)
+
+
+### Features
+
+* add PIPE-009 runtime concurrency slot requirement for pipeline cogs ([a278caa](https://github.com/mini-app-polis/ecosystem-standards/commit/a278caa606e3b2dd29c1919406c4f6391e37972f))
+
 # [2.1.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.0.0...v2.1.0) (2026-04-04)
 
 
