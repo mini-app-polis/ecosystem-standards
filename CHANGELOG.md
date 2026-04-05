@@ -1,3 +1,10 @@
+# [2.5.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.4.2...v2.5.0) (2026-04-05)
+
+
+### Features
+
+* findings quality pass — false positive fixes, deduplication, missing rules ([48ddf81](https://github.com/mini-app-polis/ecosystem-standards/commit/48ddf8179cb7d3c44a9aca507cd590a92d6c3d60))
+
 ## [2.4.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.4.1...v2.4.2) (2026-04-05)
 
 
