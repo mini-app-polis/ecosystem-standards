@@ -391,10 +391,9 @@ monorepos:
         path: apps/api
       - service_id: deejaytools-com-app
         path: apps/app
-    workspace_deps:
-      # Deps declared here are checked at the workspace root package.json.
-      # Their presence satisfies XSTACK-001 for all apps in this monorepo.
-      - common-typescript-utils
+    workspace_deps: []
+      # common-typescript-utils is declared per-app, not at the workspace root.
+      # XSTACK-001 is therefore assessed against each app's own package.json.
     evaluator:
       strategy: per_app
       # Evaluate each app independently for findings granularity, but pass
