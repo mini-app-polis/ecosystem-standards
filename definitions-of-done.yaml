@@ -111,11 +111,11 @@ definitions_of_done:
     label: New Hono API Service (TypeScript)
     checklist:
       - Hono on Node — not Cloudflare Workers runtime
-      - kaiano-ts-utils declared as dependency — do not reimplement logging, auth, or response helpers
+      - common-typescript-utils declared as dependency — do not reimplement logging, auth, or response helpers
       - "Versioned routes: /v1/<resource>"
       - "Response envelope on all endpoints — { data, meta } / { error: { code, message } }"
       - Drizzle ORM for database access — schema defined in TypeScript, migrations via Drizzle Kit
-      - Clerk auth middleware from kaiano-ts-utils — not hand-rolled
+      - Clerk auth middleware from common-typescript-utils — not hand-rolled
       - Zod schemas for all request validation
       - Contract test for every endpoint — response shape verified
       - Deployed to Railway — not Cloudflare Workers

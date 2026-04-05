@@ -143,16 +143,27 @@ services:
 
   - id: kaiano-ts-utils
     type: library
+    status: retired
+    language: typescript
+    added: 2026-03
+    retired_date: 2026-04
+    replaced_by: common-typescript-utils
+    description: >
+      Former shared TypeScript utilities library. Lived in packages/ts-utils
+      inside the deejaytools-com monorepo. Extracted and renamed to
+      common-typescript-utils in April 2026.
+
+  - id: common-typescript-utils
+    type: library
     status: active
     dod_type: null
     language: typescript
-    repo: deejaytools-com
+    repo: common-typescript-utils
     description: >
       Shared TypeScript utilities. Clerk auth middleware (verifyClerkToken),
       response envelope helpers (success, successList, error, CommonErrors),
       structured logger (createLogger) emitting standard log shape, and shared
-      Zod schemas. Lives in packages/ts-utils inside the deejaytools-com
-      monorepo until stable, then extracts to its own repo.
+      Zod schemas. Published to npm as common-typescript-utils.
     check_exceptions:
       - rule: CD-002
         reason: shared library — no service entry point for Sentry initialisation
@@ -162,7 +173,7 @@ services:
         reason: library — deduplication tests not applicable
       - rule: TEST-004
         reason: library — output shape tests not applicable
-    added: 2026-03
+    added: 2026-04
 
   # ── Standards & tooling ──────────────────────────────────────
 
@@ -358,6 +369,12 @@ patterns:
     current: common-python-utils
     retired: kaiano-common-utils
     changed: 2026-03
+
+  typescript_shared_library:
+    description: Shared TypeScript utility library name
+    current: common-typescript-utils
+    retired: kaiano-ts-utils
+    changed: 2026-04
 
   api_services:
     description: Active API services

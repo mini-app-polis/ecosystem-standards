@@ -401,7 +401,7 @@ standards:
       Every production service implements all three observability layers:
         Layer 1 — Liveness:    Healthchecks.io for always-on workers.
                                Railway auto-restart for all services.
-        Layer 2 — Structured logs: common-python-utils or kaiano-ts-utils
+        Layer 2 — Structured logs: common-python-utils or common-typescript-utils
                                logger emitting JSON events with standard shape.
                                Queryable in Railway log viewer or Better Stack.
         Layer 3 — Exceptions:  Sentry capturing all unhandled exceptions

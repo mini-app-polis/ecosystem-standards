@@ -12,7 +12,7 @@
 #
 # Parity reference:
 #   Concern              Python                    TypeScript
-#   Shared library       common-python-utils        kaiano-ts-utils
+#   Shared library       common-python-utils        common-typescript-utils
 #   Data validation      Pydantic                   Zod
 #   API response shape   { data, meta } / { error } Identical
 #   Logging              common-utils logger         ts-utils logger
@@ -57,7 +57,7 @@ standards:
       API response shapes are identical across Python and TypeScript services:
         success: { data: ..., meta: { count, version } }
         error: { error: { code, message } }
-      Defined in kaiano-ts-utils for TypeScript. Enforced by response_model in FastAPI.
+      Defined in common-typescript-utils for TypeScript. Enforced by response_model in FastAPI.
     checkable: false
     added: 2026-03
 

@@ -122,7 +122,7 @@ standards:
       Python services: search source files for clerk or verify_token imports.
       Check for a Depends(verify_token) pattern on protected route definitions.
       TypeScript services: check package.json for @clerk/clerk-sdk-node or
-      equivalent. Search for verifyClerkToken from kaiano-ts-utils on
+      equivalent. Search for verifyClerkToken from common-typescript-utils on
       protected routes. Flag if no Clerk dependency is found and the service
       has non-public endpoints. LLM: assess whether auth is applied
       consistently — check for routes that appear to handle user data but

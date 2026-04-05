@@ -70,7 +70,7 @@ standards:
     checkable: true
     check_notes: >
       Check for Sentry integration, structured logging via common-python-utils
-      or kaiano-ts-utils, and Prefect run history (for pipelines). Flag any
+      or common-typescript-utils, and Prefect run history (for pipelines). Flag any
       production service missing any of these three.
     added: 2026-03
 
