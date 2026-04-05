@@ -12,13 +12,13 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "node -e \"const fs=require('fs');const f='index.yaml';let c=fs.readFileSync(f,'utf8');c=c.replace(/^version: .+$/m,'version: ${nextRelease.version}');fs.writeFileSync(f,c);\""
+        "prepareCmd": "node -e \"const fs=require('fs');const d=new Date();const month=String(d.getMonth()+1).padStart(2,'0');const stamp=d.getFullYear()+'-'+month;let i=fs.readFileSync('index.yaml','utf8');i=i.replace(/^version: .+$/m,'version: ${nextRelease.version}');fs.writeFileSync('index.yaml',i);let e=fs.readFileSync('ecosystem.yaml','utf8');e=e.replace(/^updated: .+$/m,'updated: '+stamp);fs.writeFileSync('ecosystem.yaml',e);\""
       }
     ],
     [
       "@semantic-release/git",
       {
-        "assets": ["CHANGELOG.md", "index.yaml"],
+        "assets": ["CHANGELOG.md", "index.yaml", "ecosystem.yaml"],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ],
