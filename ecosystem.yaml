@@ -200,6 +200,8 @@ services:
     framework: hono
     host: railway
     repo: deejaytools-com
+    monorepo: deejaytools-com
+    monorepo_path: apps/api
     description: >
       Hono on Node API for deejaytools.com. Manages WCS routine registration,
       floor trial sessions, check-ins, slot assignment, partners, and songs.
@@ -221,6 +223,8 @@ services:
     framework: react
     host: cloudflare-pages
     repo: deejaytools-com
+    monorepo: deejaytools-com
+    monorepo_path: apps/app
     description: >
       React web application for deejaytools.com. WCS routine management
       platform — events, sessions, floor trials, check-in queue, partner
@@ -352,6 +356,55 @@ services:
     retired_date: 2026-03
     replaced_by: website-astro-wcs
     description: Former WCS personal site. Replaced by website-astro-wcs.
+
+
+# ── Monorepos ─────────────────────────────────────────────────
+#
+# Monorepos are repos that contain multiple evaluatable services under a
+# single git repository. The evaluator-cog uses this section to:
+#
+#   1. Clone the full repo once and evaluate each app at its monorepo_path.
+#   2. Pass workspace-level context to Claude when evaluating each app
+#      (workspace deps, package manager, sibling apps) so rules like
+#      XSTACK-001 are checked at the workspace root, not per-app.
+#   3. Deduplicate findings that share the same root cause across sibling
+#      apps — emitting one finding tagged with both apps rather than
+#      two identical findings.
+#
+# Rule: any service entry with a `monorepo` field must have a corresponding
+# entry here. The `apps` list here is the authoritative membership list;
+# the `monorepo` + `monorepo_path` fields on service entries are the
+# per-service pointers back to this record.
+
+monorepos:
+
+  - id: deejaytools-com
+    repo: deejaytools-com
+    package_manager: pnpm
+    workspace_config: pnpm-workspace.yaml
+    description: >
+      pnpm monorepo containing the deejaytools.com API and web application.
+      Workspace-level deps satisfy per-app shared library requirements
+      (XSTACK-001, XSTACK-003). CI is evaluated at the repo root.
+    apps:
+      - service_id: deejaytools-com-api
+        path: apps/api
+      - service_id: deejaytools-com-app
+        path: apps/app
+    workspace_deps:
+      # Deps declared here are checked at the workspace root package.json.
+      # Their presence satisfies XSTACK-001 for all apps in this monorepo.
+      - common-typescript-utils
+    evaluator:
+      strategy: per_app
+      # Evaluate each app independently for findings granularity, but pass
+      # the full monorepo context block to Claude with every app eval.
+      workspace_context: true
+      # If two sibling apps produce a finding with the same rule_id and the
+      # same root cause, emit one finding tagged with both service_ids rather
+      # than two identical findings.
+      deduplicate_sibling_findings: true
+    added: 2026-04
 
 # ── Canonical patterns ────────────────────────────────────────
 
