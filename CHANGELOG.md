@@ -1,3 +1,10 @@
+## [2.4.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.4.0...v2.4.1) (2026-04-05)
+
+
+### Bug Fixes
+
+* updating with monorepo ([2ab79a7](https://github.com/mini-app-polis/ecosystem-standards/commit/2ab79a730c1a4fd5ad631e7e39a7fba29fa4f375))
+
 # [2.4.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.3.1...v2.4.0) (2026-04-05)
 
 
