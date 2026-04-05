@@ -205,8 +205,6 @@ services:
       floor trial sessions, check-ins, slot assignment, partners, and songs.
       PostgreSQL on Railway. Clerk auth. Part of the deejaytools-com monorepo.
     check_exceptions:
-      - rule: CD-002
-        reason: Hono service — sentry-sdk is Python specific, uses @sentry/node
       - rule: TEST-001
         reason: API service — normalization tests not applicable
       - rule: TEST-002
@@ -239,8 +237,6 @@ services:
         reason: React app — no pipeline failure path to test
       - rule: TEST-004
         reason: React app — no pipeline output shape to verify
-      - rule: DOC-004
-        reason: React app — no .env.example, uses Vite env var pattern
     added: 2026-03
 
   # ── Static sites ──────────────────────────────────────────────
