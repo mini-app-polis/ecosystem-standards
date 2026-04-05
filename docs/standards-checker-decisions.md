@@ -37,3 +37,28 @@ on interpretation and recommendations without risk of acting on bad output.
 
 `src/evaluator_cog/flows/conformance.py` inside `evaluator-cog`, backed by
 `src/evaluator_cog/engine/deterministic.py` and `engine/llm.py`.
+
+## Checker known issues / decisions
+
+### FE-003 Tailwind check — `.mjs` config and Astro integration pattern (April 2026)
+
+**Finding:** `website-astro-software` reported a Tailwind WARN despite
+`tailwindcss` being present in `dependencies`, `tailwind.config.mjs` existing,
+`@astrojs/tailwind` being declared in `astro.config.mjs`, and
+`postcss.config.cjs` being wired.
+
+**Root cause (checker):** The deterministic check for FE-003 searches for
+`tailwind.config.js` or `tailwind.config.ts` — it does not match
+`tailwind.config.mjs`. The Astro integration pattern (`@astrojs/tailwind` in
+`astro.config.mjs`) is also a valid signal that the check does not evaluate.
+
+**Decision:** FE-003 `check_notes` to be updated to include `.mjs` config
+filename and the Astro integration pattern as valid signals. Until the checker
+is updated, the finding is a false positive and should be suppressed for repos
+where all three signals are present: (1) `tailwindcss` in `dependencies`,
+(2) `tailwind.config.mjs` at root, (3) `@astrojs/tailwind` in `astro.config.*`.
+
+**Note:** FE-003 `applies_to` is `[new_react_app]` — it should not fire for
+`new_frontend_site` at all. This is a secondary checker bug: the conformance
+flow is not filtering rules by `applies_to` correctly. Track as a bug in
+`evaluator-cog` conformance engine.

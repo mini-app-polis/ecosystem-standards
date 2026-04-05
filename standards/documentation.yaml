@@ -124,10 +124,17 @@ standards:
       For Python repos: scan README.md for uv sync, pre-commit install,
       pre-commit run --all-files, uv run pytest, and a prerequisites
       mention (Python version or uv). Flag if any of the five are missing.
-      For TypeScript API repos: scan for pnpm install, pnpm dev (or
-      equivalent), pnpm test, and a Node.js prerequisites mention.
-      For frontend repos: scan for pnpm install, pnpm dev or astro dev,
-      pnpm build, and .env.example reference. Flag if any are missing.
+
+      For TypeScript API repos (new_hono_service): scan for pnpm install,
+      pnpm dev (or equivalent), pnpm test, and a Node.js prerequisites
+      mention.
+
+      For frontend repos (new_frontend_site, new_react_app): scan for an
+      install command (pnpm install OR npm install), a dev command (pnpm dev,
+      npm run dev, or astro dev), a build command (pnpm build or npm run build),
+      and a reference to .env.example. Accept either package manager — do NOT
+      flag npm as a violation for frontend repos. Flag only if the conceptual
+      element (install / dev / build / env setup) is entirely absent.
     added: 2026-03
 
   # ─────────────────────────────────────────────

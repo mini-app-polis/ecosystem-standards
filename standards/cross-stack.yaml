@@ -28,7 +28,7 @@ standards:
     status: requirement
     dimension: cross_repo_coherence
     severity: ERROR
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_react_app]
     description: >
       Python services declare common-python-utils as a dependency.
       TypeScript services declare kaiano-ts-utils as a dependency.
@@ -39,6 +39,12 @@ standards:
       Check pyproject.toml or package.json for the appropriate shared library.
       Flag if service implements its own logger, auth verify, or response envelope
       helper without using the shared library.
+
+      STATIC-SITE EXCEPTION: Do not flag new_frontend_site repos (Astro / Cloudflare
+      Pages) for absence of kaiano-ts-utils. Static sites contain no server-side
+      logic and cannot install monorepo-internal packages. The rule applies to
+      new_hono_service and new_react_app only for the TypeScript side.
+      Analogous to the CD-002 Sentry carve-out for static sites.
     added: 2026-03
 
   - id: XSTACK-002
@@ -60,7 +66,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: [new_hono_service, new_react_app, new_frontend_site]
+    applies_to: [new_hono_service, new_react_app]
     description: >
       All TypeScript projects — monorepos and standalone services — use pnpm
       as the package manager. Not npm, not yarn. pnpm-lock.yaml is the

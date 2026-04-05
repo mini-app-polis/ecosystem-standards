@@ -254,6 +254,20 @@ services:
         reason: static site — no pipeline failure path to test
       - rule: TEST-004
         reason: static site — no pipeline output shape to verify
+      - rule: XSTACK-001
+        reason: >
+          Static Astro site on Cloudflare Pages. kaiano-ts-utils is a
+          package internal to the deejaytools-com monorepo — it is not
+          published to npm and cannot be declared as a dependency of an
+          independent repo. No shared-library dependency is applicable
+          for static sites that perform no server-side logic.
+      - rule: XSTACK-003
+        reason: >
+          Static Astro site on Cloudflare Pages. Repo uses npm (not pnpm)
+          and was scaffolded before XSTACK-003 was formalised. npm is
+          explicitly permitted for frontend sites per DOC-013.
+          Migrating to pnpm is a low-priority backlog item — not a
+          blocking violation.
     added: 2026-03
 
   - id: website-astro-wcs

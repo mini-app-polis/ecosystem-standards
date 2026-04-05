@@ -62,12 +62,14 @@ standards:
     checkable: true
     check_notes: >
       Check package.json for tailwindcss in dependencies. Check for
-      tailwind.config.js or tailwind.config.ts. Search source files for
-      className strings containing Tailwind utility classes. Flag if
-      styled-components, emotion, CSS modules (.module.css imports), or
+      tailwind.config.js, tailwind.config.ts, OR tailwind.config.mjs (Astro
+      projects use .mjs). For Astro repos, also accept @astrojs/tailwind in
+      astro.config.mjs or astro.config.ts as a valid Tailwind signal. Search
+      source files for className strings containing Tailwind utility classes.
+      Flag if styled-components, emotion, CSS modules (.module.css imports), or
       another CSS framework is present alongside or instead of Tailwind.
-      LLM: assess whether Tailwind is the primary styling mechanism or
-      whether another approach is dominant.
+      LLM: assess whether Tailwind is the primary styling mechanism or whether
+      another approach is dominant.
     added: 2026-03
 
   - id: FE-004
