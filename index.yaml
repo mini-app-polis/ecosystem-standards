@@ -1,13 +1,13 @@
 # ecosystem-standards / index.yaml
 # Manifest file — agents fetch this first to discover available standards files.
-# Version: 1.1.0 · 2026-03
+# Version: 1.2.0 · 2026-04
 #
 # Fetch pattern:
 #   1. GET index.yaml  → discover files and current version
 #   2. GET standards/<file>.yaml  → fetch relevant domain(s)
 #   3. Pin standards_version in evaluation output for auditability
 
-version: 2.3.1
+version: 2.4.0
 maintainer: mini-app-polis
 
 # Dimensions used across all standards files.
@@ -21,6 +21,7 @@ dimensions:
   - cd_readiness
   - cross_repo_coherence
   - standards_currency
+  - monorepo_coherence
 
 # Severities used across all standards files.
 # These map directly to the pipeline_evaluations table severity field.
@@ -54,6 +55,26 @@ schema:
         Per-service rule exceptions with machine-readable rule ID and
         human-readable reason. The conformance checker skips excepted
         rules and surfaces the reason in findings output.
+  monorepo_fields:
+    monorepo: >
+      ID of the monorepo this service belongs to. Must match an entry in the
+      top-level `monorepos:` section of ecosystem.yaml. When present, the
+      evaluator clones the full monorepo repo rather than a standalone repo,
+      evaluates the service at `monorepo_path`, and passes workspace-level
+      context to Claude. XSTACK-001 is checked at the workspace root
+      (workspace_deps) rather than per-app package.json.
+    monorepo_path: >
+      Relative path from the monorepo root to this service's directory
+      (e.g. apps/api). Used by evaluator-cog to scope file reads and
+      deterministic checks to the correct subdirectory.
+  ecosystem_sections:
+    monorepos: >
+      Top-level section in ecosystem.yaml listing all monorepos. Each entry
+      defines the workspace package manager, apps (with service_id and path),
+      workspace_deps (checked at root to satisfy XSTACK-001), and evaluator
+      strategy (per_app with workspace_context). Service entries in the
+      `services:` list reference their monorepo via `monorepo: <id>` and
+      `monorepo_path: <path>`.
 
 # Standards files — one per domain.
 # Agents may fetch all files or only the domains relevant to the artifact being evaluated.
@@ -115,6 +136,14 @@ files:
       services, libraries, canonical patterns, and ecosystem terminology.
       Updated on every rename, retirement, new service addition, or
       terminology change.
+
+  - file: standards/monorepo.yaml
+    domain: monorepo
+    description: >
+      Standards for monorepo structure, workspace dependency management,
+      and per-app evaluation rules. Applies to pnpm workspaces containing
+      multiple evaluatable services.
+    rule_prefix: MONO
 
   - file: standards/cross-stack.yaml
     domain: cross-stack

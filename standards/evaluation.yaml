@@ -93,6 +93,37 @@ standards:
       most recent evaluation against current index.yaml version. Flag if behind.
     added: 2026-03
 
+  - id: EVAL-007
+    title: Standards/evaluator check coverage must be tracked and in sync
+    status: requirement
+    dimension: standards_currency
+    severity: ERROR
+    applies_to: [all]
+    description: >
+      Every checkable rule in ecosystem-standards (those with `checkable: true`)
+      must have a corresponding implementation in evaluator-cog's deterministic
+      check engine. Every check in evaluator-cog's deterministic engine must
+      map back to a real rule in ecosystem-standards.
+
+      The mapping contract is expressed via a `check_id` field on checkable
+      rules (this repo) and a corresponding `CHECK_ID` constant or decorator
+      on each check implementation in evaluator-cog. Drift between the two
+      repos is detected automatically via GitHub Actions on every release of
+      either repo (see .github/workflows/drift-check.yml in this repo and
+      evaluator-cog).
+
+      When drift is detected:
+        - Unimplemented checkable rules → severity WARN finding, source=conformance_check
+        - Orphaned evaluator checks (no backing standard) → severity ERROR finding
+        - Version skew (evaluator's pinned standards version is more than one
+          minor version behind current index.yaml) → severity WARN finding
+
+      Findings are written to pipeline_evaluations via api-kaianolevine-com
+      with source=standards_drift, so they appear in the Pipeline Health view
+      alongside all other conformance findings.
+    checkable: false
+    added: 2026-04
+
   - id: EVAL-GAP-001
     title: Deterministic conformance checks — partial coverage
     status: gap
@@ -106,7 +137,9 @@ standards:
       yet covered deterministically and fall to LLM assessment only.
       Remediation: backfill deterministic checks one domain at a time,
       starting with delivery.yaml (CD-004 action version pinning) and
-      documentation.yaml (DOC-013 README completeness).
+      documentation.yaml (DOC-013 README completeness). Tracking of
+      implemented vs unimplemented checks is now automated via EVAL-007
+      drift detection — see .github/workflows/drift-check.yml.
     checkable: false
     added: 2026-03
 

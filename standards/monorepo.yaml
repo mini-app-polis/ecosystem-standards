@@ -1,0 +1,94 @@
+# ecosystem-standards / monorepo.yaml
+# Standards for monorepo structure and per-app evaluation within a workspace.
+# Version: 1.0.0 · 2026-04
+#
+# These rules apply to repos listed in the `monorepos:` section of ecosystem.yaml.
+# They govern how workspace-level configuration is shared across apps and how
+# the evaluator should assess monorepo apps without generating duplicate findings.
+#
+# Current monorepos in the ecosystem:
+#   deejaytools-com  →  apps/api (deejaytools-com-api)
+#                       apps/app (deejaytools-com-app)
+
+standards:
+
+  - id: MONO-001
+    title: Workspace-level deps satisfy per-app shared library requirements
+    status: requirement
+    dimension: monorepo_coherence
+    severity: ERROR
+    applies_to: [new_hono_service, new_react_app]
+    description: >
+      For services inside a pnpm monorepo, shared library requirements
+      (XSTACK-001) are checked at the workspace root package.json, not at
+      the per-app package.json. A dep declared in the workspace root
+      satisfies XSTACK-001 for all apps in that monorepo.
+
+      Rationale: pnpm workspaces hoist deps to the root by default.
+      Requiring each app to re-declare common-typescript-utils independently
+      is redundant and not how pnpm workspaces are intended to work.
+
+      Consequence: evaluator-cog must not flag XSTACK-001 for a monorepo
+      app if the dep is present in the monorepo's `workspace_deps` list in
+      ecosystem.yaml and is declared in the workspace root package.json.
+    checkable: true
+    check_notes: >
+      When evaluating a service with a `monorepo` field:
+      1. Look up the monorepo record in ecosystem.yaml.
+      2. Check the workspace root package.json (at the monorepo repo root,
+         not the app subdirectory) for each dep in `workspace_deps`.
+      3. If all workspace_deps are present at the root, do not flag
+         XSTACK-001 for any app in this monorepo.
+      4. Only flag XSTACK-001 if the dep is absent from BOTH the workspace
+         root AND the per-app package.json.
+    added: 2026-04
+
+  - id: MONO-002
+    title: CI is evaluated at the monorepo root — not per-app
+    status: requirement
+    dimension: monorepo_coherence
+    severity: WARN
+    applies_to: [new_hono_service, new_react_app]
+    description: >
+      For services inside a pnpm monorepo, CI configuration (ci.yml,
+      .github/workflows/) is evaluated at the monorepo repo root.
+      Per-app CI files are additive only — they do not replace root CI.
+      The evaluator assesses CD-rule compliance (semantic-release, test
+      job, pnpm setup) against the root CI config, not a per-app subfolder.
+
+      This means:
+        - A single root ci.yml covering both apps satisfies CD requirements
+          for both services.
+        - If only one app has a CI file in its subdirectory and the other
+          does not, this is not a violation as long as the root CI covers both.
+        - If the root CI is absent entirely, both apps are flagged — not just
+          one.
+    checkable: true
+    check_notes: >
+      When evaluating a service with a `monorepo` field:
+      1. Check for .github/workflows/ci.yml at the monorepo repo root.
+      2. Assess all CD rules (CD-003 semantic-release, CD-004 action pinning,
+         etc.) against the root CI file.
+      3. Do not flag a per-app subdirectory for absence of its own CI file
+         if the root CI covers it.
+      4. If the root CI is absent, flag both sibling services with the same
+         finding rather than generating per-app duplicates.
+    added: 2026-04
+
+  - id: MONO-003
+    title: Deduplicate sibling findings with shared root cause
+    status: requirement
+    dimension: monorepo_coherence
+    severity: INFO
+    applies_to: [new_hono_service, new_react_app]
+    description: >
+      When two apps in the same monorepo generate findings with the same
+      rule_id and the same root cause (e.g. both fail CD-002 because Sentry
+      is absent at the workspace level), evaluator-cog emits one finding
+      tagged with both service IDs rather than two identical findings.
+
+      This keeps the Pipeline Health view signal-rich rather than noisy.
+      Distinct per-app failures (e.g. the API fails XSTACK-001 but the app
+      does not) must still be emitted as separate findings.
+    checkable: false
+    added: 2026-04

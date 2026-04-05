@@ -45,6 +45,12 @@ standards:
       logic and cannot install monorepo-internal packages. The rule applies to
       new_hono_service and new_react_app only for the TypeScript side.
       Analogous to the CD-002 Sentry carve-out for static sites.
+
+      MONOREPO EXCEPTION: For services with a `monorepo` field in ecosystem.yaml,
+      check the workspace root package.json for the shared library before flagging
+      per-app absence. If the dep is declared in the monorepo's `workspace_deps`
+      list and present at the root, XSTACK-001 is satisfied for all apps in that
+      monorepo. See MONO-001.
     added: 2026-03
 
   - id: XSTACK-002
