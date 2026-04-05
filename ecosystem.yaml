@@ -294,6 +294,15 @@ services:
         reason: static site — no pipeline failure path to test
       - rule: TEST-004
         reason: static site — no pipeline output shape to verify
+      - rule: XSTACK-001
+        reason: Static site — no server-side logic, common-typescript-utils not applicable per XSTACK-001 carve-out.
+      - rule: XSTACK-003
+        reason: >
+          Static Astro site on Cloudflare Pages. Repo uses npm (not pnpm)
+          and was scaffolded before XSTACK-003 was formalised. npm is
+          explicitly permitted for frontend sites per DOC-013.
+          Migrating to pnpm is a low-priority backlog item — not a
+          blocking violation.
     replaces: kaiano-wcs-website
     added: 2026-03
 
