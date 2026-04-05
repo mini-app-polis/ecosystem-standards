@@ -106,3 +106,18 @@ The deterministic layer should be too — pass `service_type` into
 `run_all_checks` and skip irrelevant checks per type.
 
 Priority: medium — causes noisy false positives on non-Python repos.
+
+---
+
+## PIPE-009 Remediation
+
+PIPE-009 requires pipeline cogs to acquire a named Prefect concurrency slot
+before scanning shared resources. notes-ingest-cog is compliant as of 2026-04.
+The following cogs need remediation:
+
+- [ ] **deejay-cog** — add `with concurrency("deejay-cog", occupy=1)` wrapping
+  the flow body in `flow.py`. Create `deejay-cog` concurrency limit in Prefect
+  Cloud (limit: 1).
+- [ ] **evaluator-cog** — add `with concurrency("evaluator-cog", occupy=1)`
+  wrapping the flow body in `flow.py`. Create `evaluator-cog` concurrency limit
+  in Prefect Cloud (limit: 1).

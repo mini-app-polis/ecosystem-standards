@@ -15,6 +15,7 @@ maintainer: mini-app-polis
 dimensions:
   - structural_conformance
   - pipeline_consistency
+  - pipeline_reliability
   - testing_coverage
   - documentation_coverage
   - cd_readiness
@@ -86,6 +87,7 @@ files:
     domain: pipeline
     description: Pipeline design and orchestration standards. Prefect patterns, idempotency, and data safety rules.
     rule_prefix: PIPE
+    rule_count: 11
 
   - file: standards/frontend.yaml
     domain: frontend

@@ -171,7 +171,7 @@ standards:
     supersedes: "Apps Script → repository_dispatch → GitHub Actions (retired 2026-03)"
     added: 2026-03
 
-  - id: PIPE-009
+  - id: PIPE-011
     title: AI evaluation step as final pipeline task
     status: requirement
     dimension: pipeline_consistency
@@ -190,7 +190,7 @@ standards:
       last substantive task in the flow. Exempt evaluator-cog itself.
     added: 2026-03
 
-  - id: PIPE-010
+  - id: PIPE-012
     title: Retry delay disabled in test context
     status: convention
     dimension: pipeline_consistency
@@ -215,4 +215,45 @@ standards:
       the value with os.getenv("PYTEST_CURRENT_TEST"). Pass if the value
       is already zero, sourced from a settings field, or uses the
       PYTEST_CURRENT_TEST conditional pattern.
+    added: 2026-04
+
+  - id: PIPE-009
+    title: Pipeline cogs must acquire a named Prefect concurrency slot before scanning shared resources
+    status: requirement
+    dimension: pipeline_reliability
+    severity: ERROR
+    applies_to: [new_cog]
+    description: >
+      Any pipeline cog that scans a shared resource (Drive folder, S3 bucket,
+      database table, etc.) and processes items sequentially must acquire a
+      named Prefect concurrency slot before scanning. This prevents two
+      concurrent runs from scanning the same resource state simultaneously,
+      which would cause duplicate LLM calls, redundant processing, and
+      potential data integrity issues even when a unique constraint is present.
+
+      The deployment concurrency_limit=1 is insufficient — it controls
+      scheduling but does not prevent a second run from executing if it was
+      picked up by the runner before the first run registered as active.
+      The runtime concurrency slot is the correct enforcement point.
+
+      Implementation:
+        from prefect.concurrency.sync import concurrency
+
+        with concurrency("cog-name", occupy=1):
+            # all scanning and processing logic here
+
+      The slot name must match a concurrency limit created in Prefect Cloud
+      (Settings → Concurrency). Limit must be set to 1. The limit must exist
+      before the cog is deployed or the slot acquisition will be silently
+      skipped by Prefect.
+
+      Naming convention: use the cog name as the slot name (e.g.
+      notes-ingest, deejay-cog, evaluator-cog).
+    checkable: true
+    check_notes: >
+      Search flow.py for 'from prefect.concurrency.sync import concurrency'
+      and a corresponding 'with concurrency(' block wrapping the flow body.
+      Flag if either is absent in a pipeline cog that scans a shared resource.
+      Also flag if the cog has deployment concurrency_limit=1 but no runtime
+      concurrency slot — this is insufficient protection.
     added: 2026-04
