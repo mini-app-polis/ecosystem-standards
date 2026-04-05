@@ -1,3 +1,10 @@
+## [2.4.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.4.1...v2.4.2) (2026-04-05)
+
+
+### Bug Fixes
+
+* removing workspace dep causing false positive ([23edf88](https://github.com/mini-app-polis/ecosystem-standards/commit/23edf88cfe46306a5e759970ab92e5d65a71cdc8))
+
 ## [2.4.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.4.0...v2.4.1) (2026-04-05)
 
 
