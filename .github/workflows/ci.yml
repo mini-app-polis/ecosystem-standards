@@ -91,20 +91,26 @@ jobs:
                       f"❌ {r['id']}: checkable: true but missing check_notes"
                   )
 
-          valid_dod_types = {'new_cog','new_fastapi_service','new_hono_service',
-                             'new_frontend_site','new_react_app','new_pipeline',
-                             'library','all'}
+          valid_repo_types = {
+              'pipeline-cog','trigger-cog','api-service','shared-library',
+              'static-site','react-app','standards-repo','all'
+          }
           for r in all_rules:
               applies = r.get('applies_to', [])
               for a in applies:
-                  assert a in valid_dod_types, f"{r['id']} applies_to has invalid value: {a}"
+                  assert a in valid_repo_types, f"{r['id']} applies_to has invalid value: {a}"
 
-          valid_dod = valid_dod_types | {None}
+          # dod_type retained on services for backward compatibility during migration
+          valid_dod = {
+              'new_cog','new_fastapi_service','new_hono_service',
+              'new_frontend_site','new_react_app','new_pipeline',
+              'library', None
+          }
           for svc in eco_data.get('services', []):
               if svc.get('status') == 'active':
                   assert 'dod_type' in svc, f"{svc['id']} missing dod_type"
                   assert svc['dod_type'] in valid_dod, f"{svc['id']} invalid dod_type: {svc['dod_type']}"
-
+                  
           if errors:
               for e in errors:
                   print(e)
