@@ -199,9 +199,15 @@ standards:
     severity: WARN
     applies_to: [new_cog]
     description: >
-      All production pipelines include an AI evaluation step as the final task.
-      The step assesses run conformance against the current standards version and
-      writes findings to the pipeline_evaluations table.
+      All production pipeline cogs include a behavioral evaluation step as the
+      final task in the flow. The step calls evaluate_pipeline_run() from
+      evaluator-cog, summarising what the run did (items processed, failures,
+      skips) and posts a structured finding to pipeline_evaluations. This ensures
+      every run — successful or not — is visible in pipeline health. Crash and
+      failure hooks (on_crashed, on_failure) are separate and complementary —
+      they cover the case where the flow body never reaches the evaluation step.
+      Both patterns must be present: the inline evaluation step for successful
+      runs, and the crash/failure hooks for abnormal termination.
     checkable: true
     check_notes: >
       Search the main flow file for a final @task call that references
