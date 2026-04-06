@@ -1,5 +1,6 @@
 # Standards Checker — Architectural Decisions
-_MiniAppPolis ecosystem · March 2026_
+
+*MiniAppPolis ecosystem · March 2026*
 
 ## Context
 
@@ -8,6 +9,7 @@ repos meet ecosystem standards. The checker is advisory only — no
 automated remediation.
 
 Two complementary layers:
+
 - `evaluator-cog / flows / pipeline_eval` — **behavioral**: did this pipeline run correctly?
 - `evaluator-cog / flows / conformance` — **structural**: does this repo conform to standards?
 
@@ -25,10 +27,11 @@ stays in one place.
 
 **LLM involvement**
 Hybrid:
+
 - Deterministic for structural rules (file presence, pyproject.toml, CI YAML,
-  AST) — covers ~40 of 50 checkable rules
+AST) — covers ~40 of 50 checkable rules
 - LLM for soft rules (docstrings, dead code, report narrative) and to generate
-  actionable suggestions per finding
+actionable suggestions per finding
 
 Since findings are advisory with no automated remediation, LLM adds real value
 on interpretation and recommendations without risk of acting on bad output.
@@ -56,7 +59,7 @@ on interpretation and recommendations without risk of acting on bad output.
 filename and the Astro integration pattern as valid signals. Until the checker
 is updated, the finding is a false positive and should be suppressed for repos
 where all three signals are present: (1) `tailwindcss` in `dependencies`,
-(2) `tailwind.config.mjs` at root, (3) `@astrojs/tailwind` in `astro.config.*`.
+(2) `tailwind.config.mjs` at root, (3) `@astrojs/tailwind` in `astro.config.`*.
 
 **Note:** FE-003 `applies_to` is `[new_react_app]` — it should not fire for
 `new_frontend_site` at all. This is a secondary checker bug: the conformance
