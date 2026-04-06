@@ -35,6 +35,11 @@ services:
         reason: trigger cog — no deduplication step
       - rule: TEST-004
         reason: trigger cog — no data output shape to verify
+      - rule: CD-009
+        reason: >
+          src/watcher_cog/logger.py is the logger wrapper implementation for
+          this service — it must use stdlib logging internally. CD-009 does
+          not apply to logger implementation files.
     replaces: google-app-script-trigger
     added: 2026-03
 
@@ -72,6 +77,24 @@ services:
         reason: evaluation cog — no deduplication of external data
       - rule: TEST-004
         reason: evaluation cog — output shape tested via LLM parsing tests
+      - rule: CD-009
+        reason: >
+          src/evaluator_cog/engine/deterministic.py uses stdlib logging
+          intentionally — it is a pure logic module loaded during unit tests
+          where the shared logger is unavailable. CD-009 does not apply to
+          test-safe utility modules.
+      - rule: PIPE-008
+        reason: >
+          The deterministic checker source contains retired trigger pattern
+          strings (e.g. repository_dispatch) as string literals being checked
+          against, not as active trigger usage. PIPE-008 does not apply.
+      - rule: CD-015
+        reason: >
+          evaluator-cog runs two distinct flows (conformance_check_flow and
+          pipeline_eval). The conformance flow is registered via its own
+          Prefect entry point and scheduled independently. prefect.serve()
+          pattern is present — the checker cannot always resolve it from the
+          source scan due to the multi-flow structure.
     added: 2026-03
 
 
@@ -115,6 +138,12 @@ services:
     check_exceptions:
       - rule: PY-009
         reason: api-kaianolevine-com predates hatchling standardisation and uses setuptools — migration is a low-priority backlog item
+      - rule: PY-011
+        reason: >
+          Intentional project name: kaianolevine_api. The repository is named
+          api-kaianolevine-com (infrastructure convention) but the Python
+          project name reflects the product identity. Aligning them would
+          require a breaking rename of the installed package.
     added: 2026-03
 
   # ── Shared libraries ──────────────────────────────────────────
@@ -143,6 +172,14 @@ services:
         reason: library — deduplication tests not applicable
       - rule: TEST-004
         reason: library — output shape tests not applicable
+      - rule: PY-011
+        reason: >
+          Intentional split package identity: distribution name is
+          common-python-utils, import package is mini_app_polis. This
+          predates PY-011 and is a deliberate branding decision — the
+          mini_app_polis namespace is stable and used across all consumers.
+          Renaming the import package is a breaking change deferred
+          indefinitely.
     replaces: kaiano-common-utils
     added: 2026-03
 
@@ -276,7 +313,13 @@ services:
       catalog, stats, and evaluation findings.
     check_exceptions:
       - rule: CD-002
-        reason: Static site — no server process for Sentry initialisation.
+        reason: >
+          Static Astro site — no server process for Sentry initialisation.
+          Client-side Sentry (@sentry/astro) is also not required: this site
+          fetches live data client-side from a public API and has no auth,
+          user sessions, or error surfaces that warrant browser error tracking
+          at this stage. Full CD-002 exception covers both server-side and
+          client-side Sentry for this repo.
       - rule: TEST-001
         reason: static site — normalization tests not applicable
       - rule: TEST-002
@@ -294,6 +337,16 @@ services:
           explicitly permitted for frontend sites per DOC-013.
           Migrating to pnpm is a low-priority backlog item — not a
           blocking violation.
+      - rule: VER-003
+        reason: >
+          Static site deployed via Cloudflare Pages Git integration (auto-deploy
+          on push to main). No ci.yml is required — Cloudflare Pages is the
+          CI/CD pipeline. semantic-release runs are not applicable to a static
+          site with no published package.
+      - rule: VER-005
+        reason: Cloudflare Pages Git integration handles deployment — no GitHub Actions checkout step required.
+      - rule: VER-006
+        reason: Cloudflare Pages Git integration handles deployment — no npm install step in CI required.
     added: 2026-03
 
   - id: website-astro-wcs
@@ -323,6 +376,16 @@ services:
           explicitly permitted for frontend sites per DOC-013.
           Migrating to pnpm is a low-priority backlog item — not a
           blocking violation.
+      - rule: VER-003
+        reason: >
+          Static site deployed via Cloudflare Pages Git integration (auto-deploy
+          on push to main). No ci.yml is required — Cloudflare Pages is the
+          CI/CD pipeline. semantic-release runs are not applicable to a static
+          site with no published package.
+      - rule: VER-005
+        reason: Cloudflare Pages Git integration handles deployment — no GitHub Actions checkout step required.
+      - rule: VER-006
+        reason: Cloudflare Pages Git integration handles deployment — no npm install step in CI required.
     replaces: kaiano-wcs-website
     added: 2026-03
 
