@@ -1,3 +1,10 @@
+## [2.5.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.5.0...v2.5.1) (2026-04-06)
+
+
+### Bug Fixes
+
+* **DOC-013:** extend applies_to to frontend site and React app ([59938e6](https://github.com/mini-app-polis/ecosystem-standards/commit/59938e64b2533d374a21892b2459350d7fb7347e))
+
 # [2.5.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.4.2...v2.5.0) (2026-04-05)
 
 
