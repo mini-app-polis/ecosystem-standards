@@ -90,7 +90,7 @@ standards:
     status: requirement
     dimension: documentation_coverage
     severity: WARN
-    applies_to: [new_cog, new_fastapi_service, new_hono_service]
+    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
     description: >
       Every repo's README includes a "Running locally" section that covers
       five conceptual elements, expressed in the idioms of the repo's stack.
