@@ -1,3 +1,18 @@
+# [3.0.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.5.1...v3.0.0) (2026-04-06)
+
+
+* feat!: v3.0.0 — type/trait taxonomy, federated evaluator.yaml schema, EVAL-008 ([8fe3d42](https://github.com/mini-app-polis/ecosystem-standards/commit/8fe3d422b7d3c2dd255e1455bbe1df3cb0633972))
+
+
+### Bug Fixes
+
+* update CI applies_to validation to v3.0.0 type names ([8389da2](https://github.com/mini-app-polis/ecosystem-standards/commit/8389da294bd86e70b01b98a7dc8ec1c56dee5a8b))
+
+
+### BREAKING CHANGES
+
+* applies_to values in all standards files updated from dod_type names to repo type names (new_cog → pipeline-cog, new_fastapi_service → api-service, new_hono_service → api-service, new_frontend_site → static-site, new_react_app → react-app, library → shared-library). Evaluator-cog versions pinned to standards < v3.0.0 will not correctly scope rules by type until updated.
+
 ## [2.5.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.5.0...v2.5.1) (2026-04-06)
 
 
