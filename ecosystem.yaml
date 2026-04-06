@@ -9,6 +9,7 @@
 # standards files will reference it correctly.
 #
 # Version: 1.2.0 · 2026-04
+# check_exceptions removed — per-repo evaluator.yaml now owns evaluation config (ADR-001)
 
 version: 1.2.0
 updated: 2026-04
@@ -28,18 +29,6 @@ services:
     description: >
       Config-driven Google Drive folder watcher. Polls Drive API on a
       1-minute interval, fires Prefect flow runs when new files are detected.
-    check_exceptions:
-      - rule: TEST-001
-        reason: trigger cog — no data normalization step
-      - rule: TEST-002
-        reason: trigger cog — no deduplication step
-      - rule: TEST-004
-        reason: trigger cog — no data output shape to verify
-      - rule: CD-009
-        reason: >
-          src/watcher_cog/logger.py is the logger wrapper implementation for
-          this service — it must use stdlib logging internally. CD-009 does
-          not apply to logger implementation files.
     replaces: google-app-script-trigger
     added: 2026-03
 
@@ -70,33 +59,7 @@ services:
       and standards rules at runtime. All findings written to
       pipeline_evaluations table via api-kaianolevine-com with source field
       distinguishing evaluation type.
-    check_exceptions:
-      - rule: TEST-001
-        reason: evaluation cog — no normalization of external data
-      - rule: TEST-002
-        reason: evaluation cog — no deduplication of external data
-      - rule: TEST-004
-        reason: evaluation cog — output shape tested via LLM parsing tests
-      - rule: CD-009
-        reason: >
-          src/evaluator_cog/engine/deterministic.py uses stdlib logging
-          intentionally — it is a pure logic module loaded during unit tests
-          where the shared logger is unavailable. CD-009 does not apply to
-          test-safe utility modules.
-      - rule: PIPE-008
-        reason: >
-          The deterministic checker source contains retired trigger pattern
-          strings (e.g. repository_dispatch) as string literals being checked
-          against, not as active trigger usage. PIPE-008 does not apply.
-      - rule: CD-015
-        reason: >
-          evaluator-cog runs two distinct flows (conformance_check_flow and
-          pipeline_eval). The conformance flow is registered via its own
-          Prefect entry point and scheduled independently. prefect.serve()
-          pattern is present — the checker cannot always resolve it from the
-          source scan due to the multi-flow structure.
     added: 2026-03
-
 
   - id: notes-ingest-cog
     type: pipeline-cog
@@ -112,13 +75,6 @@ services:
       raw transcripts and notes in Postgres via api-kaianolevine-com, and
       archives processed files. Outputs to wcs_transcripts and wcs_notes
       tables. Consumed by wcs.kaianolevine.com.
-    check_exceptions:
-      - rule: TEST-001
-        reason: pipeline cog — no normalization of raw transcript data
-      - rule: TEST-002
-        reason: pipeline cog — no deduplication of transcript data
-      - rule: TEST-004
-        reason: pipeline cog — output shape tested via LLM parsing tests
     added: 2026-04
 
   # ── API services ──────────────────────────────────────────────
@@ -135,15 +91,6 @@ services:
       flags, contact form, resume endpoints. Sole API for the kaianolevine.com
       ecosystem.
     replaces: deejay-marvel-api
-    check_exceptions:
-      - rule: PY-009
-        reason: api-kaianolevine-com predates hatchling standardisation and uses setuptools — migration is a low-priority backlog item
-      - rule: PY-011
-        reason: >
-          Intentional project name: kaianolevine_api. The repository is named
-          api-kaianolevine-com (infrastructure convention) but the Python
-          project name reflects the product identity. Aligning them would
-          require a breaking rename of the installed package.
     added: 2026-03
 
   # ── Shared libraries ──────────────────────────────────────────
@@ -157,29 +104,6 @@ services:
       Shared Python utilities. Google API client (Drive, Sheets), LLM client
       (Anthropic, OpenAI), structured logging, API client, metadata helpers.
       All Python processors and cogs declare this as a dependency.
-    check_exceptions:
-      - rule: PY-006
-        reason: this repo IS common-python-utils — cannot depend on itself
-      - rule: CD-009
-        reason: src/mini_app_polis/logger.py is the logger implementation — this repo defines the logger primitive, it cannot consume itself
-      - rule: CD-002
-        reason: shared library — no service entry point for Sentry initialisation
-      - rule: CD-010
-        reason: shared library — three-layer observability does not apply
-      - rule: TEST-001
-        reason: library — normalization tests not applicable
-      - rule: TEST-002
-        reason: library — deduplication tests not applicable
-      - rule: TEST-004
-        reason: library — output shape tests not applicable
-      - rule: PY-011
-        reason: >
-          Intentional split package identity: distribution name is
-          common-python-utils, import package is mini_app_polis. This
-          predates PY-011 and is a deliberate branding decision — the
-          mini_app_polis namespace is stable and used across all consumers.
-          Renaming the import package is a breaking change deferred
-          indefinitely.
     replaces: kaiano-common-utils
     added: 2026-03
 
@@ -206,19 +130,6 @@ services:
       response envelope helpers (success, successList, error, CommonErrors),
       structured logger (createLogger) emitting standard log shape, and shared
       Zod schemas. Published to npm as common-typescript-utils.
-    check_exceptions:
-      - rule: XSTACK-001
-        reason: this repo IS common-typescript-utils — cannot depend on itself
-      - rule: CD-009
-        reason: src/logger.ts is the logger implementation — this repo defines the logger primitive, it cannot consume itself
-      - rule: CD-002
-        reason: shared library — no service entry point for Sentry initialisation
-      - rule: TEST-001
-        reason: library — normalization tests not applicable
-      - rule: TEST-002
-        reason: library — deduplication tests not applicable
-      - rule: TEST-004
-        reason: library — output shape tests not applicable
     added: 2026-04
 
   # ── Standards & tooling ──────────────────────────────────────
@@ -234,17 +145,6 @@ services:
       all architectural decisions, patterns, and conventions. Versioned
       YAML files consumed by evaluator-cog at runtime. Semantic-release
       owns versioning via index.yaml.
-    check_exceptions:
-      - rule: XSTACK-001
-        reason: YAML-only standards repo — no TypeScript or Python service source, shared library requirement does not apply
-      - rule: CD-009
-        reason: no application source code — structured logging requirement does not apply
-      - rule: CD-010
-        reason: not a deployed service — three-layer observability does not apply
-      - rule: PIPE-008
-        reason: not a cog — no pipeline trigger pattern to evaluate
-      - rule: PIPE-011
-        reason: not a cog — no pipeline evaluation step required
     added: 2026-03
 
   # ── Web applications ──────────────────────────────────────────
@@ -263,13 +163,6 @@ services:
       Hono on Node API for deejaytools.com. Manages WCS routine registration,
       floor trial sessions, check-ins, slot assignment, partners, and songs.
       PostgreSQL on Railway. Clerk auth. Part of the deejaytools-com monorepo.
-    check_exceptions:
-      - rule: TEST-001
-        reason: API service — normalization tests not applicable
-      - rule: TEST-002
-        reason: API service — deduplication tests not applicable
-      - rule: TEST-004
-        reason: API service — no pipeline output shape to verify
     added: 2026-03
 
   - id: deejaytools-com-app
@@ -287,17 +180,6 @@ services:
       platform — events, sessions, floor trials, check-in queue, partner
       and song management. Vite + React + Tailwind + shadcn/ui.
       Part of the deejaytools-com monorepo.
-    check_exceptions:
-      - rule: CD-002
-        reason: React app — client-side Sentry via @sentry/react, not sentry-sdk
-      - rule: TEST-001
-        reason: React app — normalization tests not applicable
-      - rule: TEST-002
-        reason: React app — deduplication tests not applicable
-      - rule: TEST-003
-        reason: React app — no pipeline failure path to test
-      - rule: TEST-004
-        reason: React app — no pipeline output shape to verify
     added: 2026-03
 
   # ── Static sites ──────────────────────────────────────────────
@@ -311,42 +193,6 @@ services:
     description: >
       Software portfolio site. Queries api-kaianolevine-com live for DJ sets,
       catalog, stats, and evaluation findings.
-    check_exceptions:
-      - rule: CD-002
-        reason: >
-          Static Astro site — no server process for Sentry initialisation.
-          Client-side Sentry (@sentry/astro) is also not required: this site
-          fetches live data client-side from a public API and has no auth,
-          user sessions, or error surfaces that warrant browser error tracking
-          at this stage. Full CD-002 exception covers both server-side and
-          client-side Sentry for this repo.
-      - rule: TEST-001
-        reason: static site — normalization tests not applicable
-      - rule: TEST-002
-        reason: static site — deduplication tests not applicable
-      - rule: TEST-003
-        reason: static site — no pipeline failure path to test
-      - rule: TEST-004
-        reason: static site — no pipeline output shape to verify
-      - rule: XSTACK-001
-        reason: Static site — no server-side logic, common-typescript-utils not applicable per XSTACK-001 carve-out.
-      - rule: XSTACK-003
-        reason: >
-          Static Astro site on Cloudflare Pages. Repo uses npm (not pnpm)
-          and was scaffolded before XSTACK-003 was formalised. npm is
-          explicitly permitted for frontend sites per DOC-013.
-          Migrating to pnpm is a low-priority backlog item — not a
-          blocking violation.
-      - rule: VER-003
-        reason: >
-          Static site deployed via Cloudflare Pages Git integration (auto-deploy
-          on push to main). No ci.yml is required — Cloudflare Pages is the
-          CI/CD pipeline. semantic-release runs are not applicable to a static
-          site with no published package.
-      - rule: VER-005
-        reason: Cloudflare Pages Git integration handles deployment — no GitHub Actions checkout step required.
-      - rule: VER-006
-        reason: Cloudflare Pages Git integration handles deployment — no npm install step in CI required.
     added: 2026-03
 
   - id: website-astro-wcs
@@ -356,36 +202,6 @@ services:
     language: astro
     host: cloudflare-pages
     description: West Coast Swing personal site. wcs.kaianolevine.com.
-    check_exceptions:
-      - rule: CD-002
-        reason: static site — no server process for Sentry initialisation
-      - rule: TEST-001
-        reason: static site — normalization tests not applicable
-      - rule: TEST-002
-        reason: static site — deduplication tests not applicable
-      - rule: TEST-003
-        reason: static site — no pipeline failure path to test
-      - rule: TEST-004
-        reason: static site — no pipeline output shape to verify
-      - rule: XSTACK-001
-        reason: Static site — no server-side logic, common-typescript-utils not applicable per XSTACK-001 carve-out.
-      - rule: XSTACK-003
-        reason: >
-          Static Astro site on Cloudflare Pages. Repo uses npm (not pnpm)
-          and was scaffolded before XSTACK-003 was formalised. npm is
-          explicitly permitted for frontend sites per DOC-013.
-          Migrating to pnpm is a low-priority backlog item — not a
-          blocking violation.
-      - rule: VER-003
-        reason: >
-          Static site deployed via Cloudflare Pages Git integration (auto-deploy
-          on push to main). No ci.yml is required — Cloudflare Pages is the
-          CI/CD pipeline. semantic-release runs are not applicable to a static
-          site with no published package.
-      - rule: VER-005
-        reason: Cloudflare Pages Git integration handles deployment — no GitHub Actions checkout step required.
-      - rule: VER-006
-        reason: Cloudflare Pages Git integration handles deployment — no npm install step in CI required.
     replaces: kaiano-wcs-website
     added: 2026-03
 
