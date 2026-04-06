@@ -28,7 +28,7 @@ standards:
     status: requirement
     dimension: cross_repo_coherence
     severity: ERROR
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_react_app]
+    applies_to: [pipeline-cog, api-service, react-app]
     description: >
       Python services declare common-python-utils as a dependency.
       TypeScript services declare common-typescript-utils as a dependency.
@@ -40,10 +40,9 @@ standards:
       Flag if service implements its own logger, auth verify, or response envelope
       helper without using the shared library.
 
-      STATIC-SITE EXCEPTION: Do not flag new_frontend_site repos (Astro / Cloudflare
-      Pages) for absence of common-typescript-utils. Static sites contain no server-side
+      STATIC-SITE EXCEPTION: Do not flag static-site repos (Astro / Cloudflare Pages) for absence of common-typescript-utils. Static sites contain no server-side
       logic and cannot install monorepo-internal packages. The rule applies to
-      new_hono_service and new_react_app only for the TypeScript side.
+      api-service and react-app only for the TypeScript side.
       Analogous to the CD-002 Sentry carve-out for static sites.
 
       MONOREPO EXCEPTION: For services with a `monorepo` field in ecosystem.yaml,
@@ -63,7 +62,7 @@ standards:
     status: requirement
     dimension: cross_repo_coherence
     severity: ERROR
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       API response shapes are identical across Python and TypeScript services:
         success: { data: ..., meta: { count, version } }
@@ -77,7 +76,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: [new_hono_service, new_react_app]
+    applies_to: [api-service, react-app]
     description: >
       All TypeScript projects — monorepos and standalone services — use pnpm
       as the package manager. Not npm, not yarn. pnpm-lock.yaml is the
@@ -98,7 +97,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
-    applies_to: [new_frontend_site, new_react_app, new_hono_service]
+    applies_to: [static-site, react-app, api-service]
     description: >
       Environment variable naming follows runtime-specific prefix conventions:
       PUBLIC_ prefix for Astro client-exposed variables (e.g. PUBLIC_API_URL).

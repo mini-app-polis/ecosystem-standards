@@ -19,7 +19,7 @@ services:
   # ── Always-on workers (cogs) ──────────────────────────────────
 
   - id: watcher-cog
-    type: worker
+    type: trigger-cog
     status: active
     dod_type: new_cog
     language: python
@@ -44,7 +44,7 @@ services:
     added: 2026-03
 
   - id: deejay-cog
-    type: worker
+    type: pipeline-cog
     status: active
     dod_type: new_cog
     language: python
@@ -57,7 +57,7 @@ services:
     added: 2026-03
 
   - id: evaluator-cog
-    type: worker
+    type: pipeline-cog
     status: active
     dod_type: new_cog
     language: python
@@ -99,7 +99,7 @@ services:
 
 
   - id: notes-ingest-cog
-    type: worker
+    type: pipeline-cog
     status: active
     dod_type: new_cog
     language: python
@@ -124,7 +124,7 @@ services:
   # ── API services ──────────────────────────────────────────────
 
   - id: api-kaianolevine-com
-    type: api
+    type: api-service
     status: active
     dod_type: new_fastapi_service
     language: python
@@ -149,7 +149,7 @@ services:
   # ── Shared libraries ──────────────────────────────────────────
 
   - id: common-python-utils
-    type: library
+    type: shared-library
     status: active
     dod_type: null
     language: python
@@ -184,7 +184,7 @@ services:
     added: 2026-03
 
   - id: kaiano-ts-utils
-    type: library
+    type: shared-library
     status: retired
     language: typescript
     added: 2026-03
@@ -196,7 +196,7 @@ services:
       common-typescript-utils in April 2026.
 
   - id: common-typescript-utils
-    type: library
+    type: shared-library
     status: active
     dod_type: null
     language: typescript
@@ -224,7 +224,7 @@ services:
   # ── Standards & tooling ──────────────────────────────────────
 
   - id: ecosystem-standards
-    type: standards
+    type: standards-repo
     status: active
     dod_type: null
     language: yaml
@@ -250,7 +250,7 @@ services:
   # ── Web applications ──────────────────────────────────────────
 
   - id: deejaytools-com-api
-    type: api
+    type: api-service
     status: active
     dod_type: new_hono_service
     language: typescript
@@ -273,7 +273,7 @@ services:
     added: 2026-03
 
   - id: deejaytools-com-app
-    type: site
+    type: react-app
     status: active
     dod_type: new_react_app
     language: typescript
@@ -303,7 +303,7 @@ services:
   # ── Static sites ──────────────────────────────────────────────
 
   - id: website-astro-software
-    type: site
+    type: static-site
     status: active
     dod_type: new_frontend_site
     language: astro
@@ -350,7 +350,7 @@ services:
     added: 2026-03
 
   - id: website-astro-wcs
-    type: site
+    type: static-site
     status: active
     dod_type: new_frontend_site
     language: astro

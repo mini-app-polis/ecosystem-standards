@@ -1,13 +1,20 @@
 # ecosystem-standards / index.yaml
 # Manifest file — agents fetch this first to discover available standards files.
-# Version: 2.5.2 · 2026-04
+# Version: 3.0.0 · 2026-04
 #
 # Fetch pattern:
 #   1. GET index.yaml  → discover files and current version
 #   2. GET standards/<file>.yaml  → fetch relevant domain(s)
 #   3. Pin standards_version in evaluation output for auditability
+#
+# BREAKING CHANGES in v3.0.0:
+#   - Rule applies_to values updated from dod_type names to repo type names
+#     (e.g. new_cog → pipeline-cog, new_fastapi_service → api-service)
+#   - ecosystem.yaml check_exceptions replaced by per-repo evaluator.yaml (ADR-001)
+#   - Type/trait taxonomy introduced (ADR-002)
+#   - deferred keyword introduced for known failures not yet prioritized
 
-version: 2.5.2
+version: 3.0.0
 updated: 2026-04
 maintainer: mini-app-polis
 
@@ -42,20 +49,99 @@ statuses:
 schema:
   rule_fields:
     applies_to: >
-      List of dod_type values this rule applies to. The conformance
-      checker skips rules where the service's dod_type is not in this
-      list. Use [all] to apply to every service type.
-  service_fields:
-    dod_type: >
-      The definitions-of-done checklist type that applies to this
-      service. Must match a key in definitions-of-done.yaml. Null for
-      libraries and standards repos.
-    check_exceptions:
+      List of repo type names this rule applies to. The conformance
+      checker skips rules where the repo's type is not in this list.
+      Use [all] to apply to every repo type. Valid type values are
+      defined in the repo_types section below.
+
+  repo_types:
+    pipeline-cog: >
+      Always-on Railway worker running one or more Prefect @flow(s).
+      Processes data. Examples: deejay-cog, evaluator-cog, notes-ingest-cog.
+    trigger-cog: >
+      Always-on Railway worker running a plain asyncio loop. Detects
+      events and fires Prefect flow runs via API. No @flow decorator.
+      Examples: watcher-cog.
+    api-service: >
+      HTTP API service with routes, auth, and a database. FastAPI (Python)
+      or Hono (TypeScript). Examples: api-kaianolevine-com, deejaytools-com-api.
+    shared-library: >
+      Published package consumed by other repos. No service entry point,
+      no server runtime. Examples: common-python-utils, common-typescript-utils.
+    static-site: >
+      Astro or HTML site deployed to Cloudflare Pages. No server-side
+      runtime. Examples: website-astro-software, website-astro-wcs.
+    react-app: >
+      Vite/React SPA. Client-side only. May live inside a monorepo.
+      Examples: deejaytools-com-app.
+    standards-repo: >
+      YAML-only definition and tooling repository. Not a deployed service.
+      Examples: ecosystem-standards.
+
+  traits:
+    logger-primitive: >
+      This repo IS the shared logger implementation — the CD-009 shared
+      logger requirement cannot apply to itself. Applies to common-python-utils
+      and common-typescript-utils, and to logger wrapper modules within services.
+    cloudflare-pages: >
+      Deployed via Cloudflare Pages Git integration (auto-deploy on push
+      to main). No ci.yml required — Cloudflare Pages is the CI/CD pipeline.
+      Automatically excepts VER-003, VER-005, VER-006.
+    multi-flow: >
+      Runs multiple Prefect flows registered via separate entry points.
+      The CD-015 source scanner may not resolve prefect.serve() in this
+      configuration — finding is informational not a violation.
+    pipeline-cog-evaluator: >
+      This repo IS evaluator-cog — the PIPE-011 evaluation step requirement
+      cannot apply to the evaluator itself.
+    pre-rule: >
+      Used with a specific rule_id to indicate this repo predates the rule
+      and has a documented migration path. Use sparingly — prefer deferred
+      if the fix is planned, or an exemption if the rule genuinely does
+      not apply.
+
+  evaluator_yaml:
+    purpose: >
+      Per-repo configuration file (evaluator.yaml at repo root) that declares
+      the repo type, traits, exemptions, and deferrals. Required on all active
+      repos (EVAL-008). The evaluator reads this file after cloning the repo
+      to determine which rules apply and how findings should be surfaced.
+    type:
+      format: "string — one of the repo_types values above"
+      required: true
+    traits:
+      format: "list of trait names from the traits section above"
+      required: false
+    exemptions:
       format: "list of {rule: RULE-ID, reason: string} objects"
       purpose: >
-        Per-service rule exceptions with machine-readable rule ID and
-        human-readable reason. The conformance checker skips excepted
-        rules and surfaces the reason in findings output.
+        Rules that genuinely do not apply to this repo for structural reasons
+        unique to this repo. The evaluator skips the check and surfaces the
+        reason in findings as INFO. Exemptions require a reason string.
+        If multiple repos share the same exemption reason, that reason should
+        be promoted to a type or trait rather than repeated per repo.
+    deferrals:
+      format: "list of {rule: RULE-ID, reason: string, until: date|null} objects"
+      purpose: >
+        Rules that apply to this repo and are currently failing, but are not
+        prioritized for immediate remediation. The evaluator still runs the
+        check — if failing, the finding is written to pipeline_evaluations
+        with status: deferred and severity downgraded to INFO. Deferred
+        findings are excluded from error/warn counts in pipeline health summary
+        but remain visible in a dedicated Deferred section.
+        until is optional — null means open-ended. If set to a date that has
+        passed, the deferral expires and the finding resurfaces at full severity.
+        A deferral without a plan is a signal to reconsider whether the rule
+        applies at all (convert to exemption) or whether the fix is overdue.
+        Do NOT defer security or data integrity issues.
+
+  service_fields:
+    dod_type: >
+      The definitions-of-done checklist type that applies to this service.
+      Must match a key in definitions-of-done.yaml. Null for libraries and
+      standards repos. Retained for backward compatibility with existing
+      evaluator-cog versions during the v3.0.0 migration period.
+
   monorepo_fields:
     monorepo: >
       ID of the monorepo this service belongs to. Must match an entry in the

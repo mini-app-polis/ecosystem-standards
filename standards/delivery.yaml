@@ -13,7 +13,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       Feature flags are used to decouple deployment from release. They gate
       major sections of functionality — not minor implementation details.
@@ -75,7 +75,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, react-app]
     description: >
       All production services integrate Sentry for unhandled exception
       tracking. This includes FastAPI services, Hono services, and Python
@@ -99,7 +99,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       All Python services use common-python-utils logger. All TypeScript
       services use common-typescript-utils logger. Never use print() in production
@@ -141,7 +141,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       All "uses: owner/repo@vN" references in .github/workflows/ must reference
       version tags that exist in the action's release history. Invalid version tags
@@ -165,7 +165,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       All commit messages follow: type: description.
       Types: feat, fix, docs, refactor, chore, test, ci.
@@ -183,7 +183,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       Use explicit BREAKING CHANGE in commit body for major version bumps.
       The feat!: shorthand is unreliable. Correct pattern using two -m flags:
@@ -201,7 +201,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       Every repo has .releaserc.json and a release job in ci.yml. On merge to main:
       tests run, semantic-release reads commits, determines bump, updates version
@@ -217,7 +217,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       Never manually edit version in pyproject.toml or package.json. Never manually
       edit CHANGELOG.md. Both are owned by semantic-release.
@@ -236,7 +236,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       All CI jobs that run semantic-release must use fetch-depth: 0 on the checkout
       step. Without this semantic-release cannot read full git history and will not
@@ -252,7 +252,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       semantic-release plugins are installed via npm install --no-save in the release
       job before running npx semantic-release. Not via package.json. Required because
@@ -268,7 +268,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       All pipeline flows connect to Prefect Cloud (free tier). Run history, step logs,
       and flow state are visible at app.prefect.cloud. GitHub Actions logs are for
@@ -281,7 +281,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       GitHub Actions handles lint, tests, deploys, and semantic-release.
       It does not trigger pipeline flows. Drive-event triggers go through
@@ -296,7 +296,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [new_cog]
+    applies_to: [pipeline-cog, trigger-cog]
     description: >
       Trigger cogs — services running their own continuous polling loop without
       external orchestration visibility — integrate Healthchecks.io as a dead
@@ -326,7 +326,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       Log levels follow a strict contract across all services:
         DEBUG: internal state useful for local debugging only.
@@ -359,7 +359,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, react-app]
     description: >
       All meaningful log events emitted by production services include
       these fields:
@@ -396,7 +396,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, react-app]
     description: >
       Every production service implements all three observability layers:
         Layer 1 — Liveness:    Healthchecks.io for always-on workers.
@@ -436,7 +436,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       Doppler is the single source of truth for all infrastructure secrets
       across the MiniAppPolis ecosystem. This includes API keys, database
@@ -480,7 +480,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       Internal calls between Railway services and cogs use per-caller
       API keys passed via the X-Internal-API-Key header. Each caller
@@ -510,7 +510,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [new_fastapi_service]
+    applies_to: [api-service]
     description: >
       The admin control panel for feature flags lives at an /admin route
       in the kaianolevine.com software portfolio site. It is gated behind
@@ -537,7 +537,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [new_frontend_site]
+    applies_to: [static-site]
     description: >
       All Astro static sites deploy to Cloudflare Pages. Not Netlify, not
       Vercel, not GitHub Pages. Cloudflare Pages provides dev/prod environment
@@ -558,7 +558,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: [new_cog]
+    applies_to: [pipeline-cog, trigger-cog]
     description: >
       Cogs register flows using prefect.serve() running in-process on Railway.
       The Prefect work pool architecture is not used — it requires an external
@@ -581,7 +581,7 @@ standards:
     status: convention
     dimension: cd_readiness
     severity: INFO
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       Always run git pull origin main before creating a new feature branch.
       Prevents merge conflicts with semantic-release commits
@@ -594,7 +594,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       The assets array in the @semantic-release/git plugin must include every
       file that semantic-release modifies during a release. At minimum:

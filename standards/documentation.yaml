@@ -90,7 +90,7 @@ standards:
     status: requirement
     dimension: documentation_coverage
     severity: WARN
-    applies_to: [new_cog, new_fastapi_service, new_hono_service, new_frontend_site, new_react_app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
       Every repo's README includes a "Running locally" section that covers
       five conceptual elements, expressed in the idioms of the repo's stack.
@@ -125,11 +125,11 @@ standards:
       pre-commit run --all-files, uv run pytest, and a prerequisites
       mention (Python version or uv). Flag if any of the five are missing.
 
-      For TypeScript API repos (new_hono_service): scan for pnpm install,
+      For TypeScript API repos (api-service / Hono): scan for pnpm install,
       pnpm dev (or equivalent), pnpm test, and a Node.js prerequisites
       mention.
 
-      For frontend repos (new_frontend_site, new_react_app): scan for an
+      For frontend repos (static-site, react-app): scan for an
       install command (pnpm install OR npm install), a dev command (pnpm dev,
       npm run dev, or astro dev), a build command (pnpm build or npm run build),
       and a reference to .env.example. Accept either package manager — do NOT
@@ -161,7 +161,7 @@ standards:
     status: requirement
     dimension: documentation_coverage
     severity: WARN
-    applies_to: [new_cog, new_fastapi_service]
+    applies_to: [pipeline-cog, api-service]
     description: >
       Pydantic model fields use the description parameter. Models are
       self-documenting — no separate documentation needed for data shapes.
@@ -220,7 +220,7 @@ standards:
     status: requirement
     dimension: documentation_coverage
     severity: ERROR
-    applies_to: [new_fastapi_service, new_hono_service]
+    applies_to: [api-service]
     description: >
       FastAPI's /docs is a deliverable, not a side effect. Every endpoint must
       be complete and accurate before the service is considered done. All endpoints

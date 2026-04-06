@@ -13,7 +13,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
-    applies_to: [new_cog]
+    applies_to: [pipeline-cog, trigger-cog]
     description: >
       New event-driven pipelines use Prefect. Python-native, built-in observability,
       retry logic, run history. GitHub Actions is for CI/CD only — not pipeline
@@ -30,7 +30,7 @@ standards:
     status: requirement
     dimension: pipeline_consistency
     severity: ERROR
-    applies_to: [new_cog]
+    applies_to: [pipeline-cog, trigger-cog]
     description: >
       Every pipeline step can be safely re-run without side effects. Re-running a
       step produces the same result as running it once.
@@ -59,7 +59,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
-    applies_to: [new_cog]
+    applies_to: [pipeline-cog, trigger-cog]
     description: >
       Processing new inputs and rebuilding the collection are separate pipeline
       steps — not combined. Allows independent retry.
@@ -79,7 +79,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: [new_cog]
+    applies_to: [pipeline-cog, trigger-cog]
     description: >
       Pipelines writing to shared resources declare a concurrency group.
       cancel-in-progress: false for data pipelines.
@@ -105,7 +105,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: [new_cog]
+    applies_to: [pipeline-cog, trigger-cog]
     description: >
       Raw inputs are archived after processing, never deleted. Archive subfolder used.
     checkable: true
@@ -125,7 +125,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
-    applies_to: [new_cog]
+    applies_to: [pipeline-cog, trigger-cog]
     description: >
       Flow functions use get_run_logger() for Prefect-visible logs with fallback
       to standard logger for local runs:
@@ -142,7 +142,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
-    applies_to: [new_cog]
+    applies_to: [pipeline-cog, trigger-cog]
     description: >
       Tasks that call external APIs use retries=2, retry_delay_seconds=30. Tasks
       calling Google APIs inherit common-python-utils retry logic.
@@ -161,7 +161,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
-    applies_to: [new_cog]
+    applies_to: [pipeline-cog]
     description: >
       The canonical Drive-event trigger pattern is:
         File appears in watched Drive folder
@@ -197,7 +197,7 @@ standards:
     status: requirement
     dimension: pipeline_consistency
     severity: WARN
-    applies_to: [new_cog]
+    applies_to: [pipeline-cog]
     description: >
       All production pipeline cogs include a behavioral evaluation step as the
       final task in the flow. The step calls evaluate_pipeline_run() from
@@ -227,7 +227,7 @@ standards:
     status: convention
     dimension: pipeline_consistency
     severity: WARN
-    applies_to: [new_cog]
+    applies_to: [pipeline-cog, trigger-cog]
     description: >
       Prefect @task decorators with retry_delay_seconds= must zero out
       the delay when running under pytest. Use os.getenv("PYTEST_CURRENT_TEST")
@@ -254,7 +254,7 @@ standards:
     status: requirement
     dimension: pipeline_reliability
     severity: ERROR
-    applies_to: [new_cog]
+    applies_to: [pipeline-cog, trigger-cog]
     description: >
       Any pipeline cog that scans a shared resource (Drive folder, S3 bucket,
       database table, etc.) and processes items sequentially must acquire a

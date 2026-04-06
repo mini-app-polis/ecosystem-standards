@@ -13,7 +13,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: [new_fastapi_service, new_hono_service]
+    applies_to: [api-service]
     description: >
       All new API services deployed on Railway regardless of language. Python
       services use FastAPI. TypeScript services use Hono on Node. Railway is the
@@ -26,7 +26,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
-    applies_to: [new_fastapi_service, new_hono_service]
+    applies_to: [api-service]
     description: >
       All new services use PostgreSQL deployed on Railway. Not D1 or SQLite.
     checkable: false
@@ -37,7 +37,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
-    applies_to: [new_fastapi_service, new_hono_service]
+    applies_to: [api-service]
     description: >
       Python: SQLAlchemy async with asyncpg driver, Pydantic-compatible models,
       Alembic for migrations. TypeScript: Drizzle ORM with postgres.js driver,
@@ -62,7 +62,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: [new_fastapi_service, new_hono_service]
+    applies_to: [api-service]
     description: >
       All routes versioned from day one: /v1/<resource>. No unversioned routes
       in production.
@@ -81,7 +81,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: [new_fastapi_service, new_hono_service]
+    applies_to: [api-service]
     description: >
       All responses wrapped: { data: ..., meta: { count, version } }.
       Errors: { error: { code, message } }. No bare arrays or inconsistent shapes.
@@ -96,7 +96,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
-    applies_to: [new_fastapi_service, new_hono_service]
+    applies_to: [api-service]
     description: >
       Every table includes owner_id (Clerk user ID). Not enforced as FK today
       but present for future multi-tenant use.
@@ -115,7 +115,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
-    applies_to: [new_fastapi_service, new_hono_service]
+    applies_to: [api-service]
     description: >
       Authentication via Clerk across all services. Consistent across the ecosystem.
     checkable: true
@@ -135,7 +135,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: [new_fastapi_service, new_hono_service]
+    applies_to: [api-service]
     description: >
       Public (unauthenticated) endpoints are explicitly documented and intentional —
       not accidental.
@@ -155,7 +155,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: [new_fastapi_service, new_hono_service]
+    applies_to: [api-service]
     description: >
       All API services configure CORS origins via a CORS_ORIGINS environment
       variable. Never hardcode allowed origins in source code. The env var
@@ -177,7 +177,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [new_fastapi_service, new_hono_service]
+    applies_to: [api-service]
     description: >
       All Railway-hosted API services expose a GET /health endpoint returning
       {"status": "ok"} with HTTP 200. No authentication required. Used by
@@ -199,7 +199,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: [new_fastapi_service, new_hono_service]
+    applies_to: [api-service]
     description: >
       Alembic (Python) and Drizzle Kit (TypeScript) migrations are applied
       as a CI/CD step before the new service version is live. Never run
@@ -227,7 +227,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: [new_fastapi_service, new_hono_service]
+    applies_to: [api-service]
     description: >
       Any FastAPI service with write endpoints (POST, PATCH, DELETE) that depend on
       an unverified header (X-Owner-Id or equivalent) must either be provably isolated
@@ -251,7 +251,7 @@ standards:
     status: requirement
     dimension: cross_repo_coherence
     severity: ERROR
-    applies_to: [new_fastapi_service, new_hono_service]
+    applies_to: [api-service]
     description: >
       When kaianolevine-api's auth scheme changes, CommonPythonApiClient._headers() in
       common-python-utils must change in the same release. A mismatch causes all

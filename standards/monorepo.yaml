@@ -17,7 +17,7 @@ standards:
     status: requirement
     dimension: monorepo_coherence
     severity: ERROR
-    applies_to: [new_hono_service, new_react_app]
+    applies_to: [api-service, react-app]
     description: >
       For services inside a pnpm monorepo, shared library requirements
       (XSTACK-001) are checked at the workspace root package.json, not at
@@ -48,7 +48,7 @@ standards:
     status: requirement
     dimension: monorepo_coherence
     severity: WARN
-    applies_to: [new_hono_service, new_react_app]
+    applies_to: [api-service, react-app]
     description: >
       For services inside a pnpm monorepo, CI configuration (ci.yml,
       .github/workflows/) is evaluated at the monorepo repo root.
@@ -80,7 +80,7 @@ standards:
     status: requirement
     dimension: monorepo_coherence
     severity: INFO
-    applies_to: [new_hono_service, new_react_app]
+    applies_to: [api-service, react-app]
     description: >
       When two apps in the same monorepo generate findings with the same
       rule_id and the same root cause (e.g. both fail CD-002 because Sentry
