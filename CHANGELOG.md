@@ -1,3 +1,10 @@
+## [3.0.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.0.0...v3.0.1) (2026-04-06)
+
+
+### Bug Fixes
+
+* removing exceptions in this repo. each repo now owns their exceptions ([5c7da81](https://github.com/mini-app-polis/ecosystem-standards/commit/5c7da81e7ab45a1a746d75fcac30ba36e5236386))
+
 # [3.0.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v2.5.1...v3.0.0) (2026-04-06)
 
 

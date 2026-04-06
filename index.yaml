@@ -14,7 +14,7 @@
 #   - Type/trait taxonomy introduced (ADR-002)
 #   - deferred keyword introduced for known failures not yet prioritized
 
-version: 3.0.0
+version: 3.0.1
 updated: 2026-04
 maintainer: mini-app-polis
 
