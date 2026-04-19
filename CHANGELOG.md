@@ -1,3 +1,10 @@
+## [3.1.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.1.0...v3.1.1) (2026-04-19)
+
+
+### Bug Fixes
+
+* realign package.json with latest release and fix changelog duplicate ([39b82f6](https://github.com/mini-app-polis/ecosystem-standards/commit/39b82f695eaf2306e4eaac36247bfac39fbe904a))
+
 # [3.1.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.0.1...v3.1.0) (2026-04-19)
 
 
