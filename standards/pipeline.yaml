@@ -11,45 +11,104 @@ standards:
     title: Prefect for new pipelines
     status: requirement
     dimension: structural_conformance
-    severity: WARN
+    severity: ERROR
     applies_to: [pipeline-cog, trigger-cog]
     description: >
-      New event-driven pipelines use Prefect. Python-native, built-in observability,
-      retry logic, run history. GitHub Actions is for CI/CD only — not pipeline
-      orchestration.
-    checkable: false
+      New event-driven pipelines use Prefect. Python-native, built-in
+      observability, retry logic, run history. GitHub Actions is for
+      CI/CD only — not pipeline orchestration.
+    checkable: true
+    check_notes: >
+      Verify Prefect is present as the orchestration layer:
+        (1) `prefect` appears in pyproject.toml [project.dependencies].
+            Flag if absent on a pipeline-cog or trigger-cog repo.
+        (2) At least one Python source file imports from `prefect`:
+              - Pipeline cogs: must contain `@flow` decorator usage
+                (from `prefect import flow` or similar).
+              - Trigger cogs: must contain either `@flow` usage OR
+                a Prefect client call pattern (creating flow runs via
+                `prefect.deployments.run_deployment` or PrefectClient).
+            Flag repos of these types with zero Prefect imports.
+        (3) This rule overlaps with CD-005 (Prefect Cloud for
+            observability). CD-005 focuses on the observability
+            connection; PIPE-001 focuses on the orchestration
+            framework itself. A repo failing both produces two
+            findings, which is correct — they fail for different
+            reasons.
 
   # ─────────────────────────────────────────────
   # PIPELINE DESIGN
   # ─────────────────────────────────────────────
 
   - id: PIPE-002
-    title: Idempotent pipeline steps
+    title: Database writes use upsert patterns
     status: requirement
     dimension: pipeline_consistency
     severity: ERROR
     applies_to: [pipeline-cog, trigger-cog]
     description: >
-      Every pipeline step can be safely re-run without side effects. Re-running a
-      step produces the same result as running it once.
+      Database writes in pipeline steps use upsert patterns —
+      on_conflict_do_update, merge, or equivalent — rather than plain
+      inserts. This is the concrete, mechanically-checkable portion of
+      pipeline idempotency. The broader "is the whole flow idempotent"
+      concern lives in PIPE-013.
     checkable: true
     check_notes: >
-      Search flow and task source files for database write operations (session.add,
-      session.execute INSERT/UPDATE, API POST/PATCH calls). For each write,
-      check whether it uses an upsert pattern (on_conflict_do_update,
-      merge, or equivalent) rather than a plain insert. Flag plain inserts
-      on tables that are likely to receive duplicate runs. LLM: assess
-      whether the overall flow design would produce duplicate records or
-      side effects if re-run — look for missing deduplication guards,
-      non-idempotent file moves, or stateful counters.
+      DETERMINISTIC CHECK.
+      Scan all flow and task source files (src/**/*.py) for database
+      write operations:
+        (1) `session.add(...)`, `session.add_all(...)` — flag unless
+            immediately preceded or followed by an on_conflict_do_update
+            call on the target table, OR the target table is explicitly
+            declared as append-only (documented in a comment or in
+            ecosystem.yaml).
+        (2) Raw `session.execute(INSERT INTO ...)` — flag if the INSERT
+            lacks ON CONFLICT DO UPDATE or ON CONFLICT DO NOTHING.
+        (3) HTTP `POST` or `PATCH` calls to api-kaianolevine-com
+            endpoints that are known idempotency-sensitive
+            (/v1/pipeline_evaluations, /v1/live-plays, /v1/wcs_notes) —
+            flag any POST without an Idempotency-Key header or
+            equivalent dedup identifier.
+      Exempt: test files, migration scripts, one-shot backfill scripts
+      with names matching migrate_*.py or backfill_*.py.
+      Expected remediation: use on_conflict_do_update targeting a stable
+      unique key (source file ID, content hash, or composite of
+      run_id + repo).
 
-      Specific pattern to flag: plain session.add() or INSERT INTO calls on
-      tables that could receive duplicate rows on re-run (e.g. ingestion tables,
-      evaluation records, play history). The expected fix is
-      on_conflict_do_update targeting a stable unique key (source file ID,
-      content hash, or composite of run_id + repo). Flag if no such guard is
-      present. This rule should be cited as PIPE-002 in findings — not as a
-      nameless reliability concern.
+  - id: PIPE-013
+    title: Flow design is idempotent end-to-end
+    status: requirement
+    dimension: pipeline_consistency
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog]
+    description: >
+      Beyond database writes (PIPE-002), the overall flow design must
+      produce the same result when re-run. This covers: file moves that
+      depend on current state, stateful counters, external side effects
+      that are not guarded by a deduplication key, and flow-level
+      retry semantics.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      Assess the flow structure for the following anti-patterns, each
+      of which produces a distinct finding:
+        (1) File archive/move operations that assume the file has not
+            been processed before. An archive step that moves file X to
+            archive/ fails on re-run because X no longer exists at the
+            source. Flag flows that move files without first checking
+            whether the file was already processed.
+        (2) Stateful counters incremented per run rather than derived
+            from idempotent state. A counter that goes up on every run
+            regardless of work done produces wrong values on retry.
+        (3) External side effects (sending emails, posting to Slack,
+            creating calendar events) triggered per-run without a
+            deduplication guard keyed on run_id or input hash.
+        (4) Flow-level retry configuration that re-runs the whole flow
+            on failure. If the flow is not idempotent end-to-end, this
+            amplifies bad behavior rather than recovering from it.
+      For each anti-pattern detected, emit a finding citing PIPE-013
+      with the specific file and line. Remediation is always "add a
+      dedup key or a state check before the side effect."
 
   - id: PIPE-003
     title: Separate process and collect steps
@@ -96,23 +155,63 @@ standards:
       all shared-resource writes including non-scanning writes.
 
   - id: PIPE-005
-    title: Archive, never delete raw inputs
+    title: Raw inputs are archived, not deleted
     status: requirement
     dimension: structural_conformance
     severity: ERROR
     applies_to: [pipeline-cog, trigger-cog]
     description: >
-      Raw inputs are archived after processing, never deleted. Archive subfolder used.
+      Raw inputs are archived after processing, never deleted. This
+      rule covers the concrete delete-vs-archive check. The broader
+      "is archiving applied consistently across all input types" check
+      lives in PIPE-014.
     checkable: true
     check_notes: >
-      Search all Python source files for Drive file operations — look for
-      move, delete, trash, or files().delete() calls on the Drive API.
-      Flag any files().delete() or trash() call on input files. Check for
-      a shutil.move or Drive files().copy() + delete pattern — confirm the
-      move targets an archive subfolder (named archive/, processed/, or
-      similar) rather than deletion. LLM: assess whether the archiving
-      pattern is consistently applied across all input file types handled
-      by the cog.
+      DETERMINISTIC CHECK.
+      Scan all Python source files for input-deletion patterns on the
+      Drive API and filesystem:
+        (1) `drive_service.files().delete(fileId=...)` — flag any call.
+        (2) `drive_service.files().update(fileId=..., body={'trashed': True})` —
+            flag any call.
+        (3) `os.remove(...)`, `os.unlink(...)`, `pathlib.Path.unlink()`
+            on paths derived from input-file variables (names
+            containing `input`, `source`, `raw`, or matching the flow's
+            configured input folder pattern) — flag.
+        (4) `shutil.rmtree(...)` targeting any directory that matches
+            input-folder naming — flag.
+      Exempt: test fixtures, build artifacts in `dist/` or `build/`,
+      tempfile cleanup with explicit `tempfile` or `tmp_path` context.
+
+  - id: PIPE-014
+    title: Archiving pattern is consistent across all input types
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog]
+    description: >
+      For pipeline cogs that handle multiple input types (e.g. Drive
+      files + API submissions + scheduled batches), the archiving
+      behavior must be consistent across all of them. One input type
+      being archived to `processed/` while another is silently
+      retained in the source folder creates operational confusion.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      Identify every input source handled by the cog. For each source,
+      determine whether a post-processing archive step exists and
+      where archived items land. Flag if:
+        (1) Some input types are archived and others are not.
+        (2) Archive destinations are inconsistent across input types
+            (one goes to `processed/`, another to `archive/`, a third
+            has no destination).
+        (3) The archive destination is documented nowhere (not in
+            README, not in the flow code's docstring, not in
+            ecosystem.yaml).
+      This rule is LLM-judged because it requires understanding what
+      counts as an "input type" and tracing post-processing behavior,
+      which is not mechanically detectable. Remediation: pick one
+      archive convention per cog, apply it to every input type, and
+      document it in the cog README.
 
   - id: PIPE-006
     title: Dual logger pattern in Prefect flows
@@ -149,7 +248,40 @@ standards:
       LLMClient usage, which have internal retry handling).
 
   - id: PIPE-008
-    title: watcher-cog as canonical Drive trigger
+    title: Retired trigger patterns are not used
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    applies_to: [pipeline-cog]
+    description: >
+      Pipeline cogs do not contain any of the retired trigger patterns
+      (repository_dispatch relays, workflow_dispatch from application
+      code, direct GitHub API calls to trigger workflows,
+      google-app-script-trigger references). These were replaced by
+      the watcher-cog → Prefect API pattern. The broader "does this
+      cog's trigger architecture match the canonical pattern" check
+      lives in PIPE-015.
+    supersedes: "Apps Script → repository_dispatch → GitHub Actions (retired 2026-03)"
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Scan all source files and workflow files for the retired patterns:
+        (1) `.github/workflows/*.yml` containing `on: repository_dispatch:`
+            where the job body invokes application code (not pure CI).
+        (2) Python source containing `requests.post(...)` or `httpx.post(...)`
+            to a URL matching `api.github.com/.../dispatches` — flag as
+            GitHub API trigger relay.
+        (3) References to `google-app-script-trigger` in any file (this
+            service is retired — see ecosystem.yaml).
+        (4) `workflow_dispatch` invocations from inside Python source
+            (via gh CLI subprocess or GitHub API HTTP call).
+      Each hit is one finding with the specific file/line.
+
+      COG SUBTYPE: This rule applies to pipeline cogs only. Skip for
+      trigger cogs and watcher-cog itself.
+
+  - id: PIPE-015
+    title: Cog trigger architecture matches the canonical pattern
     status: requirement
     dimension: structural_conformance
     severity: WARN
@@ -157,31 +289,38 @@ standards:
     description: >
       The canonical Drive-event trigger pattern is:
         File appears in watched Drive folder
-        → watcher-cog detects change (1-minute poll via Drive API)
-        → watcher-cog calls Prefect API to create flow run
-        → Prefect executes the cog flow
-      watcher-cog is an always-on Railway worker service. Config-driven:
-      adding a new folder-to-cog mapping requires one WatcherConfig
-      entry — no code changes. The previous pattern (Apps Script →
-      repository_dispatch → GitHub Actions) is retired. google-app-script-trigger
-      is archived.
+        → watcher-cog detects the change (1-minute poll via Drive API)
+        → watcher-cog calls Prefect API to create a flow run
+        → Prefect executes the cog flow.
+      This rule checks whether a cog's overall trigger architecture
+      conforms to the pattern — not just whether it avoids retired
+      patterns (PIPE-008). The two checks fail for different reasons
+      and require different fixes.
     checkable: true
     check_notes: >
-      Search source files for any of the retired trigger patterns:
-      repository_dispatch, workflow_dispatch triggered from application code,
-      google-app-script-trigger references, or direct GitHub API calls to
-      trigger workflows. Flag any found. Check that the cog receives its
-      trigger via Prefect flow run creation (look for PrefectClient or
-      prefect.deployments.run_deployment calls in watcher-cog, not in the
-      cog itself). LLM: assess whether the trigger architecture matches the
-      canonical watcher-cog → Prefect → cog flow pattern described in the
-      rule.
+      LLM CHECK.
+      Examine the cog's entry point(s) and determine how flow runs
+      are initiated. Flag if:
+        (1) The cog polls for input changes itself (duplicates
+            watcher-cog's responsibility).
+        (2) The cog's flow is invoked directly by cron or by a
+            Railway-scheduled command, rather than via Prefect
+            deployment trigger.
+        (3) The cog uses watcher-cog but the WatcherConfig entry
+            for its input folder is missing from watcher-cog's
+            config — this creates a cog that expects to be triggered
+            but has no trigger configured.
+        (4) The cog receives triggers from a source other than
+            watcher-cog or Prefect deployments (e.g. direct HTTP
+            calls from a frontend, webhook from a third party).
+            These may be legitimate patterns for specific cog types
+            — flag for review rather than as an automatic violation.
+      This is LLM-judged because the "what's your trigger source"
+      question requires tracing from the flow body outward to
+      deployment config, watcher-cog config, and ecosystem.yaml
+      service wiring.
 
-      COG SUBTYPE: This rule applies to pipeline cogs (cog_subtype: pipeline)
-      only. Do not evaluate trigger cogs (cog_subtype: trigger) or watcher-cog
-      itself against this rule — they ARE the trigger mechanism, not consumers
-      of it. Skip this check for any cog with cog_subtype: trigger.
-    supersedes: "Apps Script → repository_dispatch → GitHub Actions (retired 2026-03)"
+      COG SUBTYPE: Skip for trigger cogs and watcher-cog itself.
 
   - id: PIPE-011
     title: AI evaluation step as final pipeline task

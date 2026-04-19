@@ -257,26 +257,61 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
+    applies_to: [pipeline-cog, trigger-cog]
     description: >
-      All pipeline flows connect to Prefect Cloud (free tier). Run history, step logs,
-      and flow state are visible at app.prefect.cloud. GitHub Actions logs are for
-      deep debugging only — not the primary observability surface.
-    checkable: false
+      All pipeline flows connect to Prefect Cloud (free tier). Run
+      history, step logs, and flow state are visible at app.prefect.cloud.
+      GitHub Actions logs are for deep debugging only — not the primary
+      observability surface.
+    checkable: true
+    check_notes: >
+      Verify Prefect is the orchestration layer:
+        (1) `prefect` appears in pyproject.toml [project.dependencies].
+            Flag if absent on a pipeline-cog or trigger-cog repo.
+        (2) `PREFECT_API_URL` and `PREFECT_API_KEY` referenced in at
+            least one of: .env.example, docs/**/*.md, or src/**/*.py
+            (via os.environ, os.getenv, or settings class).
+            Flag if neither referenced — repo is using Prefect but not
+            pointing at Cloud.
+        (3) Flag presence of competing orchestrators as violations:
+              - `celery`, `dramatiq`, `rq` as dependencies.
+              - `APScheduler` used as the primary scheduler (OK if used
+                as a local dev fallback).
+              - `schedule:` cron blocks in .github/workflows/*.yml that
+                invoke application code directly (vs. CI/CD tasks).
 
   - id: CD-006
     title: GitHub Actions is CI/CD only — not a trigger relay
     status: requirement
     dimension: structural_conformance
-    severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
+    severity: ERROR
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
       GitHub Actions handles lint, tests, deploys, and semantic-release.
       It does not trigger pipeline flows. Drive-event triggers go through
       watcher-cog. Scheduled and manual triggers go through Prefect
-      deployments. repository_dispatch as a trigger relay for cogs
-      is a retired pattern.
-    checkable: false
+      deployments. `repository_dispatch` as a trigger relay for cogs is
+      a retired pattern.
+    checkable: true
+    check_notes: >
+      Scan all .github/workflows/*.yml files:
+        (1) Flag any workflow with `on: repository_dispatch:` as a trigger.
+            Exception: if the repository_dispatch workflow only performs
+            CI/CD tasks (tests, build, deploy) and does not invoke
+            application code or Prefect APIs, it is allowed. Read the
+            workflow body to distinguish.
+        (2) Flag any scheduled workflow (`on: schedule: - cron:`) whose
+            job body contains HTTP calls to Prefect Cloud API
+            (`api.prefect.cloud`), invocations of prefect CLI commands
+            (`prefect deployment run`, `prefect flow-run create`), or
+            direct imports of application modules as orchestration entry
+            points.
+            Allowed scheduled workflows: drift-check, dependency update
+            (dependabot, renovate), nightly test runs.
+        (3) Flag any workflow that POSTs to an internal API endpoint
+            that triggers a flow (e.g. /v1/trigger, /v1/runs) —
+            scheduled or manual triggers must go through Prefect
+            deployments, not via an API relay.
 
   - id: CD-007
     title: Healthchecks.io for trigger cogs
@@ -458,58 +493,58 @@ standards:
       that should be Doppler-managed.
 
   - id: CD-012
-    title: Internal service-to-service auth via per-caller API keys
+    title: Internal service-to-service auth via per-caller credentials
     status: requirement
-    dimension: cd_readiness
+    dimension: structural_conformance
     severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
       Internal calls between Railway services and cogs use per-caller
-      API keys passed via the X-Internal-API-Key header. Each caller
-      (each cog or service making internal API calls) has its own key —
-      not a single shared secret across all callers.
+      credentials — not a single shared secret across all callers.
+      Per-caller credentials allow:
+        - Independent rotation without touching all callers.
+        - Caller identity logging on every internal request.
+        - Revocation of a single caller without affecting others.
 
-      Per-caller keys allow:
-        - Independent rotation without touching all callers
-        - Caller identity logging on every internal request
-        - Revocation of a single caller's access without affecting others
+      Current-state mechanism: `X-Internal-API-Key` HTTP header with
+      Doppler-managed per-caller keys. `common-python-utils` provides
+      `get_internal_headers()`; TypeScript cogs carry the header
+      directly.
 
-      All internal API keys are stored in Doppler and injected at runtime.
-      The receiving service (api-kaianolevine-com) validates the key and
-      logs the caller identity on every internal request.
+      Target-state mechanism (Project Keystone): Clerk machine-to-machine
+      JWT. Cogs request a short-lived JWT on startup and cache until
+      expiry. `api-kaianolevine-com` verifies RS256 JWTs via Clerk JWKS
+      and extracts `sub` as owner_id. Clerk user ID becomes the
+      ecosystem-wide owner_id.
 
-      common-python-utils provides get_internal_headers() returning the
-      correct header dict for outgoing internal requests. All Python cogs
-      use this utility — never construct the header inline.
-
-      Clerk JWT auth is for user-facing requests only. Internal
-      service-to-service calls never use Clerk JWTs.
+      Mixed state is expected during the Keystone transition — both
+      mechanisms are valid during this period. `api-kaianolevine-com`
+      uses feature flags `keystone.legacy_auth_enabled` and
+      `keystone.clerk_auth_enabled` to gate the transition phase.
+      This rule becomes checkable once the transition completes
+      (legacy_auth_enabled is set to false in production).
     checkable: false
 
   - id: CD-013
-    title: Feature flag admin panel in kaianolevine.com
+    title: Feature flags must have an operator management surface
     status: requirement
     dimension: cd_readiness
     severity: WARN
     applies_to: [api-service]
     description: >
-      The admin control panel for feature flags lives at an /admin route
-      in the kaianolevine.com software portfolio site. It is gated behind
-      Clerk authentication with admin role verification.
-
-      Capabilities:
-        - View all flags and their current state
-        - Toggle flags on/off
-        - Create new flags (key, description, permanent boolean)
-        - Delete flags (permanent flags require confirmation)
-
-      The admin panel calls authenticated write endpoints on
-      api-kaianolevine-com. The public GET /v1/feature-flags endpoint
-      remains unauthenticated for use by Astro sites and cogs.
-
-      Each site (kaianolevine.com, wcs.kaianolevine.com, deejaytools.com)
-      has its own Clerk application and independent user pool. Admin access
-      to the flag panel is scoped to the kaianolevine.com Clerk app only.
+      An ecosystem that uses feature flags for kill switches and
+      readiness gates (CD-001) must provide an authenticated UI for
+      toggling flags. SQL-only flag management is insufficient — the
+      point of a flag is to allow rapid response without engineering
+      involvement, and that requires a non-developer-friendly surface.
+      Required capabilities of the management UI:
+        - View all flags and their current state.
+        - Toggle flags on/off.
+        - Create flags (key, description, permanence marker).
+        - Delete flags (permanent flags require confirmation).
+      The location and implementation of the management UI is an
+      ecosystem-level fact, not a per-repo standard — see
+      ecosystem.yaml for the authoritative location.
     checkable: false
 
   - id: CD-014

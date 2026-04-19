@@ -11,13 +11,30 @@ standards:
     title: All new API services on Railway
     status: requirement
     dimension: structural_conformance
-    severity: ERROR
+    severity: WARN
     applies_to: [api-service]
     description: >
-      All new API services deployed on Railway regardless of language. Python
-      services use FastAPI. TypeScript services use Hono on Node. Railway is the
-      single hosting standard. Cloudflare Workers deprecated for new API work.
-    checkable: false
+      All new API services deployed on Railway regardless of language.
+      Python services use FastAPI. TypeScript services use Hono on Node.
+      Railway is the single hosting standard. Cloudflare Workers deprecated
+      for new API work.
+    checkable: true
+    check_notes: >
+      Verify the repo targets Railway as its deploy host:
+        (1) A Railway config file exists at repo root: one of
+            `nixpacks.toml`, `railway.toml`, or `Procfile`. Flag if none
+            are present.
+        (2) The matching service entry in ecosystem.yaml has
+            `host: railway`. Flag if `host` is any other value
+            (cloudflare-workers, vercel, etc.) on an active service.
+        (3) Verify the expected framework is present in dependency
+            declarations:
+              - Python (language: python in ecosystem.yaml):
+                `fastapi` appears in pyproject.toml [project.dependencies].
+              - TypeScript (language: typescript):
+                `hono` appears in package.json dependencies.
+            Flag services whose declared language does not match the
+            required framework, or whose framework is absent entirely.
 
   - id: API-002
     title: PostgreSQL as data store for new services
@@ -26,8 +43,25 @@ standards:
     severity: WARN
     applies_to: [api-service]
     description: >
-      All new services use PostgreSQL deployed on Railway. Not D1 or SQLite.
-    checkable: false
+      All new services that require persistence use PostgreSQL deployed
+      on Railway. Not D1, SQLite, or MySQL.
+    checkable: true
+    check_notes: >
+      Scan dependency declarations for database drivers:
+        (1) Required if any DB-driver dependency is present at all — if
+            the service has no DB deps, skip this check (service may be
+            stateless by design).
+        (2) Allowed drivers:
+              - Python: `psycopg`, `psycopg2`, `psycopg[binary]`,
+                `asyncpg`, or `sqlalchemy` (which permits postgres).
+              - TypeScript: `pg`, `postgres`, `drizzle-orm` (paired with
+                `postgres-js` or `pg`), or `@prisma/client` (with a
+                postgres provider configured).
+        (3) Disallowed drivers (flag as violation):
+              - `better-sqlite3`, `sqlite3`, `@cloudflare/d1`, `d1-orm`,
+                `mysql`, `mysql2`.
+        (4) If a postgres driver AND a disallowed driver are both present,
+            flag both — the disallowed one must be removed.
 
   - id: API-003
     title: ORM required — SQLAlchemy (Python) or Drizzle (TypeScript)

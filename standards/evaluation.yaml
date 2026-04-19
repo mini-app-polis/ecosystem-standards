@@ -63,28 +63,6 @@ standards:
       and suggest a concrete remediation. Vague findings are not acceptable.
     checkable: false
 
-  - id: EVAL-004
-    title: Structural conformance dimension
-    status: requirement
-    dimension: structural_conformance
-    severity: INFO
-    applies_to: [pipeline-cog, api-service]
-    description: >
-      Evaluation dimension: does the repo/workflow follow the patterns in the
-      standards? Covers src layout, naming conventions, error handling, tooling choices.
-    checkable: false
-
-  - id: EVAL-005
-    title: Pipeline consistency dimension
-    status: requirement
-    dimension: pipeline_consistency
-    severity: INFO
-    applies_to: [pipeline-cog, api-service]
-    description: >
-      Evaluation dimension: did this run behave the same way as previous runs?
-      Covers unexpected timing changes, new error types, missing steps.
-    checkable: false
-
   - id: EVAL-006
     title: Standards currency dimension
     status: requirement
@@ -105,30 +83,50 @@ standards:
     status: requirement
     dimension: standards_currency
     severity: ERROR
-    applies_to: [all]
+    applies_to: [standards-repo]
     description: >
-      Every checkable rule in ecosystem-standards (those with `checkable: true`)
-      must have a corresponding implementation in evaluator-cog's deterministic
-      check engine. Every check in evaluator-cog's deterministic engine must
-      map back to a real rule in ecosystem-standards.
+      Every checkable rule in ecosystem-standards (those with
+      `checkable: true`) must have a corresponding implementation in
+      evaluator-cog's deterministic check engine. Every check in
+      evaluator-cog's deterministic engine must map back to a real rule
+      in ecosystem-standards.
 
-      The mapping contract is expressed via a `check_id` field on checkable
-      rules (this repo) and a corresponding `CHECK_ID` constant or decorator
-      on each check implementation in evaluator-cog. Drift between the two
-      repos is detected automatically via GitHub Actions on every release of
-      either repo (see .github/workflows/drift-check.yml in this repo and
-      evaluator-cog).
+      The mapping contract is expressed via a `check_id` field on
+      checkable rules (this repo) and a corresponding `CHECK_ID` constant
+      or decorator on each check implementation in evaluator-cog. Drift
+      between the two repos is detected automatically via GitHub Actions
+      on every release of either repo.
 
       When drift is detected:
-        - Unimplemented checkable rules → severity WARN finding, source=conformance_check
-        - Orphaned evaluator checks (no backing standard) → severity ERROR finding
-        - Version skew (evaluator's pinned standards version is more than one
-          minor version behind current package.json) → severity WARN finding
+        - Unimplemented checkable rules → severity WARN finding,
+          source=conformance_check
+        - Orphaned evaluator checks (no backing standard) → severity
+          ERROR finding
+        - Version skew (evaluator's pinned standards version is more
+          than one minor version behind current package.json) →
+          severity WARN finding
 
       Findings are written to pipeline_evaluations via api-kaianolevine-com
-      with source=standards_drift, so they appear in the Pipeline Health view
-      alongside all other conformance findings.
-    checkable: false
+      with source=standards_drift, so they appear in the Pipeline Health
+      view alongside all other conformance findings.
+    checkable: true
+    check_notes: >
+      This rule is verified by `scripts/check_drift.py` in this repo.
+      The script:
+        (1) Parses every `standards/*.yaml` rule and extracts
+            `checkable: true` rules' IDs.
+        (2) Parses evaluator-cog's `engine/deterministic.py` for
+            `CHECK_ID = "XXX-NNN"` constants.
+        (3) Computes set differences in both directions:
+              - In standards but not in evaluator → unimplemented.
+              - In evaluator but not in standards → orphaned.
+        (4) Compares package.json version to the `standards_version`
+            referenced in evaluator-cog's pinned standards version.
+            Version skew > 1 minor version triggers a finding.
+      The script emits findings to api-kaianolevine-com with
+      source=standards_drift. It is invoked by drift-check.yml on
+      releases. An evaluator-cog conformance check is not required —
+      this rule is runtime-enforced, not repo-scanned.
 
   - id: EVAL-008
     title: Every active repo must have an evaluator.yaml at its root

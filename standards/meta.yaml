@@ -1,0 +1,121 @@
+# ecosystem-standards / standards/meta.yaml
+# Rules governing the structure and operation of this standards
+# repository itself. These rules apply exclusively to
+# `applies_to: [standards-repo]` — they are the meta-standards that
+# keep the standards catalog coherent.
+
+standards:
+
+  - id: META-001
+    title: Repo version is managed by semantic-release
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    applies_to: [standards-repo]
+    description: >
+      The standards repo version of record lives in package.json,
+      owned and written by semantic-release on every release. Humans
+      do not edit the version field. All consumers (evaluator-cog,
+      check_drift.py, any future consumer) resolve `standards_version`
+      by reading package.json at runtime.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Verify the release pipeline is correctly wired:
+        (1) `package.json` exists at repo root with a `version` field.
+        (2) `.releaserc.json` exists and includes both
+            `@semantic-release/npm` (with `npmPublish: false`) and
+            `@semantic-release/git` plugins.
+        (3) The `@semantic-release/git` `assets` array includes
+            `package.json`.
+        (4) `.github/workflows/` contains a workflow that invokes
+            `npx semantic-release` on push to main, with
+            `@semantic-release/npm` among the installed plugins.
+      Flag if any of the four conditions fails.
+
+  - id: META-002
+    title: No scattered version or date metadata
+    status: requirement
+    dimension: standards_currency
+    severity: ERROR
+    applies_to: [standards-repo]
+    description: >
+      Version and date metadata lives in exactly one place
+      (package.json, managed by semantic-release — see META-001).
+      Standards files and the manifest must not carry header
+      `# Version:` comments, top-level `updated:` fields, top-level
+      `maintainer:` fields, or per-rule `added:` fields. These were
+      all human-maintained and historically drifted; the cleanup is
+      now enforced.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Scan all YAML and Markdown files in the repo:
+        (1) Flag any line matching `^# Version:` in standards/*.yaml,
+            index.yaml, ecosystem.yaml, or definitions-of-done.yaml.
+        (2) Flag any top-level `updated:` or `maintainer:` field in
+            index.yaml or ecosystem.yaml.
+        (3) Flag any per-rule `added:` field inside any
+            standards/*.yaml file. (Regex: `^\s*added:\s*\d{4}-\d{2}`)
+      The README rule-format example must also not contain an
+      `added:` field — flag if present.
+      CHANGELOG.md is exempt — semantic-release owns its contents.
+
+  - id: META-003
+    title: Canonical enums in index.yaml are dictionaries
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    applies_to: [standards-repo]
+    description: >
+      Canonical value lists in index.yaml (severities, dimensions,
+      statuses, repo_types, traits) are declared as dictionaries
+      mapping each value to a one-line description. Bare lists are
+      not acceptable — they fail to document what each value means
+      and force consumers to look elsewhere for the definition.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Load index.yaml and verify that the following top-level or
+      nested keys are each `dict` types with non-empty string values:
+        - `severities`
+        - `dimensions`
+        - `statuses`
+        - `schema.repo_types`
+        - `schema.traits`
+      Flag any key that is a `list` type instead of a `dict`.
+      Flag any dict whose values are empty strings or None.
+
+  - id: META-004
+    title: Canonical field-value enums have CONTEXT CONTRACT blocks
+    status: requirement
+    dimension: documentation_coverage
+    severity: WARN
+    applies_to: [standards-repo]
+    description: >
+      When a field in the pipeline_evaluations data model takes a
+      canonical set of string values (severity, source, dimension),
+      the authoritative list of values and their semantics must be
+      documented in the relevant domain file's CONTEXT CONTRACT
+      section. This is how downstream consumers (evaluator-cog,
+      cogs, api-kaianolevine-com) know which values are valid.
+      Current examples: the `pipeline_evaluations.source` canonical
+      values block in standards/evaluation.yaml.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      Examine standards/evaluation.yaml for the presence of a
+      CONTEXT CONTRACT section documenting the canonical values of
+      `pipeline_evaluations.source`. The block must enumerate every
+      value a production cog or evaluator may emit and describe
+      what each value means.
+      Flag if:
+        (1) The CONTEXT CONTRACT block is missing.
+        (2) The block lists values but does not describe what each
+            means.
+        (3) A value appears in evaluator-cog or cog source code that
+            is not enumerated in the CONTEXT CONTRACT block (via
+            drift-check.yml's companion check — see EVAL-007).
+      This rule is LLM-judged because the completeness-of-enumeration
+      check requires cross-referencing usage in consumer repos
+      against the contract block in this repo.

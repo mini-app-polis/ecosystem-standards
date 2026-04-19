@@ -23,50 +23,132 @@
 standards:
 
   - id: XSTACK-001
-    title: Use shared library — do not reimplement shared behaviors
+    title: Shared library declared as dependency
     status: requirement
     dimension: cross_repo_coherence
     severity: ERROR
-    applies_to: [pipeline-cog, api-service, react-app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, react-app, shared-library]
     description: >
-      Python services declare common-python-utils as a dependency.
-      TypeScript services declare common-typescript-utils as a dependency.
-      Neither stack reimplements logging, auth verification, or response helpers
-      provided by the shared library.
+      Python services declare `common-python-utils` as a dependency.
+      TypeScript services declare `common-typescript-utils` as a
+      dependency. This rule is the concrete dep-presence check. The
+      anti-reimplementation concern (don't reimplement shared helpers
+      even if the library is installed) lives in XSTACK-005.
     checkable: true
     check_notes: >
-      Check pyproject.toml or package.json for the appropriate shared library.
-      Flag if service implements its own logger, auth verify, or response envelope
-      helper without using the shared library.
-
-      STATIC-SITE EXCEPTION: Do not flag static-site repos (Astro / Cloudflare Pages) for absence of common-typescript-utils. Static sites contain no server-side
-      logic and cannot install monorepo-internal packages. The rule applies to
-      api-service and react-app only for the TypeScript side.
-      Analogous to the CD-002 Sentry carve-out for static sites.
-
-      MONOREPO EXCEPTION: For services with a `monorepo` field in ecosystem.yaml,
-      check the workspace root package.json for the shared library before flagging
-      per-app absence. If the dep is declared in the monorepo's `workspace_deps`
-      list and present at the root, XSTACK-001 is satisfied for all apps in that
-      monorepo. See MONO-001.
+      DETERMINISTIC CHECK.
+      Scan dependency declarations:
+        Python (language: python): `common-python-utils` appears in
+          pyproject.toml [project.dependencies] OR
+          [tool.poetry.dependencies]. Flag if absent.
+        TypeScript (language: typescript): `common-typescript-utils`
+          appears in package.json `dependencies` or `devDependencies`.
+          Flag if absent.
+      STATIC-SITE EXCEPTION: Do not flag static-site repos — they
+        contain no server-side logic and cannot install
+        monorepo-internal packages.
+      MONOREPO EXCEPTION: For services with a `monorepo` field in
+        ecosystem.yaml, check the workspace root `package.json`
+        `workspace_deps` list before flagging per-app absence. If
+        the shared library is declared at the workspace level, the
+        check passes for all apps in that monorepo.
+      SELF-EXEMPTION: The shared library itself
+        (common-python-utils, common-typescript-utils) is not
+        required to depend on itself. Skip this check for repos with
+        trait `logger-primitive`.
       Additionally: for monorepo apps, file-presence checks (README.md,
       CHANGELOG.md, .releaserc.json, .env.example, ci.yml) should check
       BOTH the app subdirectory (monorepo_path) AND the monorepo root before
       flagging absence. These files commonly live at the workspace root and
       apply to all apps in the monorepo. Flag only if absent from both locations.
 
+  - id: XSTACK-005
+    title: Shared helpers are not reimplemented
+    status: requirement
+    dimension: cross_repo_coherence
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog, api-service, react-app]
+    description: >
+      Services that declare the shared library as a dependency
+      (XSTACK-001) must actually use its helpers rather than
+      reimplementing the same behavior locally. The behaviors
+      covered: logging setup, Clerk auth verification, API response
+      envelope construction, internal-auth header helpers, retry
+      wrappers around Google APIs.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      For each service that has the shared library installed
+      (XSTACK-001 passing), scan source files for reimplementations
+      of behaviors the shared library provides:
+        (1) Custom logging config (logging.basicConfig,
+            structlog.configure, custom JSON formatters) in files
+            other than the shared library's own logger module. If
+            the service defines its own logger setup, flag unless
+            the logger module imports from `common-python-utils`
+            or `common-typescript-utils`.
+        (2) Clerk token verification implemented inline (manual JWT
+            decode + Clerk JWKS fetch) rather than via
+            `verify_token` from the shared library.
+        (3) Ad-hoc response envelope construction — `return {"data":
+            ..., "meta": ...}` literals rather than using
+            `SuccessResponse` / `ErrorResponse` helpers. (This
+            overlaps with XSTACK-002 for api-service repos;
+            XSTACK-005 catches the same pattern on non-api-service
+            repos that still construct responses — e.g. cogs that
+            return structured data to internal callers.)
+        (4) Internal-API-Key header construction inline rather than
+            via `get_internal_headers()` from
+            `common-python-utils`.
+        (5) Retry logic around Google Drive / Sheets / Anthropic
+            API calls implemented locally rather than via
+            `DriveFacade` / `LLMClient` from the shared library.
+      This is LLM-judged because the distinction between
+      "legitimate local helper" and "reimplementation of a shared
+      behavior" requires understanding intent. The check_notes
+      enumerate specific patterns to anchor the judgment.
+      Remediation: replace the local reimplementation with the
+      shared-library helper.
+
   - id: XSTACK-002
     title: Cross-stack response shape parity
     status: requirement
     dimension: cross_repo_coherence
-    severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
+    severity: WARN
+    applies_to: [api-service]
     description: >
-      API response shapes are identical across Python and TypeScript services:
+      API response shapes are identical across Python and TypeScript
+      services:
         success: { data: ..., meta: { count, version } }
-        error: { error: { code, message } }
-      Defined in common-typescript-utils for TypeScript. Enforced by response_model in FastAPI.
-    checkable: false
+        error:   { error: { code, message } }
+      Defined in `common-typescript-utils` for TypeScript. Enforced by
+      `response_model` on FastAPI route decorators for Python.
+    checkable: true
+    check_notes: >
+      Scan route definitions:
+        Python (FastAPI):
+          (1) Every route decorator (@app.get, @app.post, @router.*, etc.)
+              in src/**/*.py must include a `response_model=` argument.
+              Flag routes missing it.
+          (2) The referenced response model must extend (directly or
+              transitively) a base class yielding the {data, meta}
+              envelope. If the project uses `common-python-utils`'s
+              response helpers (e.g. `SuccessResponse`, `ErrorResponse`),
+              flag routes whose response_model does not derive from them.
+              If the project does not use common-python-utils helpers,
+              flag as CD-009-adjacent (shared logger / shared utils
+              non-use) rather than XSTACK-002.
+        TypeScript (Hono):
+          (1) Every route handler must return either a response built
+              via `common-typescript-utils` helpers (`success()`,
+              `error()`) OR a literal object matching the {data, meta}
+              envelope for success / {error: {code, message}} for error.
+          (2) Flag handlers that return raw `c.json({...})` with ad-hoc
+              shapes (e.g. `c.json({items: [...]})` without wrapping).
+      Note: narrowed applies_to — this rule previously listed
+      [pipeline-cog, trigger-cog, api-service, static-site, react-app],
+      which was incorrect. Only api-service *emits* API responses; the
+      others consume them.
 
   - id: XSTACK-003
     title: pnpm for all TypeScript projects

@@ -150,21 +150,50 @@ standards:
     severity: WARN
     applies_to: [static-site]
     description: >
-      Astro sites pin their starter version. Upstream preserved in-repo for reference.
-      Do not blindly upgrade starter versions — pin and document the version in use.
-    checkable: false
+      Astro sites pin their starter version. Upstream preserved in-repo
+      for reference. Do not blindly upgrade starter versions — pin and
+      document the version in use.
+    checkable: true
+    check_notes: >
+      Verify Astro core dependencies are pinned to exact versions:
+        (1) In package.json `dependencies` and `devDependencies`, the
+            following packages must have exact version specifiers (no
+            leading `^`, `~`, `>=`, `*`, or `latest`):
+              - `astro`
+              - `@astrojs/*` (any package starting with this prefix)
+        (2) Flag any of the above with a range specifier.
+        (3) Flag any site where `astro` is not in dependencies or
+            devDependencies at all — this rule only applies to repos
+            using Astro (type: static-site is the scoping condition).
 
   - id: FE-009
     title: Build-time data for static content
     status: requirement
     dimension: structural_conformance
-    severity: WARN
+    severity: INFO
     applies_to: [static-site]
     description: >
-      Infrequently-changing data (collections, summaries) fetched at build time via
-      Astro data files. Do not make runtime API calls for content that could be
-      fetched at build time.
-    checkable: false
+      Infrequently-changing data (collections, summaries) fetched at
+      build time via Astro data files or frontmatter. Do not make
+      runtime API calls for content that could be fetched at build time.
+    checkable: true
+    check_notes: >
+      Scan src/**/*.astro files for runtime fetch calls in contexts
+      that should be build-time:
+        (1) Identify fetch() calls inside <script> tags (runtime) vs
+            inside the component's --- frontmatter block (build time).
+        (2) For fetch() calls at runtime, flag any whose URL matches
+            an endpoint that has a build-time counterpart. Heuristic:
+            if the same URL appears in both a frontmatter fetch
+            (anywhere in the repo) and a runtime fetch, the runtime
+            one is a candidate for build-time promotion.
+        (3) Exempt: fetch() calls inside an Astro component with a
+            `client:*` directive on the wrapping element AND a
+            corresponding FE-010 island classification — those are
+            covered by FE-010 (runtime for interactive demos).
+      Note: false positives are tolerable here (severity INFO). The
+      goal is to surface candidate runtime-to-build-time migrations,
+      not block on every edge case.
 
   - id: FE-010
     title: Runtime queries for interactive demos only
@@ -173,7 +202,20 @@ standards:
     severity: INFO
     applies_to: [static-site]
     description: >
-      Live API queries reserved for search, filtering, and interactive demo surfaces.
-      Implemented via Astro component islands. Document which endpoints are called
-      at runtime vs build time.
-    checkable: false
+      Live API queries reserved for search, filtering, and interactive
+      demo surfaces. Implemented via Astro component islands. Document
+      which endpoints are called at runtime vs build time.
+    checkable: true
+    check_notes: >
+      For every runtime fetch() call in src/**/*.astro (inside <script>
+      tags, not frontmatter), verify:
+        (1) The containing component file has at least one `client:*`
+            directive (client:load, client:idle, client:visible, etc.)
+            on its containing island element. Flag runtime fetches in
+            components with no client:* directive — those are either
+            dead code or misplaced.
+        (2) Endpoints called at runtime should be documented. Check
+            for a README.md or docs/*.md file in the repo that
+            mentions the endpoint URL or route path. Flag runtime
+            fetches whose target endpoint is not mentioned in any
+            documentation file. This is advisory (INFO severity).

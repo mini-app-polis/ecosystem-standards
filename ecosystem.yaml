@@ -175,7 +175,9 @@ services:
     host: cloudflare-pages
     description: >
       Software portfolio site. Queries api-kaianolevine-com live for DJ sets,
-      catalog, stats, and evaluation findings.
+      catalog, stats, and evaluation findings. Hosts the feature flag
+      admin panel at /admin (Clerk-authenticated, admin role required) —
+      this is the canonical management surface referenced by CD-013.
 
   - id: website-astro-wcs
     type: static-site

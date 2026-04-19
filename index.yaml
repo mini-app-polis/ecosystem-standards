@@ -9,16 +9,19 @@
 
 # Dimensions used across all standards files.
 # These map directly to the pipeline_evaluations table dimension field.
+# Every rule declares exactly one dimension — the category of concern
+# the rule addresses. Dimensions are how evaluation findings are
+# aggregated in Pipeline Health views.
 dimensions:
-  - structural_conformance
-  - pipeline_consistency
-  - pipeline_reliability
-  - testing_coverage
-  - documentation_coverage
-  - cd_readiness
-  - cross_repo_coherence
-  - standards_currency
-  - monorepo_coherence
+  structural_conformance: "Does the repo follow documented patterns? Covers src layout, naming conventions, error handling, tooling choices, framework selection."
+  pipeline_consistency: "Did this run behave the same way as previous runs? Covers unexpected timing changes, new error types, missing steps, drift in output shape."
+  pipeline_reliability: "Will this pipeline run correctly under concurrent or repeated invocation? Covers idempotency, concurrency control, retry behavior, and data-integrity guards."
+  testing_coverage: "Are the critical paths covered by tests appropriate to the layer? Unit for pure logic, integration for external dependencies, contract for cross-service shapes."
+  documentation_coverage: "Is the repo understandable by a future maintainer (human or AI) without reading every file? Covers README completeness, inline docs, ADRs, and .env.example."
+  cd_readiness: "Is the repo safe to deploy continuously? Covers Sentry, structured logging, semantic-release, feature flags, and observability connections."
+  cross_repo_coherence: "Do similar concepts look similar across repos? Covers naming conventions, response shapes, shared library usage, and API versioning."
+  standards_currency: "Is this repo being evaluated against the current version of the standards? Covers version resolution, staleness detection, and standards/evaluator drift."
+  monorepo_coherence: "Do pnpm monorepo workspaces satisfy per-app and root-level rules? Covers workspace_deps, monorepo_path scoping, root CI, and deduplicated findings across sibling apps."
 
 # Severities used across all standards files.
 # These map directly to the pipeline_evaluations table severity field.
@@ -194,7 +197,7 @@ files:
     domain: pipeline
     description: Pipeline design and orchestration standards. Prefect patterns, idempotency, and data safety rules.
     rule_prefix: PIPE
-    rule_count: 11
+    rule_count: 14
 
   - file: standards/frontend.yaml
     domain: frontend
@@ -205,6 +208,11 @@ files:
     domain: delivery
     description: Continuous delivery, observability, and versioning standards. Includes semantic-release and GitHub Actions patterns.
     rule_prefix: [CD, VER]
+
+  - file: standards/meta.yaml
+    domain: meta
+    description: Rules governing the structure and operation of the standards repo itself. Scoped exclusively to standards-repo.
+    rule_prefix: META
 
   - file: standards/evaluation.yaml
     domain: evaluation
