@@ -33,10 +33,20 @@ dimensions:
 
 # Severities used across all standards files.
 # These map directly to the pipeline_evaluations table severity field.
+#
+# Rule-level usage: standards rules declare `severity:` as ERROR, WARN, or INFO.
+# These represent the severity of the violation if the rule is broken.
+#
+# Emission-level usage: evaluators may additionally emit CRITICAL (for system-level
+# failures that block further evaluation) or SUCCESS (for clean-run completion
+# findings from pipeline cogs). These are outcome severities, not rule severities —
+# they do not appear on rule definitions in this repo.
 severities:
+  CRITICAL: "System-level failure blocking further evaluation (e.g. flow crash, evaluator outage). Emission-only — not used on rule definitions."
   ERROR: "PRINCIPLE or PATTERN violated. Requires remediation before next deploy."
   WARN: "Current-state pattern in new code, or TARGET state not being progressed toward. Remediation recommended."
   INFO: "Observation worth noting. No action required but useful for monthly review."
+  SUCCESS: "Clean-run completion finding emitted by pipeline cogs. Emission-only — not used on rule definitions."
 
 # Statuses used across all standards files.
 statuses:

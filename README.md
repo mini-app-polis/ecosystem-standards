@@ -55,7 +55,7 @@ Every rule has:
   title: Short description
   status: requirement          # requirement | convention | advisory | idea | gap
   dimension: ...               # maps to pipeline_evaluations.dimension
-  severity: ERROR              # ERROR | WARN | INFO — maps to pipeline_evaluations.severity
+  severity: ERROR              # CRITICAL | ERROR | WARN | INFO | SUCCESS — maps to pipeline_evaluations.severity
   description: >
     Full description of the rule and what it means in practice.
   checkable: true              # can an agent verify this automatically?

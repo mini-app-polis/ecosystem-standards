@@ -35,10 +35,24 @@ standards:
       Every evaluation call includes a reference to the current version of the
       standards document being evaluated against. Without the rubric, evaluation
       is undefined.
+
+      Canonical implementation: resolve standards_version at runtime by reading
+      index.yaml from the ecosystem-standards repo, cached for the process
+      lifetime. Allow an explicit environment variable override
+      (STANDARDS_VERSION) for tests and controlled pins. Do not hardcode
+      version strings as defaults — they will go stale silently, and presence
+      checks alone will not catch the drift.
     checkable: true
     check_notes: >
-      Check pipeline_evaluations table for standards_version field. Flag evaluations
-      missing this field.
+      Check pipeline_evaluations table for standards_version field. Flag
+      evaluations missing this field.
+
+      Additionally, scan evaluator and cog source files (engine/, flows/,
+      src/**/*.py) for hardcoded standards version string literals assigned
+      as defaults — e.g. standards_version="3.0.1" or STANDARDS_VERSION = "3.0.1"
+      as a module-level constant. Flag any found. Exempt test fixtures and
+      values explicitly sourced from environment variables or from a runtime
+      read of index.yaml.
     added: 2026-03
 
   - id: EVAL-003
@@ -208,4 +222,45 @@ standards:
   #   - dimension(s): the evaluation dimension(s) being assessed
   #   - baseline: historical baseline where relevant (previous run outputs)
   #   - state_tags: current state tags for standards in flux
+  # ─────────────────────────────────────────────
+
+  # ─────────────────────────────────────────────
+  # PIPELINE_EVALUATIONS.SOURCE — CANONICAL VALUES
+  #
+  # The `source` field on pipeline_evaluations records where a finding was
+  # emitted from. The following five values are canonical. Adding a new
+  # source value requires updating this list first.
+  #
+  # External emission origins (set by the emitting cog, must not be
+  # overridden downstream):
+  #
+  #   flow_inline        Posted from inside a flow body — e.g. the end-of-run
+  #                      evaluation task in a pipeline cog. Represents the
+  #                      cog's own assessment of its run outcome.
+  #
+  #   flow_hook          Posted from a Prefect on_failure / on_crashed hook.
+  #                      Represents an abnormal-termination finding that the
+  #                      inline evaluation step never got to emit.
+  #
+  #   prefect_webhook    Posted by the evaluator-cog webhook handler on
+  #                      Prefect flow run state events. Represents an
+  #                      external-observer finding about a flow that did
+  #                      not self-report.
+  #
+  # Evaluator-cog internal sources:
+  #
+  #   conformance_check  Posted by the scheduled conformance flow in
+  #                      evaluator-cog. Represents an assessment of a repo
+  #                      against ecosystem-standards.
+  #
+  #   standards_drift    Posted by the drift-detection job. Represents
+  #                      mismatch between ecosystem-standards and the
+  #                      checks implemented in evaluator-cog (see EVAL-007).
+  #
+  # Rule: the `source` value is authoritative at the point of emission.
+  # Downstream code (including the evaluator-cog API client) must not
+  # override an externally-set source value when forwarding a finding —
+  # doing so erases the distinction between flow_inline and flow_hook,
+  # which is load-bearing for finding deduplication and for interpreting
+  # Pipeline Health UI cards.
   # ─────────────────────────────────────────────

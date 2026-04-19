@@ -1,3 +1,17 @@
+## [3.1.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.0.1...v3.1.0) (2026-04)
+
+
+### Features
+
+* document canonical severity and pipeline_evaluations.source enums, runtime-resolution pattern for standards_version
+
+Surfaced by the April 2026 deejay-cog / evaluator-cog cleanup. Three additive changes:
+- README.md and index.yaml severities: list all five canonical values (adds CRITICAL, SUCCESS as emission-only outcomes)
+- standards/evaluation.yaml: document the five canonical pipeline_evaluations.source values (flow_inline, flow_hook, prefect_webhook, conformance_check, standards_drift) and the rule that downstream code must not override an externally-set source
+- EVAL-002: augment with the canonical runtime-resolution pattern for standards_version (read from index.yaml, cache per-process, env override); add check_notes to flag hardcoded version string literals
+
+No breaking changes. No applies_to changes. No rule status downgrades.
+
 ## [3.0.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.0.0...v3.0.1) (2026-04-06)
 
 
