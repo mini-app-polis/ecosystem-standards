@@ -1,3 +1,10 @@
+# [3.3.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.2.0...v3.3.0) (2026-04-19)
+
+
+### Features
+
+* sharpen 15 fuzzy rules, promote CD-012 (Keystone done), EVAL-003 + MONO-003 (new evaluator-service type), demote 8 principles ([0230c4e](https://github.com/mini-app-polis/ecosystem-standards/commit/0230c4ec1e3d27d3e40ffa1c2ee67ca17fae91b5))
+
 # [3.2.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.1.1...v3.2.0) (2026-04-19)
 
 
