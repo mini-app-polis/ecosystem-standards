@@ -3,7 +3,7 @@
 
 ### Features
 
-* four rule splits, META prefix for standards-repo rules, DOC-012 deletion, EVAL-007 scope fix, sharpen eleven rules to checkable, rewrite CD-012/CD-013 for clarity, upgrade dimensions manifest ([05698ba](https://github.com/mini-app-polis/ecosystem-standards/commit/05698ba4e393bed754d66bd366d9af2bc9e187d5))
+* four rule splits, META prefix for standards-repo rules, DOC-012 deletion, EVAL-007 scope fix, sharpen eleven rules to checkable, rewrite CD-012 for clarity, upgrade dimensions manifest ([05698ba](https://github.com/mini-app-polis/ecosystem-standards/commit/05698ba4e393bed754d66bd366d9af2bc9e187d5))
 
 ## [3.1.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.1.0...v3.1.1) (2026-04-19)
 

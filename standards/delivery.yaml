@@ -537,28 +537,6 @@ standards:
             Flag if legacy API-key verification code paths remain.
     supersedes: "X-Internal-API-Key header with Doppler-managed per-caller keys (retired 2026-04, Project Keystone)"
 
-  - id: CD-013
-    title: Feature flags must have an operator management surface
-    status: requirement
-    dimension: cd_readiness
-    severity: WARN
-    applies_to: [api-service]
-    description: >
-      An ecosystem that uses feature flags for kill switches and
-      readiness gates (CD-001) must provide an authenticated UI for
-      toggling flags. SQL-only flag management is insufficient — the
-      point of a flag is to allow rapid response without engineering
-      involvement, and that requires a non-developer-friendly surface.
-      Required capabilities of the management UI:
-        - View all flags and their current state.
-        - Toggle flags on/off.
-        - Create flags (key, description, permanence marker).
-        - Delete flags (permanent flags require confirmation).
-      The location and implementation of the management UI is an
-      ecosystem-level fact, not a per-repo standard — see
-      ecosystem.yaml for the authoritative location.
-    checkable: false
-
   - id: CD-014
     title: Cloudflare Pages for all static site deployments
     status: requirement
