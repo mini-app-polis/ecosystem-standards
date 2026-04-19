@@ -1,3 +1,10 @@
+# [3.1.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.0.1...v3.1.0) (2026-04-19)
+
+
+### Features
+
+* document canonical severity and source enums, runtime-resolution pattern for standards_version ([f701aa0](https://github.com/mini-app-polis/ecosystem-standards/commit/f701aa0f8c5aa1247fd29174aa05f54697433174))
+
 ## [3.1.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.0.1...v3.1.0) (2026-04)
 
 
