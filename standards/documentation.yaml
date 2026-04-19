@@ -34,8 +34,13 @@ standards:
     checkable: true
     check_notes: >
       Search README.md for sections or keywords describing inputs and outputs.
-      For cogs: look for mentions of source folder, Drive folder, input files,
-      output, produces, writes to, or similar. For APIs: look for endpoint
+      For cogs: the README must contain at least two of the following keyword
+      families in any section:
+        - Input signals: "source folder", "Drive folder", "input files",
+          "reads from", "consumes"
+        - Output signals: "output", "produces", "writes to", "archive location",
+          "destination"
+      For APIs: look for endpoint
       listings or links to OpenAPI docs. Flag if README contains fewer than
       two of these signals.
 

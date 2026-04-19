@@ -6,7 +6,7 @@ standards:
 
   - id: PRIN-001
     title: Reuse over rebuild
-    status: requirement
+    status: convention
     dimension: structural_conformance
     severity: ERROR
     applies_to: [all]
@@ -32,7 +32,7 @@ standards:
 
   - id: PRIN-003
     title: AI evaluates process, not data
-    status: requirement
+    status: convention
     dimension: structural_conformance
     severity: ERROR
     applies_to: [all]
@@ -43,7 +43,7 @@ standards:
 
   - id: PRIN-004
     title: New stack, opportunistic migration
-    status: requirement
+    status: convention
     dimension: structural_conformance
     severity: INFO
     applies_to: [all]
@@ -70,7 +70,7 @@ standards:
 
   - id: PRIN-006
     title: Deploy anytime, release when ready
-    status: requirement
+    status: convention
     dimension: cd_readiness
     severity: WARN
     applies_to: [all]
@@ -84,7 +84,7 @@ standards:
 
   - id: PRIN-007
     title: Portfolio artifacts are working systems
-    status: requirement
+    status: convention
     dimension: structural_conformance
     severity: INFO
     applies_to: [all]
@@ -94,23 +94,33 @@ standards:
     checkable: false
 
   - id: PRIN-008
-    title: Every bug fix includes a regression test
+    title: Bug fix commits touch tests
     status: requirement
     dimension: testing_coverage
     severity: ERROR
-    applies_to: [all]
+    applies_to: [pipeline-cog, trigger-cog, api-service, shared-library]
     description: >
-      If a bug was found in production, a test is written that would have caught it.
-      This is non-negotiable.
+      If a bug was found in production, a test is written that would
+      have caught it. This rule covers the concrete "did a test file
+      change alongside the source change" check. The assessment of
+      whether the test is actually a regression test for the specific
+      bug lives in PRIN-010.
     checkable: true
     check_notes: >
-      Fetch recent git commits with a fix: prefix. For each fix commit,
-      check whether a test file was added or modified in the same commit
-      or an immediately following commit. Flag fix commits that touch only
-      source files with no corresponding test file change. LLM: assess
-      whether the test changes in fix commits appear to be regression tests
-      for the specific bug — look for new test functions added (not just
-      modified existing ones) that target the module touched by the fix.
+      DETERMINISTIC CHECK.
+      Fetch recent commits on main with conventional-commit prefix
+      `fix:` or `fix(<scope>):`, last 90 days.
+      For each fix commit, verify that at least one file matching
+      either `tests/**/*.py`, `src/**/test_*.py`, or `**/*.test.ts`
+      was added or modified either:
+        (a) in the same commit, OR
+        (b) in a commit within 24 hours of the fix commit that
+            references the same issue number (via "Fixes #N",
+            "Closes #N", or similar).
+      Flag any fix commit failing both conditions.
+      Exempt: fix commits touching only documentation files
+      (docs/**/*.md, README.md) or only build config files
+      (pyproject.toml, package.json, .github/**).
 
   - id: PRIN-009
     title: Standards are a living document
@@ -126,3 +136,39 @@ standards:
     check_notes: >
       Check the timestamp of the most recent commit to the ecosystem-standards
       repo via git log. Flag if more than 90 days have elapsed since last update.
+
+  - id: PRIN-010
+    title: Bug fix tests are genuine regression tests
+    status: requirement
+    dimension: testing_coverage
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog, api-service, shared-library]
+    description: >
+      Beyond the presence of test changes in a fix commit (PRIN-008),
+      the test changes must actually exercise the failure path that
+      the bug fix addresses. A fix commit that modifies an existing
+      test's assertion to match new behavior — without adding a test
+      that would have failed pre-fix — does not satisfy this rule.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      For each fix commit identified by PRIN-008, examine the test
+      changes:
+        (1) Flag fix commits where all test changes are modifications
+            to existing test assertions (no new test functions added).
+            This pattern usually indicates the test was adjusted to
+            match the new code rather than written to catch the bug.
+        (2) Flag fix commits where the new/modified test touches a
+            module unrelated to the module modified by the fix (as
+            measured by file paths — if fix changes
+            src/cog/processing.py, a new test in
+            tests/utils/test_unrelated.py is suspicious).
+        (3) For new test functions added in fix commits, assess
+            whether the test's assertion describes the buggy behavior
+            that was fixed. A test function named `test_valid_input`
+            added in a commit fixing a null-handling bug is suspicious
+            — the test name suggests happy-path, not the regression
+            case.
+      This rule is LLM-judged because assessing whether a test
+      genuinely exercises a specific failure mode requires reading
+      both the fix diff and the test body together.

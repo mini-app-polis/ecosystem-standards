@@ -165,8 +165,8 @@ standards:
     checkable: true
     check_notes: >
       Check for pnpm-lock.yaml in the repo root. Flag if package-lock.json
-      or yarn.lock is present instead. Check ci.yml for pnpm setup steps —
-      look for uses of pnpm/action-setup or corepack enable. Flag if npm
+      or yarn.lock is present instead. Require that ci.yml contains either
+      pnpm/action-setup or corepack enable. Flag if neither is present. Flag if npm
       install or yarn install appears in CI steps. For monorepos, check
       pnpm-workspace.yaml exists.
 

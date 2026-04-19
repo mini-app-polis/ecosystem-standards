@@ -23,11 +23,8 @@ standards:
     checkable: true
     check_notes: >
       Check package.json for astro in dependencies. Check astro.config.mjs
-      or astro.config.ts exists. Flag if the site type is static/community/
-      portfolio but the framework dependency is React-only (vite + react
-      without astro). LLM: given the repo name and README description, assess
-      whether this is a static site (should use Astro) or a web app with
-      persistent UI state (React is appropriate).
+      or astro.config.ts exists. Flag if the service entry in ecosystem.yaml
+      has type: static-site but package.json has react without astro.
 
   - id: FE-002
     title: Vite + React + TypeScript for web apps
@@ -43,9 +40,7 @@ standards:
       Check package.json for vite, react, and typescript in dependencies.
       Check tsconfig.json exists. Flag if package.json has webpack, create-
       react-app, or next as the bundler. Flag if TypeScript is absent from
-      a React app repo. LLM: assess whether the stack matches the standard
-      — look for any non-standard bundler or UI framework choices and flag
-      with explanation.
+      a React app repo.
 
   - id: FE-003
     title: Tailwind CSS for styling
@@ -65,8 +60,6 @@ standards:
       source files for className strings containing Tailwind utility classes.
       Flag if styled-components, emotion, CSS modules (.module.css imports), or
       another CSS framework is present alongside or instead of Tailwind.
-      LLM: assess whether Tailwind is the primary styling mechanism or whether
-      another approach is dominant.
 
   - id: FE-004
     title: shadcn/ui for components
@@ -84,9 +77,7 @@ standards:
       shadcn). Check for a src/components/ui/ directory containing component
       files. Flag if a ui/ directory is absent in a React app. Flag if
       shadcn components appear to be installed as a package dependency rather
-      than copied into src/. LLM: assess whether the component patterns in
-      use match shadcn/ui conventions — look for Button, Dialog, Input
-      components in src/components/ui/.
+      than copied into src/.
 
   - id: FE-005
     title: React Hook Form + Zod for forms and validation
@@ -103,9 +94,7 @@ standards:
       source files for useForm imports from react-hook-form and z. from zod.
       Flag if a form element exists in JSX/TSX files without a corresponding
       useForm hook. Flag if form validation is implemented with custom state
-      (useState for each field) rather than react-hook-form. LLM: assess
-      whether form handling is consistent — look for any forms bypassing
-      the standard pattern.
+      (useState for each field) rather than react-hook-form.
 
   # ─────────────────────────────────────────────
   # DATA INTEGRATION
@@ -125,9 +114,7 @@ standards:
       Search Astro data files and page components for API fetch calls. Check
       whether each fetch is wrapped in a try/catch with a fallback value (empty
       array, null, default object). Flag any fetch without error handling that
-      would cause a build failure if the API is unavailable. LLM: assess
-      whether the fallback handling is substantive — a caught error that re-
-      throws or logs without returning a safe default does not satisfy this rule.
+      would cause a build failure if the API is unavailable.
 
   - id: FE-007
     title: No hardcoded API URLs

@@ -97,7 +97,7 @@ jobs:
 
           valid_repo_types = {
               'pipeline-cog','trigger-cog','api-service','shared-library',
-              'static-site','react-app','standards-repo','all'
+              'static-site','react-app','standards-repo','evaluator-service','all'
           }
           for r in all_rules:
               applies = r.get('applies_to', [])

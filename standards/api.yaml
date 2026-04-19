@@ -152,9 +152,7 @@ standards:
       TypeScript services: check package.json for @clerk/clerk-sdk-node or
       equivalent. Search for verifyClerkToken from common-typescript-utils on
       protected routes. Flag if no Clerk dependency is found and the service
-      has non-public endpoints. LLM: assess whether auth is applied
-      consistently — check for routes that appear to handle user data but
-      lack an auth dependency.
+      has non-public endpoints.
 
   - id: API-008
     title: Public endpoints explicit and intentional

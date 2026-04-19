@@ -125,9 +125,6 @@ standards:
       tasks that process individual items versus tasks that build or update
       a collection/summary. Flag if a single task appears to both process
       a new item AND rebuild the full collection in the same function body.
-      LLM: assess whether the flow structure separates per-item processing
-      from collection rebuilds — look for rebuild logic (fetching all records,
-      generating summaries, updating indexes) mixed into item-processing tasks.
 
   - id: PIPE-004
     title: Concurrency groups required for shared resources

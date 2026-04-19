@@ -13,7 +13,7 @@ standards:
 
   - id: EVAL-001
     title: Evaluation findings stored, not ephemeral
-    status: requirement
+    status: convention
     dimension: pipeline_consistency
     severity: WARN
     applies_to: [pipeline-cog, api-service]
@@ -57,11 +57,34 @@ standards:
     status: requirement
     dimension: pipeline_consistency
     severity: WARN
-    applies_to: [pipeline-cog, api-service]
+    applies_to: [evaluator-service]
     description: >
-      Findings reference a specific standard by ID, describe what was observed,
-      and suggest a concrete remediation. Vague findings are not acceptable.
-    checkable: false
+      Every finding emitted by evaluator-cog references a specific
+      standard by ID, describes what was observed with enough
+      specificity to locate the violation, and suggests a concrete
+      remediation. Vague findings ("improve error handling," "better
+      logging") are not acceptable.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Runtime data-quality check against pipeline_evaluations for
+      findings emitted by evaluator-cog in the last 30 days
+      (source=conformance_check OR source=standards_drift):
+        (1) Every finding_text must contain at least one rule ID
+            matching the pattern [A-Z]+-\d+ (e.g. API-001, CD-005,
+            PIPE-013). Flag any finding whose text does not reference
+            a rule ID.
+        (2) finding_text length must be > 60 characters. Findings
+            shorter than this baseline almost certainly lack the
+            specificity this rule requires.
+        (3) Every finding must have a non-null remediation (or
+            equivalent column). Flag findings with empty remediation.
+        (4) remediation length must exceed finding_text length × 0.5
+            OR be ≥ 40 characters. A remediation that is just a copy
+            of the finding (or shorter) adds no actionable guidance.
+      This rule checks evaluator-cog's output, not evaluator-cog's
+      source code. The evaluator verifying this rule runs against
+      the api-kaianolevine-com pipeline_evaluations data.
 
   - id: EVAL-006
     title: Standards currency dimension

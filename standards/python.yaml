@@ -63,8 +63,12 @@ standards:
       (from pydantic import BaseModel). Flag any module that accesses external
       data (CSV parsing, Drive API responses, HTTP responses) using raw dict
       access or positional indexing without a corresponding Pydantic model
-      definition in the same repo. Look for patterns like row[0], data['key'],
-      response.json() assigned directly to variables without model validation.
+      definition in the same repo. Flag any of the following access patterns
+      on variables holding external data (CSV rows, API responses, Drive API
+      responses): row[0] or row['key'] where row is the result of csv.reader or
+      csv.DictReader; response.json() assigned directly to a variable without
+      passing through a Pydantic model; positional tuple indexing (data[0],
+      data[1]) on parsed external data.
 
   # ─────────────────────────────────────────────
   # PROJECT STRUCTURE

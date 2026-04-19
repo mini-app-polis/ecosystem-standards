@@ -79,6 +79,14 @@ schema:
     standards-repo: >
       YAML-only definition and tooling repository. Not a deployed service.
       Examples: ecosystem-standards.
+    evaluator-service: >
+      Always-on Railway worker that reads the standards catalog and
+      produces pipeline_evaluations findings. Single-repo type (N=1):
+      evaluator-cog. Rules applying to `[evaluator-service]` describe
+      the quality and shape of evaluator-cog's output, as distinct from
+      rules applying to `[pipeline-cog]` which describe cog behavior
+      generally. Example rules: EVAL-003 (finding specificity),
+      MONO-003 (monorepo dedup).
 
   traits:
     logger-primitive: >

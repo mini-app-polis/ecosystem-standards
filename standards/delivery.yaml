@@ -9,7 +9,7 @@ standards:
 
   - id: CD-001
     title: Feature flags for major functionality toggles
-    status: requirement
+    status: advisory
     dimension: cd_readiness
     severity: WARN
     applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
@@ -368,8 +368,10 @@ standards:
     check_notes: >
       Search all Python source files for logger.debug, logger.info,
       logger.warning, logger.error calls. Flag logger.error used for
-      file-not-found or similar expected outcomes (look for patterns like
-      'not found', 'no files', 'skipping' adjacent to error calls). Flag
+      file-not-found or similar expected outcomes: match regex patterns
+      against strings passed to logger.error calls:
+      (not found|no files|skipping|already exists|no new items). Flag error
+      calls where the message string contains any of these. Flag
       logger.info calls inside tight loops or per-item processing that would
       produce high-frequency noise. Flag logger.debug calls that are present
       in production code paths without a DEBUG guard.
@@ -456,10 +458,10 @@ standards:
     severity: ERROR
     applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
-      Doppler is the single source of truth for all infrastructure secrets
-      across the MiniAppPolis ecosystem. This includes API keys, database
-      URLs, service tokens, internal API keys, Sentry DSNs, Healthchecks
-      URLs, and Clerk credentials.
+      Doppler must be the canonical secret store and single source of truth
+      for all infrastructure secrets across the MiniAppPolis ecosystem.
+      This includes API keys, database URLs, service tokens, internal API
+      keys, Sentry DSNs, Healthchecks URLs, and Clerk credentials.
 
       Doppler syncs automatically to:
         Railway:        all API services and cogs receive secrets via
@@ -471,7 +473,8 @@ standards:
         - All secret changes are made in Doppler only
         - Doppler pushes changes to downstream platforms automatically
         - Never manually set secrets in Railway, GitHub, or Cloudflare
-          if Doppler is managing that service
+          when Doppler manages that service — manual overrides must not
+          diverge from Doppler as the source of truth
         - .env.example lists all required secret keys with no values —
           this file is the human-readable contract of what a service needs
 
@@ -489,41 +492,50 @@ standards:
     check_notes: >
       Check that .env.example exists and lists all required secret keys.
       Flag any service with secrets hardcoded in source or committed
-      .env files. Flag any service manually setting Railway env vars
-      that should be Doppler-managed.
+      .env files.       Flag any service manually setting Railway env vars
+      that must be Doppler-managed.
 
   - id: CD-012
-    title: Internal service-to-service auth via per-caller credentials
+    title: Internal service-to-service auth via Clerk M2M JWT
     status: requirement
     dimension: structural_conformance
-    severity: WARN
+    severity: ERROR
     applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
-      Internal calls between Railway services and cogs use per-caller
-      credentials — not a single shared secret across all callers.
-      Per-caller credentials allow:
-        - Independent rotation without touching all callers.
-        - Caller identity logging on every internal request.
-        - Revocation of a single caller without affecting others.
+      Internal calls between Railway services and cogs use Clerk
+      machine-to-machine JWT. Cogs request a short-lived JWT on startup
+      and cache until expiry. api-kaianolevine-com verifies RS256 JWTs
+      via Clerk JWKS and extracts `sub` as owner_id. Clerk user ID is
+      the ecosystem-wide owner_id.
 
-      Current-state mechanism: `X-Internal-API-Key` HTTP header with
-      Doppler-managed per-caller keys. `common-python-utils` provides
-      `get_internal_headers()`; TypeScript cogs carry the header
-      directly.
-
-      Target-state mechanism (Project Keystone): Clerk machine-to-machine
-      JWT. Cogs request a short-lived JWT on startup and cache until
-      expiry. `api-kaianolevine-com` verifies RS256 JWTs via Clerk JWKS
-      and extracts `sub` as owner_id. Clerk user ID becomes the
-      ecosystem-wide owner_id.
-
-      Mixed state is expected during the Keystone transition — both
-      mechanisms are valid during this period. `api-kaianolevine-com`
-      uses feature flags `keystone.legacy_auth_enabled` and
-      `keystone.clerk_auth_enabled` to gate the transition phase.
-      This rule becomes checkable once the transition completes
-      (legacy_auth_enabled is set to false in production).
-    checkable: false
+      The retired mechanism (`X-Internal-API-Key` header with
+      Doppler-managed per-caller keys) was superseded during Project
+      Keystone. `common-python-utils`'s `get_internal_headers()`
+      returns JWT-based headers.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      For service repos:
+        (1) Python services: scan src/**/*.py for the JWT acquisition
+            pattern — require at least one reference to
+            `common_python_utils.auth.get_m2m_token` (or the current
+            helper name — verify against common-python-utils at
+            evaluation time), OR a direct httpx call to a Clerk
+            token endpoint. Flag pipeline-cog, trigger-cog, and
+            api-service repos making internal API calls without
+            acquiring a JWT.
+        (2) TypeScript services: equivalent scan for M2M token
+            acquisition via `common-typescript-utils`.
+        (3) Flag any reference to `X-Internal-API-Key` in new or
+            modified source files on main — this is the superseded
+            pattern. Matching files in test fixtures (tests/**/*)
+            that mock the auth layer are exempt.
+        (4) For api-kaianolevine-com specifically: verify that auth.py
+            contains JWKS-based RS256 verification (imports including
+            `jose`, `python-jose`, `authlib`, or equivalent JWT
+            library) and extracts `sub` from the token as owner_id.
+            Flag if legacy API-key verification code paths remain.
+    supersedes: "X-Internal-API-Key header with Doppler-managed per-caller keys (retired 2026-04, Project Keystone)"
 
   - id: CD-013
     title: Feature flags must have an operator management surface

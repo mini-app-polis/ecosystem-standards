@@ -75,16 +75,33 @@ standards:
   - id: MONO-003
     title: Deduplicate sibling findings with shared root cause
     status: requirement
-    dimension: monorepo_coherence
-    severity: INFO
-    applies_to: [api-service, react-app]
+    dimension: pipeline_consistency
+    severity: WARN
+    applies_to: [evaluator-service]
     description: >
-      When two apps in the same monorepo generate findings with the same
-      rule_id and the same root cause (e.g. both fail CD-002 because Sentry
-      is absent at the workspace level), evaluator-cog emits one finding
-      tagged with both service IDs rather than two identical findings.
-
-      This keeps the Pipeline Health view signal-rich rather than noisy.
-      Distinct per-app failures (e.g. the API fails XSTACK-001 but the app
-      does not) must still be emitted as separate findings.
-    checkable: false
+      When two apps in the same monorepo generate findings with the
+      same rule_id and the same root cause (e.g. both fail CD-002
+      because Sentry is absent at the workspace level), evaluator-cog
+      emits one finding tagged with both service IDs rather than two
+      identical findings. Distinct per-app failures (e.g. api fails
+      XSTACK-001 but app passes) remain as separate findings.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Runtime data-quality check against pipeline_evaluations for
+      findings on monorepo services (services in ecosystem.yaml
+      with a `monorepo:` field), last 30 days:
+        (1) Group findings by (rule_id, finding_text,
+            standards_version, run_id) within each monorepo.
+        (2) Flag any group containing more than one finding — this
+            indicates duplicate emission that should have been
+            collapsed into a single finding with multiple service
+            IDs attached.
+        (3) Exempt rules where per-app divergence is the expected
+            behavior — these are rules whose description explicitly
+            states per-app semantics (XSTACK-002 is the canonical
+            example; XSTACK-001 is the canonical example of a rule
+            where workspace-level satisfaction produces one finding
+            for the monorepo).
+      This rule checks evaluator-cog's output, not evaluator-cog's
+      source code.

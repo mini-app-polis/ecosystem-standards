@@ -8,7 +8,7 @@ standards:
 
   - id: TEST-000
     title: Testing pyramid — right ratio, not maximum coverage
-    status: requirement
+    status: convention
     dimension: testing_coverage
     severity: INFO
     applies_to: [all]
@@ -194,8 +194,8 @@ standards:
     check_notes: >
       For FastAPI services, search test files for 'from fastapi.testclient
       import TestClient' or 'from httpx import AsyncClient'. Flag any test
-      file testing API endpoints without TestClient — look for test functions
-      containing endpoint path strings (/v1/) without a client fixture.
+      function (def test_*) whose body contains a string literal matching
+      /v1/ and does not reference a TestClient or AsyncClient fixture.
 
   - id: TEST-009
     title: Database fixtures — no production data in tests
@@ -208,11 +208,12 @@ standards:
       rollback. Never run against the production database.
     checkable: true
     check_notes: >
-      Search conftest.py for database fixture definitions. Look for patterns
-      establishing a test database (DATABASE_URL override, SQLite in-memory,
-      or transaction rollback fixture). Flag if no db fixture is found in a
-      repo that has SQLAlchemy models. Also flag any hardcoded production
-      DATABASE_URL strings in test files.
+      Search conftest.py for database fixture definitions. Require at least one
+      of the following patterns in conftest.py: (a) DATABASE_URL override to a
+      test-specific URL, (b) in-memory SQLite engine creation, (c) transaction
+      rollback fixture with scope='function' or 'session'. Flag if none are
+      present in a repo containing SQLAlchemy model definitions. Also flag any
+      hardcoded production DATABASE_URL strings in test files.
 
   - id: TEST-010
     title: Contract test for every API endpoint
