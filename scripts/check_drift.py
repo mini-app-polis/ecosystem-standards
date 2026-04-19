@@ -31,8 +31,6 @@ import sys
 import tomllib
 from pathlib import Path
 
-import requests
-import yaml
 
 
 # ── Rule extraction ────────────────────────────────────────────────────────
@@ -43,6 +41,8 @@ def extract_checkable_rule_ids(standards_dir: Path) -> dict[str, str]:
     Walk all standards/*.yaml files and return a dict of
     {rule_id: file_path} for every rule with checkable: true.
     """
+    import yaml
+
     checkable = {}
     standards_path = standards_dir / "standards"
     for yaml_file in sorted(standards_path.glob("*.yaml")):
@@ -156,6 +156,8 @@ def build_finding(
 
 
 def submit_finding(finding: dict, api_base_url: str, api_key: str) -> None:
+    import requests
+
     url = f"{api_base_url}/v1/pipeline-evaluations"
     headers = {
         "Content-Type": "application/json",
@@ -167,7 +169,7 @@ def submit_finding(finding: dict, api_base_url: str, api_key: str) -> None:
 
 
 def read_version(path: Path, key: str = "version") -> str:
-    """Read a version string from index.yaml or pyproject.toml."""
+    """Read a version string from package.json, index.yaml, or pyproject.toml."""
     try:
         if path.suffix == ".toml":
             with open(path, "rb") as f:
@@ -179,6 +181,12 @@ def read_version(path: Path, key: str = "version") -> str:
             if key in tool_poetry:
                 return str(tool_poetry[key])
             return "unknown"
+        if path.suffix == ".json":
+            with open(path) as f:
+                data = json.load(f)
+            return str(data.get(key, "unknown"))
+        import yaml
+
         with open(path) as f:
             data = yaml.safe_load(f)
         return str(data.get(key, "unknown"))
@@ -199,7 +207,7 @@ def main() -> None:
     evaluator_dir: Path = args.evaluator_dir
 
     # Versions for finding metadata
-    standards_version = read_version(standards_dir / "index.yaml")
+    standards_version = read_version(standards_dir / "package.json")
     evaluator_version = read_version(evaluator_dir / "pyproject.toml", key="version")
 
     triggered_by = os.environ.get("TRIGGERED_BY", "manual")

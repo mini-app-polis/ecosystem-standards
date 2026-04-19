@@ -1,6 +1,5 @@
 # ecosystem-standards / testing.yaml
 # Testing standards for all Python cogs and FastAPI services.
-# Version: 1.0.0 · 2026-03
 #
 # GAP: Most existing cogs currently have import-level tests only.
 # Remediation order: deejay-cog first, then by activity level.
@@ -21,7 +20,6 @@ standards:
       E2E tests (few): happy path only, run nightly not on every commit.
         One per pipeline covering the full flow.
     checkable: false
-    added: 2026-03
 
   # ─────────────────────────────────────────────
   # CRITICAL PATH — PYTHON PROCESSORS
@@ -42,7 +40,6 @@ standards:
     check_notes: >
       Scan tests/ directory for test functions covering normalization or cleaning
       logic. Flag if no such test exists.
-    added: 2026-03
 
   - id: TEST-002
     title: Deduplication test required per cog
@@ -57,7 +54,6 @@ standards:
     check_notes: >
       Scan tests/ directory for test functions covering duplicate detection.
       Flag if no such test exists.
-    added: 2026-03
 
   - id: TEST-003
     title: Failure path test required per cog
@@ -72,7 +68,6 @@ standards:
     check_notes: >
       Scan tests/ directory for test functions that pass malformed or invalid input
       and assert the cog continues. Flag if no failure path test exists.
-    added: 2026-03
 
   - id: TEST-004
     title: Output shape test required per cog
@@ -87,7 +82,6 @@ standards:
     check_notes: >
       Scan tests/ directory for test functions asserting output structure or schema.
       Flag if no output shape test exists.
-    added: 2026-03
 
   # ─────────────────────────────────────────────
   # TOOLING
@@ -105,7 +99,6 @@ standards:
     check_notes: >
       Check for [tool.pytest.ini_options] in pyproject.toml. Flag if repo uses
       unittest directly without pytest.
-    added: 2026-03
 
   - id: TEST-006
     title: pytest-cov for coverage in CI
@@ -120,7 +113,6 @@ standards:
     check_notes: >
       Check CI workflow for pytest --cov or pytest-cov invocation. Flag if coverage
       is not measured in CI.
-    added: 2026-03
 
   - id: TEST-007
     title: respx/httpx for HTTP mocking — no real external calls
@@ -138,7 +130,6 @@ standards:
       of a respx.mock context. Flag any test file importing httpx or requests
       without a corresponding respx mock. Also flag if respx is absent from
       dev dependencies entirely.
-    added: 2026-03
 
   - id: TEST-012
     title: mypy must run in CI if [tool.mypy] is declared
@@ -158,7 +149,6 @@ standards:
       .github/workflows/ for a step invoking mypy. Flag if no mypy CI step exists
       and repo is not in a documented "typing: in progress" state.
     origin: "kaianolevine-api has no mypy CI step. common-python-utils does. Standard aligns them."
-    added: 2026-03
 
   - id: TEST-013
     title: Operational delays sourced from config, not hardcoded
@@ -186,7 +176,6 @@ standards:
       any non-zero literal not sourced from process.env.
       Remediation: move the value to Settings/env var with a sensible
       production default. Tests override via environment.
-    added: 2026-04
 
   # ─────────────────────────────────────────────
   # FASTAPI TESTING
@@ -207,7 +196,6 @@ standards:
       import TestClient' or 'from httpx import AsyncClient'. Flag any test
       file testing API endpoints without TestClient — look for test functions
       containing endpoint path strings (/v1/) without a client fixture.
-    added: 2026-03
 
   - id: TEST-009
     title: Database fixtures — no production data in tests
@@ -225,7 +213,6 @@ standards:
       or transaction rollback fixture). Flag if no db fixture is found in a
       repo that has SQLAlchemy models. Also flag any hardcoded production
       DATABASE_URL strings in test files.
-    added: 2026-03
 
   - id: TEST-010
     title: Contract test for every API endpoint
@@ -242,7 +229,6 @@ standards:
       Count FastAPI route decorators. Count test functions asserting response shape.
       Flag if any endpoint has no corresponding contract test, or if contract tests
       are absent from CI workflow.
-    added: 2026-03
 
   - id: TEST-011
     title: Mock verification required
@@ -260,7 +246,6 @@ standards:
       assert_called_once(), assert_called_once_with(), or assert_called_with()
       exists in the same test function. Flag test functions that create mocks
       but have no assertion on the mock object.
-    added: 2026-03
 
   - id: TEST-GAP-001
     title: "GAP: Most existing cogs have import-level tests only"
@@ -279,4 +264,3 @@ standards:
       For each cog repo, check tests/ for the four critical path tests
       (TEST-001 through TEST-004). Flag any cog missing any of the four.
       Track remediation progress here.
-    added: 2026-03

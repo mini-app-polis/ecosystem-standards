@@ -1,22 +1,11 @@
 # ecosystem-standards / index.yaml
 # Manifest file — agents fetch this first to discover available standards files.
-# Version: 3.0.0 · 2026-04
 #
 # Fetch pattern:
 #   1. GET index.yaml  → discover files and current version
 #   2. GET standards/<file>.yaml  → fetch relevant domain(s)
 #   3. Pin standards_version in evaluation output for auditability
 #
-# BREAKING CHANGES in v3.0.0:
-#   - Rule applies_to values updated from dod_type names to repo type names
-#     (e.g. new_cog → pipeline-cog, new_fastapi_service → api-service)
-#   - ecosystem.yaml check_exceptions replaced by per-repo evaluator.yaml (ADR-001)
-#   - Type/trait taxonomy introduced (ADR-002)
-#   - deferred keyword introduced for known failures not yet prioritized
-
-version: 3.1.0
-updated: 2026-04
-maintainer: mini-app-polis
 
 # Dimensions used across all standards files.
 # These map directly to the pipeline_evaluations table dimension field.

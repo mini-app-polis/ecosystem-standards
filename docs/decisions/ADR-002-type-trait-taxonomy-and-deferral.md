@@ -202,7 +202,7 @@ deferrals:
 ## Implementation Plan
 
 **Step 1: Update `index.yaml` in `ecosystem-standards`**
-Add `type` values using the new taxonomy. Add `traits` as a list field. Document which rules apply to which types.
+Add `type` values using the new taxonomy. Add `traits` as a list field. Document which rules apply to which types. Version bumps are managed by semantic-release via conventional commits.
 
 **Step 2: Update each standards YAML file**
 Add or update `applies_to` on each rule to use the new type names. Remove exceptions that are now covered by type scoping. Add `trait_exceptions` where traits grant automatic exemption.

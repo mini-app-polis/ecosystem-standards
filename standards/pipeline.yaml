@@ -1,6 +1,5 @@
 # ecosystem-standards / pipeline.yaml
 # Standards for pipeline design and orchestration.
-# Version: 1.0.0 · 2026-03
 
 standards:
 
@@ -19,7 +18,6 @@ standards:
       retry logic, run history. GitHub Actions is for CI/CD only — not pipeline
       orchestration.
     checkable: false
-    added: 2026-03
 
   # ─────────────────────────────────────────────
   # PIPELINE DESIGN
@@ -52,7 +50,6 @@ standards:
       content hash, or composite of run_id + repo). Flag if no such guard is
       present. This rule should be cited as PIPE-002 in findings — not as a
       nameless reliability concern.
-    added: 2026-03
 
   - id: PIPE-003
     title: Separate process and collect steps
@@ -72,7 +69,6 @@ standards:
       LLM: assess whether the flow structure separates per-item processing
       from collection rebuilds — look for rebuild logic (fetching all records,
       generating summaries, updating indexes) mixed into item-processing tasks.
-    added: 2026-03
 
   - id: PIPE-004
     title: Concurrency groups required for shared resources
@@ -98,7 +94,6 @@ standards:
       Note: PIPE-009 is the preferred implementation for pipeline cogs that
       scan shared resources. PIPE-004 is the broader requirement that covers
       all shared-resource writes including non-scanning writes.
-    added: 2026-03
 
   - id: PIPE-005
     title: Archive, never delete raw inputs
@@ -118,7 +113,6 @@ standards:
       similar) rather than deletion. LLM: assess whether the archiving
       pattern is consistently applied across all input file types handled
       by the cog.
-    added: 2026-03
 
   - id: PIPE-006
     title: Dual logger pattern in Prefect flows
@@ -135,7 +129,6 @@ standards:
     check_notes: >
       Scan Prefect @flow decorated functions for get_run_logger() with fallback.
       Flag flows using only standard logging.
-    added: 2026-03
 
   - id: PIPE-007
     title: Retry logic on external API calls
@@ -154,7 +147,6 @@ standards:
       external-calling task missing retries=2 unless it explicitly inherits
       retry logic from common-python-utils (check for DriveFacade or
       LLMClient usage, which have internal retry handling).
-    added: 2026-03
 
   - id: PIPE-008
     title: watcher-cog as canonical Drive trigger
@@ -190,7 +182,6 @@ standards:
       itself against this rule — they ARE the trigger mechanism, not consumers
       of it. Skip this check for any cog with cog_subtype: trigger.
     supersedes: "Apps Script → repository_dispatch → GitHub Actions (retired 2026-03)"
-    added: 2026-03
 
   - id: PIPE-011
     title: AI evaluation step as final pipeline task
@@ -220,7 +211,6 @@ standards:
       only. Do not flag trigger cogs (cog_subtype: trigger) — they fire flow
       runs but do not run pipelines themselves and have no evaluation step.
       Skip this check for any cog with cog_subtype: trigger.
-    added: 2026-03
 
   - id: PIPE-012
     title: Retry delay disabled in test context
@@ -247,7 +237,6 @@ standards:
       the value with os.getenv("PYTEST_CURRENT_TEST"). Pass if the value
       is already zero, sourced from a settings field, or uses the
       PYTEST_CURRENT_TEST conditional pattern.
-    added: 2026-04
 
   - id: PIPE-009
     title: Pipeline cogs must acquire a named Prefect concurrency slot before scanning shared resources
@@ -288,4 +277,3 @@ standards:
       Flag if either is absent in a pipeline cog that scans a shared resource.
       Also flag if the cog has deployment concurrency_limit=1 but no runtime
       concurrency slot — this is insufficient protection.
-    added: 2026-04

@@ -1,7 +1,6 @@
 # ecosystem-standards / definitions-of-done.yaml
 # Checklists used by AI evaluators for post-PR assessment.
 # A piece of work is done when it meets ALL criteria for its type.
-# Version: 1.0.0 · 2026-03
 
 definitions_of_done:
 

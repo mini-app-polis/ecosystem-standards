@@ -12,14 +12,15 @@ Standards live as versioned YAML files — human-readable enough to edit directl
 
 **For humans:** edit the YAML files directly when a real issue drives a new rule. Commit with a clear message explaining why.
 
-**For agents:** fetch `index.yaml` first to discover available files and the current version, then fetch the relevant domain file(s).
+**For agents:** fetch `index.yaml` first to discover available files, fetch `package.json` for the current release value, then fetch the relevant domain file(s).
 
 ```
-GET index.yaml                        → manifest, version, file list
+GET index.yaml                        → manifest, file list
+GET package.json                      → version of the standards repo
 GET standards/<domain>.yaml           → rules for that domain
 ```
 
-Every evaluation output should pin the `version` from `index.yaml` so findings are traceable to a specific standards state.
+Every evaluation output should pin the `version` from `package.json` so findings are traceable to a specific standards state.
 
 ---
 
@@ -27,7 +28,8 @@ Every evaluation output should pin the `version` from `index.yaml` so findings a
 
 ```
 ecosystem-standards/
-├── index.yaml                  ← start here — manifest and version
+├── package.json                ← version (owned by semantic-release)
+├── index.yaml                  ← manifest (start here for standards content)
 ├── README.md
 ├── CHANGELOG.md
 ├── standards/
@@ -63,7 +65,6 @@ Every rule has:
     What to look for and what to flag.
   origin: >                    # optional — the issue that drove this rule
     Why this rule exists.
-  added: 2026-03               # when the rule was added
 ```
 
 ---
@@ -74,7 +75,7 @@ Every rule has:
 1. Open this repo
 2. Add or update a rule in the relevant YAML file
 3. Commit with a message explaining the issue that drove it
-4. Bump the version in `index.yaml` and add a changelog entry
+4. Commit with a conventional-commit message — semantic-release owns version bumps and the changelog.
 
 The git history is your audit trail. The `origin` field on each rule is the permanent record of why it exists.
 

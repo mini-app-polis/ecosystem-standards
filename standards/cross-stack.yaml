@@ -1,7 +1,6 @@
 # ecosystem-standards / cross-stack.yaml
 # Standards that apply across both Python and TypeScript stacks.
 # The pattern is the standard, not the implementation.
-# Version: 1.0.0 · 2026-03
 #
 # Whether working in Python or TypeScript, the answers to:
 #   - how do I log something?
@@ -55,7 +54,6 @@ standards:
       BOTH the app subdirectory (monorepo_path) AND the monorepo root before
       flagging absence. These files commonly live at the workspace root and
       apply to all apps in the monorepo. Flag only if absent from both locations.
-    added: 2026-03
 
   - id: XSTACK-002
     title: Cross-stack response shape parity
@@ -69,7 +67,6 @@ standards:
         error: { error: { code, message } }
       Defined in common-typescript-utils for TypeScript. Enforced by response_model in FastAPI.
     checkable: false
-    added: 2026-03
 
   - id: XSTACK-003
     title: pnpm for all TypeScript projects
@@ -90,7 +87,6 @@ standards:
       look for uses of pnpm/action-setup or corepack enable. Flag if npm
       install or yarn install appears in CI steps. For monorepos, check
       pnpm-workspace.yaml exists.
-    added: 2026-04
 
   - id: XSTACK-004
     title: Env var naming conventions by runtime
@@ -116,4 +112,3 @@ standards:
       (API URL, public keys) without the correct prefix for its runtime.
       Flag any VITE_ variable in an Astro repo or PUBLIC_ variable in a
       Vite repo.
-    added: 2026-04

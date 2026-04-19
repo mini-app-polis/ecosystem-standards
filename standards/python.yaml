@@ -1,6 +1,5 @@
 # ecosystem-standards / python.yaml
 # Standards for all Python services, cogs, and libraries.
-# Version: 1.0.0 · 2026-03
 
 standards:
 
@@ -21,7 +20,6 @@ standards:
     check_notes: >
       Check for uv.lock or [tool.uv] in pyproject.toml. Flag new repos using
       Poetry. Flag existing repos using Poetry only when actively being worked on.
-    added: 2026-03
 
   - id: PY-002
     title: ruff for linting and formatting
@@ -36,7 +34,6 @@ standards:
     check_notes: >
       Check for [tool.ruff] in pyproject.toml. Flag if repo configures
       black, isort, or flake8 separately.
-    added: 2026-03
 
   - id: PY-003
     title: Python 3.11+ minimum version
@@ -50,7 +47,6 @@ standards:
     checkable: true
     check_notes: >
       Check requires-python in pyproject.toml. Flag if minimum is below 3.11.
-    added: 2026-03
 
   - id: PY-004
     title: Pydantic for all external data validation
@@ -69,7 +65,6 @@ standards:
       access or positional indexing without a corresponding Pydantic model
       definition in the same repo. Look for patterns like row[0], data['key'],
       response.json() assigned directly to variables without model validation.
-    added: 2026-03
 
   # ─────────────────────────────────────────────
   # PROJECT STRUCTURE
@@ -87,7 +82,6 @@ standards:
     check_notes: >
       Check for presence of src/ directory. Flag if Python package files are at
       the repo root (flat layout).
-    added: 2026-03
 
   - id: PY-006
     title: common-python-utils declared as dependency
@@ -103,7 +97,6 @@ standards:
     check_notes: >
       Check pyproject.toml dependencies for common-python-utils. Flag if absent
       and repo is a Python cog.
-    added: 2026-03
 
   - id: PY-007
     title: pyproject.toml as single source of truth
@@ -116,7 +109,6 @@ standards:
     checkable: true
     check_notes: >
       Check for presence of setup.py or requirements.txt at repo root. Flag if found.
-    added: 2026-03
 
   - id: PY-008
     title: pre-commit configured
@@ -129,7 +121,6 @@ standards:
     checkable: true
     check_notes: >
       Check for .pre-commit-config.yaml at repo root. Flag if absent.
-    added: 2026-03
 
   - id: PY-009
     title: hatchling as build backend
@@ -145,7 +136,6 @@ standards:
     checkable: true
     check_notes: >
       Check [build-system] requires in pyproject.toml. Flag if value is not hatchling.
-    added: 2026-03
 
   - id: PY-010
     title: ruff line length is 88
@@ -161,7 +151,6 @@ standards:
     check_notes: >
       Parse [tool.ruff] line-length in pyproject.toml. Flag if value is not 88
       or if field is absent.
-    added: 2026-03
 
   # ─────────────────────────────────────────────
   # NAMING CONVENTIONS
@@ -195,7 +184,6 @@ standards:
       are documented in __init__.py and README.md. Do not flag PY-011 for
       a name mismatch if DOC-009 passes for that repo. Only flag if the
       mismatch is undocumented.
-    added: 2026-03
 
   # ─────────────────────────────────────────────
   # ERROR HANDLING
@@ -217,7 +205,6 @@ standards:
       processes files and no FAILED_ rename pattern is found, flag as missing.
       Confirm FAILED_ prefix is applied in exception handlers, not just happy
       path code.
-    added: 2026-03
 
   - id: PY-013
     title: possible_duplicate_ prefix for duplicates
@@ -233,7 +220,6 @@ standards:
       Search all Python source files for the string 'possible_duplicate_' in
       rename or move operations. If the cog performs deduplication logic and
       no possible_duplicate_ rename pattern is found, flag as missing.
-    added: 2026-03
 
   - id: PY-014
     title: finally for temp file cleanup
@@ -250,7 +236,6 @@ standards:
       NamedTemporaryFile, tmp_ prefixed paths). For each occurrence, confirm
       cleanup is performed inside a finally block. Flag any temp file creation
       not covered by a finally or context manager.
-    added: 2026-03
 
   - id: PY-015
     title: SQLAlchemy async pattern required in FastAPI services
@@ -273,7 +258,6 @@ standards:
       pyproject.toml dependencies for asyncpg — flag if sqlalchemy is present
       but asyncpg is absent. Flag any session usage without await on execute,
       commit, or refresh calls.
-    added: 2026-04
 
   # ─────────────────────────────────────────────
   # CONFIGURATION (from code review audit)
@@ -300,7 +284,6 @@ standards:
     origin: >
       routers/webhook.py uses getattr(settings, "STANDARDS_VERSION", "6.0") but
       STANDARDS_VERSION is not on Settings. The env var has no effect.
-    added: 2026-03
 
   - id: CFG-002
     title: Every key in .env.example must be declared in Settings
@@ -320,4 +303,3 @@ standards:
     origin: >
       KAIANO_API_CLERK_TOKEN appears in common-python-utils/.env.example but is
       not read anywhere in the current implementation.
-    added: 2026-03

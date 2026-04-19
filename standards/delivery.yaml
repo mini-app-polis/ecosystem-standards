@@ -1,6 +1,5 @@
 # ecosystem-standards / delivery.yaml
 # Continuous delivery, versioning, and observability standards.
-# Version: 1.0.0 · 2026-03
 
 standards:
 
@@ -68,7 +67,6 @@ standards:
       Fail-open or fail-closed behavior must be intentional and documented
       per flag.
     checkable: false
-    added: 2026-03
 
   - id: CD-002
     title: Sentry for error tracking — all production services
@@ -92,7 +90,6 @@ standards:
       package.json (TypeScript). Check for sentry_sdk.init() or Sentry.init()
       call at service entry point. Check for SENTRY_DSN in .env.example.
       Flag any production service missing any of these three.
-    added: 2026-03
 
   - id: CD-003
     title: Structured logging via shared library
@@ -130,7 +127,6 @@ standards:
       Scan source files for print() statements in production code paths.
       Flag if found. Check that logger is imported from shared library,
       not configured inline per-service.
-    added: 2026-03
 
   # ─────────────────────────────────────────────
   # CI/CD
@@ -154,7 +150,6 @@ standards:
       Parse all uses: references in .github/workflows/*.yml. For each action,
       verify the pinned version tag exists via the GitHub API. Flag any returning 404.
     origin: "Invalid version tags cause CI to fail silently, creating false confidence in a passing pipeline."
-    added: 2026-03
 
   # ─────────────────────────────────────────────
   # VERSIONING
@@ -176,7 +171,6 @@ standards:
       refactor|chore|test|ci|perf|build)(\(.+\))?: .+. Flag commits that
       do not match. Exempt merge commits and semantic-release chore commits
       (chore(release):).
-    added: 2026-03
 
   - id: VER-002
     title: BREAKING CHANGE footer for major bumps
@@ -194,7 +188,6 @@ standards:
       For each major version entry, check the corresponding git tag commit
       message for a BREAKING CHANGE footer. Flag any major version bump where
       the triggering commit lacks a BREAKING CHANGE footer.
-    added: 2026-03
 
   - id: VER-003
     title: semantic-release on all repos
@@ -210,7 +203,6 @@ standards:
     check_notes: >
       Check for .releaserc.json at repo root and a release job in
       .github/workflows/ci.yml. Flag if either is absent.
-    added: 2026-03
 
   - id: VER-004
     title: Never manually edit version files or CHANGELOG
@@ -229,7 +221,6 @@ standards:
       or ## X.Y.Z — date formats. Flag if any section deviates from the
       machine-generated format. Also check pyproject.toml version — if it
       does not match the latest CHANGELOG.md version, flag as manually edited.
-    added: 2026-03
 
   - id: VER-005
     title: "fetch-depth: 0 on CI checkout"
@@ -245,7 +236,6 @@ standards:
     check_notes: >
       Scan .github/workflows/ci.yml for actions/checkout steps in the release job.
       Flag if fetch-depth: 0 is absent.
-    added: 2026-03
 
   - id: VER-006
     title: Plugins installed explicitly before semantic-release
@@ -261,7 +251,6 @@ standards:
     check_notes: >
       Check release job in ci.yml for npm install --no-save step before npx
       semantic-release. Flag if absent.
-    added: 2026-03
 
   - id: CD-005
     title: Prefect Cloud for pipeline observability
@@ -274,7 +263,6 @@ standards:
       and flow state are visible at app.prefect.cloud. GitHub Actions logs are for
       deep debugging only — not the primary observability surface.
     checkable: false
-    added: 2026-03
 
   - id: CD-006
     title: GitHub Actions is CI/CD only — not a trigger relay
@@ -289,7 +277,6 @@ standards:
       deployments. repository_dispatch as a trigger relay for cogs
       is a retired pattern.
     checkable: false
-    added: 2026-03
 
   - id: CD-007
     title: Healthchecks.io for trigger cogs
@@ -319,7 +306,6 @@ standards:
       heartbeat ping call in the main poll loop. Flag trigger cogs missing
       this integration. Do not flag pipeline cogs (cog_subtype: pipeline)
       — they are exempt by design.
-    added: 2026-03
 
   - id: CD-008
     title: Log levels used consistently and intentionally
@@ -352,7 +338,6 @@ standards:
       logger.info calls inside tight loops or per-item processing that would
       produce high-frequency noise. Flag logger.debug calls that are present
       in production code paths without a DEBUG guard.
-    added: 2026-03
 
   - id: CD-009
     title: Structured log event shape — all services
@@ -389,7 +374,6 @@ standards:
       Check that log calls use the shared library logger, not a custom
       inline configuration. Flag services importing logging directly and
       configuring their own handler/formatter without using the shared library.
-    added: 2026-03
 
   - id: CD-010
     title: Three-layer observability stack — all production services
@@ -429,7 +413,6 @@ standards:
       three produces duplicate findings for one root cause. If CD-010 passes
       (all layers present), CD-002 and CD-009 may still fire independently
       for structural issues not captured by the composite check.
-    added: 2026-03
 
   - id: CD-011
     title: Doppler as canonical secret store
@@ -473,7 +456,6 @@ standards:
       Flag any service with secrets hardcoded in source or committed
       .env files. Flag any service manually setting Railway env vars
       that should be Doppler-managed.
-    added: 2026-03
 
   - id: CD-012
     title: Internal service-to-service auth via per-caller API keys
@@ -503,7 +485,6 @@ standards:
       Clerk JWT auth is for user-facing requests only. Internal
       service-to-service calls never use Clerk JWTs.
     checkable: false
-    added: 2026-03
 
   - id: CD-013
     title: Feature flag admin panel in kaianolevine.com
@@ -530,7 +511,6 @@ standards:
       has its own Clerk application and independent user pool. Admin access
       to the flag panel is scoped to the kaianolevine.com Clerk app only.
     checkable: false
-    added: 2026-03
 
   - id: CD-014
     title: Cloudflare Pages for all static site deployments
@@ -551,7 +531,6 @@ standards:
       or URLs (pages.dev domain). Flag if a different deployment target is
       referenced (netlify.toml, vercel.json, .github/workflows with gh-pages).
       If no deployment target is detectable, flag as unverified.
-    added: 2026-04
 
   - id: CD-015
     title: Prefect serve() — no work pool
@@ -574,7 +553,6 @@ standards:
       Flag any found. Confirm prefect.serve() is used as the flow registration
       mechanism in the cog's main entry point. Flag if neither serve() nor
       deploy() is found — the registration pattern is missing entirely.
-    added: 2026-04
 
   - id: VER-007
     title: Pull before branching
@@ -587,7 +565,6 @@ standards:
       Prevents merge conflicts with semantic-release commits
       (chore(release): X.Y.Z [skip ci]) that land on main after every release.
     checkable: false
-    added: 2026-03
 
   - id: VER-008
     title: .releaserc.json assets must include all version-managed files
@@ -611,4 +588,3 @@ standards:
       index.yaml, package.json, etc). Find the @semantic-release/git plugin and
       extract its assets array. Flag any file written by prepareCmd that is not
       present in assets. Also flag if CHANGELOG.md is absent from assets.
-    added: 2026-04

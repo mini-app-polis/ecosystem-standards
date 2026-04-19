@@ -1,6 +1,5 @@
 # ecosystem-standards / documentation.yaml
 # Documentation standards for all repos, modules, and API endpoints.
-# Version: 1.0.0 · 2026-03
 
 standards:
 
@@ -22,7 +21,6 @@ standards:
     check_notes: >
       Check for README.md at repo root. Flag if absent or if it is clearly
       a template default with no real content.
-    added: 2026-03
 
   - id: DOC-002
     title: README describes inputs and outputs
@@ -40,7 +38,6 @@ standards:
       output, produces, writes to, or similar. For APIs: look for endpoint
       listings or links to OpenAPI docs. Flag if README contains fewer than
       two of these signals.
-    added: 2026-03
 
   - id: DOC-003
     title: CHANGELOG.md required
@@ -55,7 +52,6 @@ standards:
     checkable: true
     check_notes: >
       Check for CHANGELOG.md at repo root. Flag if absent.
-    added: 2026-03
 
   - id: DOC-004
     title: .env.example is current
@@ -70,7 +66,6 @@ standards:
     check_notes: >
       Check for .env.example at repo root. Flag if absent. Cross-reference with
       Settings class fields (see CFG-002 in python.yaml).
-    added: 2026-03
 
   - id: DOC-005
     title: Design decisions captured
@@ -83,7 +78,6 @@ standards:
       down — in docs/DESIGN.md, a CHANGELOG entry, or a README note. Not just what
       was decided but why.
     checkable: false
-    added: 2026-03
 
   - id: DOC-013
     title: README "Running locally" section is complete
@@ -135,7 +129,6 @@ standards:
       and a reference to .env.example. Accept either package manager — do NOT
       flag npm as a violation for frontend repos. Flag only if the conceptual
       element (install / dev / build / env setup) is entirely absent.
-    added: 2026-03
 
   # ─────────────────────────────────────────────
   # CODE-LEVEL
@@ -154,7 +147,6 @@ standards:
     check_notes: >
       AST scan: find public functions and classes (not prefixed with _) lacking
       a docstring. Flag if any exist.
-    added: 2026-03
 
   - id: DOC-007
     title: Pydantic field descriptions required
@@ -172,7 +164,6 @@ standards:
       or Field(description=...) call is present. Flag any model field using
       plain type annotation without a Field description. Allow exemptions for
       private fields prefixed with underscore.
-    added: 2026-03
 
   - id: DOC-008
     title: No dead code
@@ -187,7 +178,6 @@ standards:
     check_notes: >
       Scan for large blocks of commented-out code (3+ consecutive commented lines
       that appear to be code, not documentation). Flag if found.
-    added: 2026-03
 
   - id: DOC-009
     title: Split package identity documented at entry point
@@ -209,7 +199,6 @@ standards:
       common-python-utils/__init__.py had broken install URL and no explanation
       of the name split. New consumers had to discover the import namespace by
       inspecting src/.
-    added: 2026-03
 
   # ─────────────────────────────────────────────
   # API DOCUMENTATION
@@ -229,7 +218,6 @@ standards:
     check_notes: >
       Scan FastAPI route decorators for presence of summary=, description=, and
       response_model=. Flag any endpoint missing any of the three.
-    added: 2026-03
 
   - id: DOC-011
     title: Public endpoints documented as intentional
@@ -247,7 +235,6 @@ standards:
       such route, check the OpenAPI description field contains a phrase
       confirming intent — e.g. "intentionally public", "no auth required",
       "read-only public". Flag unauthenticated routes with no such note.
-    added: 2026-03
 
   # ─────────────────────────────────────────────
   # STANDARDS DOCUMENT ITSELF
@@ -260,7 +247,7 @@ standards:
     severity: WARN
     applies_to: [all]
     description: >
-      Every update to the standards repo increments the version in index.yaml.
+      Every update to the standards repo increments the version in package.json.
       The AI evaluator always references a specific version. Evaluations without
       a standards version reference are invalid.
 
@@ -272,14 +259,13 @@ standards:
     checkable: true
     check_notes: >
       This rule has two distinct check surfaces:
-      (1) The standards repo itself: verify index.yaml has a version field
+      (1) The standards repo itself: verify package.json has a version field
           and it is incremented on every release. This is the authoring-side
           check and should always pass.
       (2) Evaluation call metadata: verify that evaluation records written
           to pipeline_evaluations include a standards_version field matching
-          the current index.yaml version. This is a runtime check — look for
+          the current package.json version. This is a runtime check — look for
           standards_version in the evaluation payload or submission code.
           Flag if absent, but apply WARN severity during the grace period
           (see adoption note in description). Do not flag the standards repo
           itself for this — it is the source of truth, not a consumer of it.
-    added: 2026-03

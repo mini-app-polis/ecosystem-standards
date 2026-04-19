@@ -1,6 +1,5 @@
 # ecosystem-standards / monorepo.yaml
 # Standards for monorepo structure and per-app evaluation within a workspace.
-# Version: 1.0.0 · 2026-04
 #
 # These rules apply to repos listed in the `monorepos:` section of ecosystem.yaml.
 # They govern how workspace-level configuration is shared across apps and how
@@ -41,7 +40,6 @@ standards:
          XSTACK-001 for any app in this monorepo.
       4. Only flag XSTACK-001 if the dep is absent from BOTH the workspace
          root AND the per-app package.json.
-    added: 2026-04
 
   - id: MONO-002
     title: CI is evaluated at the monorepo root — not per-app
@@ -73,7 +71,6 @@ standards:
          if the root CI covers it.
       4. If the root CI is absent, flag both sibling services with the same
          finding rather than generating per-app duplicates.
-    added: 2026-04
 
   - id: MONO-003
     title: Deduplicate sibling findings with shared root cause
@@ -91,4 +88,3 @@ standards:
       Distinct per-app failures (e.g. the API fails XSTACK-001 but the app
       does not) must still be emitted as separate findings.
     checkable: false
-    added: 2026-04

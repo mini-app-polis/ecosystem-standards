@@ -1,6 +1,5 @@
 # ecosystem-standards / evaluation.yaml
 # Standards governing how AI evaluation is performed across the ecosystem.
-# Version: 1.0.0 · 2026-03
 #
 # AI is used to evaluate the development process itself — not to enrich output data.
 # The evaluator checks conformance to these standards, surfaces drift, and provides
@@ -23,7 +22,6 @@ standards:
       They are reviewable, queryable, and feed the portfolio surface. Results
       logged only are not acceptable for production pipelines.
     checkable: false
-    added: 2026-03
 
   - id: EVAL-002
     title: Every evaluation references a standards version
@@ -37,7 +35,7 @@ standards:
       is undefined.
 
       Canonical implementation: resolve standards_version at runtime by reading
-      index.yaml from the ecosystem-standards repo, cached for the process
+      package.json from the ecosystem-standards repo, cached for the process
       lifetime. Allow an explicit environment variable override
       (STANDARDS_VERSION) for tests and controlled pins. Do not hardcode
       version strings as defaults — they will go stale silently, and presence
@@ -52,8 +50,7 @@ standards:
       as defaults — e.g. standards_version="3.0.1" or STANDARDS_VERSION = "3.0.1"
       as a module-level constant. Flag any found. Exempt test fixtures and
       values explicitly sourced from environment variables or from a runtime
-      read of index.yaml.
-    added: 2026-03
+      read of package.json.
 
   - id: EVAL-003
     title: Findings are specific and actionable
@@ -65,7 +62,6 @@ standards:
       Findings reference a specific standard by ID, describe what was observed,
       and suggest a concrete remediation. Vague findings are not acceptable.
     checkable: false
-    added: 2026-03
 
   - id: EVAL-004
     title: Structural conformance dimension
@@ -77,7 +73,6 @@ standards:
       Evaluation dimension: does the repo/workflow follow the patterns in the
       standards? Covers src layout, naming conventions, error handling, tooling choices.
     checkable: false
-    added: 2026-03
 
   - id: EVAL-005
     title: Pipeline consistency dimension
@@ -89,7 +84,6 @@ standards:
       Evaluation dimension: did this run behave the same way as previous runs?
       Covers unexpected timing changes, new error types, missing steps.
     checkable: false
-    added: 2026-03
 
   - id: EVAL-006
     title: Standards currency dimension
@@ -104,8 +98,7 @@ standards:
     checkable: true
     check_notes: >
       Check pipeline_evaluations for this repo. Compare standards_version on the
-      most recent evaluation against current index.yaml version. Flag if behind.
-    added: 2026-03
+      most recent evaluation against current package.json version. Flag if behind.
 
   - id: EVAL-007
     title: Standards/evaluator check coverage must be tracked and in sync
@@ -130,13 +123,12 @@ standards:
         - Unimplemented checkable rules → severity WARN finding, source=conformance_check
         - Orphaned evaluator checks (no backing standard) → severity ERROR finding
         - Version skew (evaluator's pinned standards version is more than one
-          minor version behind current index.yaml) → severity WARN finding
+          minor version behind current package.json) → severity WARN finding
 
       Findings are written to pipeline_evaluations via api-kaianolevine-com
       with source=standards_drift, so they appear in the Pipeline Health view
       alongside all other conformance findings.
     checkable: false
-    added: 2026-04
 
   - id: EVAL-008
     title: Every active repo must have an evaluator.yaml at its root
@@ -174,7 +166,6 @@ standards:
       one of the valid repo_types in index.yaml. Flag if type is absent
       or unrecognized. Flag if exemptions are present without reason strings.
       Flag if traits contain unrecognized values.
-    added: 2026-04
 
   - id: EVAL-GAP-001
     title: Deterministic conformance checks — partial coverage
@@ -193,7 +184,6 @@ standards:
       implemented vs unimplemented checks is now automated via EVAL-007
       drift detection — see .github/workflows/drift-check.yml.
     checkable: false
-    added: 2026-03
 
   # ─────────────────────────────────────────────
   # EVALUATION TRIGGERS

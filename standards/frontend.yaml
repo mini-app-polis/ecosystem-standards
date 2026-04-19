@@ -1,6 +1,5 @@
 # ecosystem-standards / frontend.yaml
 # Standards for all frontend sites and web applications.
-# Version: 1.0.0 · 2026-03
 #
 # Decision rule: if the primary product is content delivery, use Astro.
 # If it is an application with persistent UI state and user actions, use React.
@@ -29,7 +28,6 @@ standards:
       without astro). LLM: given the repo name and README description, assess
       whether this is a static site (should use Astro) or a web app with
       persistent UI state (React is appropriate).
-    added: 2026-03
 
   - id: FE-002
     title: Vite + React + TypeScript for web apps
@@ -48,7 +46,6 @@ standards:
       a React app repo. LLM: assess whether the stack matches the standard
       — look for any non-standard bundler or UI framework choices and flag
       with explanation.
-    added: 2026-03
 
   - id: FE-003
     title: Tailwind CSS for styling
@@ -70,7 +67,6 @@ standards:
       another CSS framework is present alongside or instead of Tailwind.
       LLM: assess whether Tailwind is the primary styling mechanism or whether
       another approach is dominant.
-    added: 2026-03
 
   - id: FE-004
     title: shadcn/ui for components
@@ -91,7 +87,6 @@ standards:
       than copied into src/. LLM: assess whether the component patterns in
       use match shadcn/ui conventions — look for Button, Dialog, Input
       components in src/components/ui/.
-    added: 2026-03
 
   - id: FE-005
     title: React Hook Form + Zod for forms and validation
@@ -111,7 +106,6 @@ standards:
       (useState for each field) rather than react-hook-form. LLM: assess
       whether form handling is consistent — look for any forms bypassing
       the standard pattern.
-    added: 2026-03
 
   # ─────────────────────────────────────────────
   # DATA INTEGRATION
@@ -134,7 +128,6 @@ standards:
       would cause a build failure if the API is unavailable. LLM: assess
       whether the fallback handling is substantive — a caught error that re-
       throws or logs without returning a safe default does not satisfy this rule.
-    added: 2026-03
 
   - id: FE-007
     title: No hardcoded API URLs
@@ -149,7 +142,6 @@ standards:
     check_notes: >
       Scan source files for hardcoded API URL strings (http://localhost, railway.app,
       etc.). Flag if found outside of .env files.
-    added: 2026-03
 
   - id: FE-008
     title: Pinned starter version
@@ -161,7 +153,6 @@ standards:
       Astro sites pin their starter version. Upstream preserved in-repo for reference.
       Do not blindly upgrade starter versions — pin and document the version in use.
     checkable: false
-    added: 2026-03
 
   - id: FE-009
     title: Build-time data for static content
@@ -174,7 +165,6 @@ standards:
       Astro data files. Do not make runtime API calls for content that could be
       fetched at build time.
     checkable: false
-    added: 2026-03
 
   - id: FE-010
     title: Runtime queries for interactive demos only
@@ -187,4 +177,3 @@ standards:
       Implemented via Astro component islands. Document which endpoints are called
       at runtime vs build time.
     checkable: false
-    added: 2026-03

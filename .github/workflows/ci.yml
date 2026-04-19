@@ -31,11 +31,20 @@ jobs:
           # Validate index.yaml
           try:
               data = yaml.safe_load(open('index.yaml'))
-              assert 'version' in data, "index.yaml missing version"
               assert 'files' in data, "index.yaml missing files"
               print(f"✅ index.yaml")
           except Exception as e:
               errors.append(f"❌ index.yaml: {e}")
+
+          # Validate package.json
+          try:
+              import json as _json
+              pkg = _json.load(open('package.json'))
+              assert 'version' in pkg, "package.json missing version"
+              assert 'name' in pkg, "package.json missing name"
+              print(f"✅ package.json")
+          except Exception as e:
+              errors.append(f"❌ package.json: {e}")
 
           # Validate ecosystem.yaml
           try:
@@ -145,7 +154,7 @@ jobs:
             @semantic-release/changelog \
             @semantic-release/git \
             @semantic-release/github \
-            @semantic-release/exec \
+            @semantic-release/npm \
             @semantic-release/commit-analyzer \
             @semantic-release/release-notes-generator
 

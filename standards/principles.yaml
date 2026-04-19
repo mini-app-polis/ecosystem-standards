@@ -1,7 +1,6 @@
 # ecosystem-standards / principles.yaml
 # Immutable core principles that govern intent and philosophy across the ecosystem.
 # Stack choices change. These do not.
-# Version: 1.0.0 · 2026-03
 
 standards:
 
@@ -16,7 +15,6 @@ standards:
       Cogs feed APIs. APIs feed sites. Shared libraries reduce duplication
       across all layers.
     checkable: false
-    added: 2026-03
 
   - id: PRIN-002
     title: Pipeline resilience — continue on item failure
@@ -31,7 +29,6 @@ standards:
     check_notes: >
       Scan pipeline entry points for bare except/raise that would abort the full
       run on a single item failure. Flag if no per-item try/except wrapping exists.
-    added: 2026-03
 
   - id: PRIN-003
     title: AI evaluates process, not data
@@ -43,7 +40,6 @@ standards:
       AI is infrastructure, not a feature. It runs during the pipeline to evaluate
       health and conformance — not to enrich output data for end users.
     checkable: false
-    added: 2026-03
 
   - id: PRIN-004
     title: New stack, opportunistic migration
@@ -55,7 +51,6 @@ standards:
       New things are built with the current best stack. Existing things migrate
       when the opportunity arises — not on a forced schedule.
     checkable: false
-    added: 2026-03
 
   - id: PRIN-005
     title: Observability is not optional
@@ -72,7 +67,6 @@ standards:
       Check for Sentry integration, structured logging via common-python-utils
       or common-typescript-utils, and Prefect run history (for pipelines). Flag any
       production service missing any of these three.
-    added: 2026-03
 
   - id: PRIN-006
     title: Deploy anytime, release when ready
@@ -87,7 +81,6 @@ standards:
       frontend needs to ship before the API is ready. See CD-001 for
       the full feature flag standard.
     checkable: false
-    added: 2026-03
 
   - id: PRIN-007
     title: Portfolio artifacts are working systems
@@ -99,7 +92,6 @@ standards:
       Portfolio pieces are live, queryable, demonstrable systems — not case
       studies, READMEs, or screenshots.
     checkable: false
-    added: 2026-03
 
   - id: PRIN-008
     title: Every bug fix includes a regression test
@@ -119,7 +111,6 @@ standards:
       whether the test changes in fix commits appear to be regression tests
       for the specific bug — look for new test functions added (not just
       modified existing ones) that target the module touched by the fix.
-    added: 2026-03
 
   - id: PRIN-009
     title: Standards are a living document
@@ -133,6 +124,5 @@ standards:
       Standards must be reviewed at least every 90 days.
     checkable: true
     check_notes: >
-      Check the updated date on index.yaml. Flag if more than 90 days have elapsed
-      since last update.
-    added: 2026-03
+      Check the timestamp of the most recent commit to the ecosystem-standards
+      repo via git log. Flag if more than 90 days have elapsed since last update.

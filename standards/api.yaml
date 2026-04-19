@@ -1,6 +1,5 @@
 # ecosystem-standards / api.yaml
 # Standards for all API services — FastAPI (Python) and Hono (TypeScript).
-# Version: 1.0.0 · 2026-03
 
 standards:
 
@@ -19,7 +18,6 @@ standards:
       services use FastAPI. TypeScript services use Hono on Node. Railway is the
       single hosting standard. Cloudflare Workers deprecated for new API work.
     checkable: false
-    added: 2026-03
 
   - id: API-002
     title: PostgreSQL as data store for new services
@@ -30,7 +28,6 @@ standards:
     description: >
       All new services use PostgreSQL deployed on Railway. Not D1 or SQLite.
     checkable: false
-    added: 2026-03
 
   - id: API-003
     title: ORM required — SQLAlchemy (Python) or Drizzle (TypeScript)
@@ -51,7 +48,6 @@ standards:
       TypeScript/Hono services: check package.json for drizzle-orm dependency
       and src/ for drizzle-kit config (drizzle.config.ts). Flag if neither
       is present for a service that interacts with PostgreSQL.
-    added: 2026-03
 
   # ─────────────────────────────────────────────
   # STRUCTURE
@@ -74,7 +70,6 @@ standards:
       router.get, etc.) for /v1/ path prefix. Flag routes without it.
       Exception: /health, /metrics, and OpenAPI spec endpoints do not require
       versioning.
-    added: 2026-03
 
   - id: API-005
     title: Response envelope on all endpoints
@@ -89,7 +84,6 @@ standards:
     check_notes: >
       Check response_model types on all endpoints. Flag endpoints returning bare
       arrays, raw dicts, or shapes inconsistent with the envelope standard.
-    added: 2026-03
 
   - id: API-006
     title: owner_id on all tables
@@ -108,7 +102,6 @@ standards:
       it is explicitly a join table, lookup table, or internal-only table
       (check for a comment or naming convention indicating this — e.g. _lookup,
       _config suffix).
-    added: 2026-03
 
   - id: API-007
     title: Clerk for authentication
@@ -128,7 +121,6 @@ standards:
       has non-public endpoints. LLM: assess whether auth is applied
       consistently — check for routes that appear to handle user data but
       lack an auth dependency.
-    added: 2026-03
 
   - id: API-008
     title: Public endpoints explicit and intentional
@@ -148,7 +140,6 @@ standards:
       it is plausibly intentional (e.g. health check, public read endpoint,
       contact form) or potentially accidental (e.g. write endpoint, user-
       specific data endpoint with no auth).
-    added: 2026-03
 
   - id: API-009
     title: CORS configured via env var — never hardcoded
@@ -170,7 +161,6 @@ standards:
       setup, with allowed origins sourced from process.env.CORS_ORIGINS.
       Flag if CORS_ORIGINS is hardcoded or CORS middleware is absent entirely.
       Check .env.example for CORS_ORIGINS entry.
-    added: 2026-04
 
   - id: API-010
     title: /health endpoint on all API services
@@ -192,7 +182,6 @@ standards:
       a 'status' field, require no authentication, and perform no database
       queries or external calls. Flag if absent or if the route performs
       DB queries (health endpoint must not depend on DB liveness).
-    added: 2026-04
 
   - id: API-011
     title: Database migrations run via CI — never manually
@@ -216,7 +205,6 @@ standards:
       For monorepo services, check the workspace root ci.yml — the migration
       step may be at root level rather than per-app. Do not flag if found
       at the monorepo root CI.
-    added: 2026-04
 
   # ─────────────────────────────────────────────
   # AUTH (from code review audit)
@@ -244,7 +232,6 @@ standards:
       kaianolevine-api uses X-Owner-Id with no verification. Acceptable while all
       write callers are internal Railway services. Standard formalizes the boundary
       condition.
-    added: 2026-03
 
   - id: AUTH-002
     title: API auth scheme and HTTP client must match
@@ -266,4 +253,3 @@ standards:
     origin: >
       common-python-utils references KAIANO_API_CLERK_TOKEN in .env.example but
       _headers() does not read it — a forward-reference that looks like a live feature.
-    added: 2026-03

@@ -8,12 +8,6 @@
 # When a rename or retirement happens, update this file first — then the
 # standards files will reference it correctly.
 #
-# Version: 1.2.0 · 2026-04
-# check_exceptions removed — per-repo evaluator.yaml now owns evaluation config (ADR-001)
-
-version: 1.2.0
-updated: 2026-04
-maintainer: mini-app-polis
 
 services:
 
@@ -30,7 +24,6 @@ services:
       Config-driven Google Drive folder watcher. Polls Drive API on a
       1-minute interval, fires Prefect flow runs when new files are detected.
     replaces: google-app-script-trigger
-    added: 2026-03
 
   - id: deejay-cog
     type: pipeline-cog
@@ -43,7 +36,6 @@ services:
       DJ set CSV processor. Normalizes, validates, and ingests DJ set data
       into PostgreSQL via api-kaianolevine-com.
     replaces: deejay-set-processor-dev
-    added: 2026-03
 
   - id: evaluator-cog
     type: pipeline-cog
@@ -59,7 +51,6 @@ services:
       and standards rules at runtime. All findings written to
       pipeline_evaluations table via api-kaianolevine-com with source field
       distinguishing evaluation type.
-    added: 2026-03
 
   - id: notes-ingest-cog
     type: pipeline-cog
@@ -75,7 +66,6 @@ services:
       raw transcripts and notes in Postgres via api-kaianolevine-com, and
       archives processed files. Outputs to wcs_transcripts and wcs_notes
       tables. Consumed by wcs.kaianolevine.com.
-    added: 2026-04
 
   # ── API services ──────────────────────────────────────────────
 
@@ -91,7 +81,6 @@ services:
       flags, contact form, resume endpoints. Sole API for the kaianolevine.com
       ecosystem.
     replaces: deejay-marvel-api
-    added: 2026-03
 
   # ── Shared libraries ──────────────────────────────────────────
 
@@ -105,13 +94,11 @@ services:
       (Anthropic, OpenAI), structured logging, API client, metadata helpers.
       All Python processors and cogs declare this as a dependency.
     replaces: kaiano-common-utils
-    added: 2026-03
 
   - id: kaiano-ts-utils
     type: shared-library
     status: retired
     language: typescript
-    added: 2026-03
     retired_date: 2026-04
     replaced_by: common-typescript-utils
     description: >
@@ -130,7 +117,6 @@ services:
       response envelope helpers (success, successList, error, CommonErrors),
       structured logger (createLogger) emitting standard log shape, and shared
       Zod schemas. Published to npm as common-typescript-utils.
-    added: 2026-04
 
   # ── Standards & tooling ──────────────────────────────────────
 
@@ -145,7 +131,6 @@ services:
       all architectural decisions, patterns, and conventions. Versioned
       YAML files consumed by evaluator-cog at runtime. Semantic-release
       owns versioning via index.yaml.
-    added: 2026-03
 
   # ── Web applications ──────────────────────────────────────────
 
@@ -163,7 +148,6 @@ services:
       Hono on Node API for deejaytools.com. Manages WCS routine registration,
       floor trial sessions, check-ins, slot assignment, partners, and songs.
       PostgreSQL on Railway. Clerk auth. Part of the deejaytools-com monorepo.
-    added: 2026-03
 
   - id: deejaytools-com-app
     type: react-app
@@ -180,7 +164,6 @@ services:
       platform — events, sessions, floor trials, check-in queue, partner
       and song management. Vite + React + Tailwind + shadcn/ui.
       Part of the deejaytools-com monorepo.
-    added: 2026-03
 
   # ── Static sites ──────────────────────────────────────────────
 
@@ -193,7 +176,6 @@ services:
     description: >
       Software portfolio site. Queries api-kaianolevine-com live for DJ sets,
       catalog, stats, and evaluation findings.
-    added: 2026-03
 
   - id: website-astro-wcs
     type: static-site
@@ -203,7 +185,6 @@ services:
     host: cloudflare-pages
     description: West Coast Swing personal site. wcs.kaianolevine.com.
     replaces: kaiano-wcs-website
-    added: 2026-03
 
   # ── Retired / archived ────────────────────────────────────────
 
@@ -211,7 +192,6 @@ services:
     type: infra
     status: retired
     language: javascript
-    added: 2026-03
     retired_date: 2026-03
     replaced_by: watcher-cog
     description: >
@@ -223,7 +203,6 @@ services:
     type: library
     status: retired
     language: python
-    added: 2026-03
     retired_date: 2026-03
     replaced_by: common-python-utils
     description: Former shared Python utilities library.
@@ -232,7 +211,6 @@ services:
     type: worker
     status: retired
     language: python
-    added: 2026-03
     retired_date: 2026-03
     replaced_by: deejay-cog
     description: Former DJ set CSV processor. Replaced by deejay-cog.
@@ -241,7 +219,6 @@ services:
     type: api
     status: retired
     language: python
-    added: 2026-03
     retired_date: 2026-03
     replaced_by: api-kaianolevine-com
     description: >
@@ -251,7 +228,6 @@ services:
     type: site
     status: retired
     language: astro
-    added: 2026-03
     retired_date: 2026-03
     replaced_by: website-astro-wcs
     description: Former WCS personal site. Replaced by website-astro-wcs.
@@ -302,7 +278,6 @@ monorepos:
       # same root cause, emit one finding tagged with both service_ids rather
       # than two identical findings.
       deduplicate_sibling_findings: true
-    added: 2026-04
 
 # ── Canonical patterns ────────────────────────────────────────
 
