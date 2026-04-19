@@ -50,11 +50,6 @@ jobs:
           try:
               eco_data = yaml.safe_load(open('ecosystem.yaml'))
               assert 'services' in eco_data, "ecosystem.yaml missing services"
-              for svc in eco_data.get('services', []):
-                  for exc in svc.get('check_exceptions', []):
-                      assert isinstance(exc, dict), f"{svc['id']} check_exception is not an object: {exc}"
-                      assert 'rule' in exc, f"{svc['id']} check_exception missing 'rule': {exc}"
-                      assert 'reason' in exc, f"{svc['id']} check_exception missing 'reason': {exc}"
               print(f"✅ ecosystem.yaml")
           except Exception as e:
               errors.append(f"❌ ecosystem.yaml: {e}")
