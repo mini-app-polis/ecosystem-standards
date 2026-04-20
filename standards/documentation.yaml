@@ -261,8 +261,22 @@ standards:
     checkable: true
     check_notes: >
       For FastAPI services, identify routes with no auth dependency (no
+<<<<<<< HEAD
       Depends(verify_token) or equivalent in the route signature). For each
       such route, check the OpenAPI description field contains a phrase
       confirming intent — e.g. "intentionally public", "no auth required",
       "read-only public". Flag unauthenticated routes with no such note.
+=======
+      Depends(verify_token) or equivalent in the route signature). Exempt
+      standard infrastructure endpoints: /health, /metrics, /docs,
+      /openapi.json, /redoc. For each remaining unauthenticated route —
+      including /version and any application-level endpoints — check the
+      OpenAPI description field contains a phrase confirming intent —
+      e.g. "intentionally public", "no auth required", "read-only public".
+      Flag unauthenticated routes with no such note. The rationale: DOC-011
+      is the place to record *why* a route is public, so that API-008's
+      flag becomes resolvable by writing the justification into the
+      description rather than by exempting the rule.
+    added: 2026-03
+>>>>>>> 715f80d (fix: clarifying intent on api definitions)
 

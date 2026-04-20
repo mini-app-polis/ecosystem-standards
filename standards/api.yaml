@@ -99,11 +99,19 @@ standards:
     checkable: true
     check_notes: >
       Python/FastAPI: check route decorators (@app.get, @router.get, etc.)
-      for /v1/ prefix. Flag unversioned routes (except /health, /docs, /openapi.json).
+      for /v1/ prefix. Resolve the effective mounted path per-route by
+      composing: (1) any prefix passed to APIRouter(prefix=...) at router
+      construction, (2) any prefix passed to app.include_router(router,
+      prefix=...) when the router is mounted. A decorator like
+      @router.get("/summary") on a router declared with
+      APIRouter(prefix="/v1/evaluations") has effective path
+      /v1/evaluations/summary and should pass.
       TypeScript/Hono: check route handler registrations (app.get, app.post,
       router.get, etc.) for /v1/ path prefix. Flag routes without it.
-      Exception: /health, /metrics, and OpenAPI spec endpoints do not require
-      versioning.
+      Exempt from versioning: /health, /metrics, /docs, /openapi.json,
+      /redoc, and /version. The /version endpoint is the single legitimate
+      carve-out because it reports the API version — it must be reachable
+      at a stable, version-independent path to be useful.
 
   - id: API-005
     title: Response envelope on all endpoints
@@ -166,12 +174,27 @@ standards:
     checkable: true
     check_notes: >
       Identify all FastAPI route definitions (Python) or Hono route handlers
+<<<<<<< HEAD
       (TypeScript) that have no auth dependency. Cross-reference with DOC-011:
       check whether each unauthenticated route has an OpenAPI description
       confirming intent. LLM: for each unauthed route found, assess whether
       it is plausibly intentional (e.g. health check, public read endpoint,
       contact form) or potentially accidental (e.g. write endpoint, user-
       specific data endpoint with no auth).
+=======
+      (TypeScript) that have no auth dependency. Exempt standard
+      infrastructure endpoints: /health, /metrics, /docs, /openapi.json,
+      /redoc. These are platform-provided and never require auth by design.
+      All other unauthenticated routes, including /version and any
+      application-level endpoints like /contact or /, are flagged —
+      whether the lack of auth is intentional is the policy decision to
+      make, not a carve-out. Remediate either by adding auth or by
+      documenting the intent via DOC-011. LLM: for each unauthed route
+      found, assess whether it is plausibly intentional (e.g. public read
+      endpoint, contact form) or potentially accidental (e.g. write
+      endpoint, user-specific data endpoint with no auth).
+    added: 2026-03
+>>>>>>> 715f80d (fix: clarifying intent on api definitions)
 
   - id: API-009
     title: CORS configured via env var — never hardcoded
