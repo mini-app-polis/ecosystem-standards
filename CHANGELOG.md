@@ -1,3 +1,11 @@
+## [3.4.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.4.0...v3.4.1) (2026-04-20)
+
+
+### Bug Fixes
+
+* clarifying intent on api definitions ([c0b8ed3](https://github.com/mini-app-polis/ecosystem-standards/commit/c0b8ed3fdc30946929c87618a29bc5ef063eddf5))
+* yaml ([7bccf94](https://github.com/mini-app-polis/ecosystem-standards/commit/7bccf94d3ce0797defb22ba22a1ae5299820db71))
+
 # [3.4.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.3.0...v3.4.0) (2026-04-19)
 
 
