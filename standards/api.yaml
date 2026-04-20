@@ -128,22 +128,33 @@ standards:
       arrays, raw dicts, or shapes inconsistent with the envelope standard.
 
   - id: API-006
-    title: owner_id on all tables
+    title: Tables authorization-scoped to a Clerk user
     status: requirement
     dimension: structural_conformance
     severity: WARN
     applies_to: [api-service]
     description: >
-      Every table includes owner_id (Clerk user ID). Not enforced as FK today
-      but present for future multi-tenant use.
+      Every data-bearing table is authorization-scoped to a Clerk user, so
+      queries can filter by the authenticated identity. Three patterns
+      satisfy this: (1) direct ownership via an owner_id column holding the
+      Clerk user ID; (2) identity tables whose primary key is the user_id
+      itself; (3) relationship tables whose user_id column carries a
+      ForeignKey to an identity table.
     checkable: true
     check_notes: >
       Search Python source files for SQLAlchemy model class definitions
-      (subclasses of Base or DeclarativeBase). For each model, check that
-      an owner_id column is declared. Flag any model missing owner_id unless
-      it is explicitly a join table, lookup table, or internal-only table
-      (check for a comment or naming convention indicating this — e.g. _lookup,
-      _config suffix).
+      (subclasses of Base or DeclarativeBase). For each model, verify at
+      least one of the three authorization-scoping patterns is present:
+      (1) an owner_id column (direct ownership);
+      (2) a user_id column declared as primary_key=True, or the class
+      name ends in Profile/Identity/User (identity table);
+      (3) a user_id column whose mapped_column(...) / Column(...) call
+      contains a ForeignKey(...) argument (relationship table).
+      Flag models that satisfy none of the three. Exempt join, lookup,
+      and internal-only tables by class-name suffix (_lookup, _config,
+      _enum, or the PascalCase equivalents). The SQLAlchemy declarative
+      root class (Base, DeclarativeBase, Model) is skipped automatically
+      since it holds no columns of its own.
 
   - id: API-007
     title: Clerk for authentication
