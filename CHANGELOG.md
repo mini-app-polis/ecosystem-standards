@@ -1,3 +1,10 @@
+## [3.4.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.4.1...v3.4.2) (2026-04-20)
+
+
+### Bug Fixes
+
+* api spec ([808a3c5](https://github.com/mini-app-polis/ecosystem-standards/commit/808a3c54af88e0a9923a340df292140f537f895c))
+
 ## [3.4.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.4.0...v3.4.1) (2026-04-20)
 
 
