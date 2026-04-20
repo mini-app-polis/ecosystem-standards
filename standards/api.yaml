@@ -174,14 +174,6 @@ standards:
     checkable: true
     check_notes: >
       Identify all FastAPI route definitions (Python) or Hono route handlers
-<<<<<<< HEAD
-      (TypeScript) that have no auth dependency. Cross-reference with DOC-011:
-      check whether each unauthenticated route has an OpenAPI description
-      confirming intent. LLM: for each unauthed route found, assess whether
-      it is plausibly intentional (e.g. health check, public read endpoint,
-      contact form) or potentially accidental (e.g. write endpoint, user-
-      specific data endpoint with no auth).
-=======
       (TypeScript) that have no auth dependency. Exempt standard
       infrastructure endpoints: /health, /metrics, /docs, /openapi.json,
       /redoc. These are platform-provided and never require auth by design.
@@ -194,7 +186,6 @@ standards:
       endpoint, contact form) or potentially accidental (e.g. write
       endpoint, user-specific data endpoint with no auth).
     added: 2026-03
->>>>>>> 715f80d (fix: clarifying intent on api definitions)
 
   - id: API-009
     title: CORS configured via env var — never hardcoded
@@ -308,3 +299,4 @@ standards:
     origin: >
       common-python-utils references KAIANO_API_CLERK_TOKEN in .env.example but
       _headers() does not read it — a forward-reference that looks like a live feature.
+
