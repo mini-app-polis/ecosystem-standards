@@ -1,3 +1,10 @@
+## [3.8.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.8.0...v3.8.1) (2026-04-21)
+
+
+### Bug Fixes
+
+* **standards:** add trigger-cog to Python/test rules and shared-library/standards-repo to VER/CD rules; sharpen evaluator-service definition ([e332df6](https://github.com/mini-app-polis/ecosystem-standards/commit/e332df69605423d7fe24b908e7e62bb9ab052835))
+
 # [3.8.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.7.0...v3.8.0) (2026-04-21)
 
 
