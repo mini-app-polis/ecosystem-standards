@@ -77,9 +77,9 @@ Good examples:
 
 Bad examples:
 
-- `ADR-099-fix-ci.md` (too vague, reads as a ticket, not a decision)
-- `ADR-099-use-postgres.md` (active-verb framing; prefer
-  `ADR-099-postgres-as-primary-store.md`)
+- `ADR-00X-fix-ci.md` (too vague, reads as a ticket, not a decision)
+- `ADR-00X-use-postgres.md` (active-verb framing; prefer
+  `ADR-00X-postgres-as-primary-store.md`)
 
 ---
 
@@ -154,8 +154,8 @@ ADRs move through these states:
   line is added near the top.
 
 You do not delete superseded ADRs. The history of how thinking evolved
-is the value — a current reader needs to be able to trace why ADR-007
-exists by reading the ADR-003 it replaced.
+is the value — a current reader needs to be able to trace why a new
+ADR exists by reading the earlier ADR it replaced.
 
 This is different from rule retirement (see `new-standard.md` Step 8),
 where deletion is correct because `standards/*.yaml` reflects the
@@ -223,8 +223,8 @@ hot-potato problem; writing it down ends the re-litigation.
 Commit messages follow Conventional Commits. For ADRs, use `docs:`:
 
 ```
-docs: add ADR-099 postgres as primary store
-docs: supersede ADR-099 with ADR-100 (conformance checker v2)
+docs: add ADR-00X postgres as primary store
+docs: supersede ADR-00X with ADR-00Y (conformance checker v2)
 ```
 
 semantic-release treats `docs:` as a patch-level bump. If the ADR is
@@ -239,9 +239,9 @@ Do not edit `package.json` or `CHANGELOG.md` by hand (see META-001).
 ## Minimum working skeleton
 
 ```markdown
-# ADR-004: Short decision title
+# ADR-00X: Short decision title
 
-**Date:** 2026-05-01
+**Date:** <YYYY-MM-DD>
 **Status:** Accepted
 **Repo:** ecosystem-standards
 
