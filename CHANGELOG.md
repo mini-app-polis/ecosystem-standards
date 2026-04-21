@@ -1,3 +1,10 @@
+# [3.8.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.7.0...v3.8.0) (2026-04-21)
+
+
+### Features
+
+* splitting prefixes to correct files and formal clean up restructure ([cc4a839](https://github.com/mini-app-polis/ecosystem-standards/commit/cc4a839e7ba5cab12ead48ab9d20552a6d57d73d))
+
 # [3.7.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.6.0...v3.7.0) (2026-04-21)
 
 
