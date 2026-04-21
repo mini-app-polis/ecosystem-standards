@@ -260,11 +260,16 @@ schema:
   traits:
     logger-primitive:
       description: >
-        This repo IS the shared logger implementation — the CD-009
-        shared logger requirement cannot apply to itself. Applies to
-        common-python-utils and common-typescript-utils, and to logger
-        wrapper modules within services.
-      exempts: [CD-009]
+        This repo IS the shared library implementation — rules that
+        require the repo to declare or use the shared library as a
+        dependency cannot apply to the library itself. Applies to
+        common-python-utils and common-typescript-utils (the shared
+        libraries themselves) and to logger wrapper modules within
+        services. CD-009 is exempted for logger wrapper modules;
+        XSTACK-001 is exempted for the shared libraries themselves
+        (circular dependency — the repo cannot declare itself as a
+        dependency).
+      exempts: [CD-009, XSTACK-001]
 
     cloudflare-pages:
       description: >
@@ -321,14 +326,20 @@ schema:
   #      trait. Used for known false-positives, not semantic
   #      exemptions.
   #
-  #   6. Modifier — if another rule's `modifies:` includes this rule
+  #   6. Per-repo downgrade — if the repo's `evaluator.yaml`
+  #      `downgrades:` lists this rule, the check IS run and any
+  #      finding is emitted at the downgraded severity with the
+  #      documented reason. Used for repo-specific checker
+  #      limitations not covered by a shared trait.
+  #
+  #   7. Modifier — if another rule's `modifies:` includes this rule
   #      AND the modifier's `applies_to` matches the repo, the
   #      modifier's `check_notes` is consulted first to determine
   #      altered evaluation behavior. The modifier and the original
   #      rule both run; the modifier's logic may suppress duplicate
   #      or per-app findings.
   #
-  #   7. Default — the rule is run against the repo and findings are
+  #   8. Default — the rule is run against the repo and findings are
   #      emitted at the rule's declared severity.
   #
   # The mechanisms are additive at authoring time (a repo may declare
@@ -343,6 +354,7 @@ schema:
       - repo_exemption
       - repo_deferral
       - trait_downgrade
+      - repo_downgrade
       - rule_modifier
       - default
 
@@ -380,6 +392,24 @@ schema:
         A deferral without a plan is a signal to reconsider whether the rule
         applies at all (convert to exemption) or whether the fix is overdue.
         Do NOT defer security or data integrity issues.
+    downgrades:
+      format: "list of {rule: RULE-ID, to: SEVERITY, reason: string} objects"
+      purpose: >
+        Rules where the check fires incorrectly on this specific repo
+        for a known, documented reason — typically a scanner limitation
+        the evaluator cannot distinguish from a real violation. The
+        evaluator still runs the check; if it fires, the finding is
+        emitted at the listed severity instead of the rule's declared
+        severity. `to` must be one of ERROR, WARN, INFO. A reason is
+        required and should name the specific checker limitation or
+        semantic nuance the evaluator misses.
+        Use sparingly. If two or more repos share the same downgrade
+        reason, promote it to a trait `downgrades:` entry in
+        `schema.traits`. Per-repo downgrades are for genuinely one-off
+        checker limitations, not a general-purpose severity knob.
+        Distinct from `deferrals:` (which is "we know we're failing
+        and will fix eventually") — a downgrade says the rule itself
+        is misfiring against this repo's actual behavior.
 
   service_fields:
     dod_type: >
