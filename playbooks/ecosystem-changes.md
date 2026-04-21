@@ -151,11 +151,18 @@ A new trait is justified when:
 
 Process:
 
-1. Add to `index.yaml` `schema.traits:` with a one-line description.
+1. Add to `index.yaml` `schema.traits:` as a dict entry with a
+   `description:` field and, if applicable, a structured `exempts:`
+   or `downgrades:` field. `exempts:` is a list of rule IDs the
+   trait unconditionally exempts; `downgrades:` is a list of
+   `{rule, to, reason}` objects for known false-positives that
+   should be run but emitted at a lower severity. See
+   `index.yaml` `schema.traits` prose for the contract.
 2. Name the trait for the structural property, not the outcome.
    `logger-primitive` ≠ `exempt-from-cd-009`.
-3. Document which rules the trait interacts with in the rule's
-   `check_notes` (evaluator-cog reads this).
+3. Prefer structured `exempts:` / `downgrades:` over prose in the
+   description. The description is for humans; the structured
+   fields are how the evaluator dispatches.
 4. Never invent a trait for a one-off. If only one repo has the
    condition, use an `exemption` in that repo's `evaluator.yaml`
    instead.
@@ -179,7 +186,7 @@ Same policy as services: delete, don't tombstone.
 - `dimensions:` — categories of concern (one per rule).
 - `severities:` — ERROR / WARN / INFO at the rule level, plus
   CRITICAL / SUCCESS as emission-only outcomes.
-- `statuses:` — requirement / convention / advisory / idea / gap.
+- `statuses:` — requirement / convention / gap.
 
 These are **dictionaries mapping each value to a description** per
 META-003. A new value is a material change to what the ecosystem
@@ -207,9 +214,10 @@ Process:
 ### Adding a severity or status
 
 Extremely rare. The three rule-level severities (ERROR, WARN, INFO)
-and five statuses (requirement, convention, advisory, idea, gap)
-have been stable. Adding a value here is an ADR-worthy decision —
-write the ADR first.
+and three statuses (requirement, convention, gap) are intentionally
+small. Adding a value here is an ADR-worthy decision — write the ADR
+first. ADR-005 is the canonical example of reducing this surface;
+reverse the direction with care.
 
 ### Retiring a value
 
@@ -351,7 +359,7 @@ Do not edit `package.json` or `CHANGELOG.md` by hand (see META-001).
 - `index.yaml` — the file most of this playbook edits.
 - `ecosystem.yaml` — the service registry.
 - `definitions-of-done.yaml` — DoD checklists.
-- `standards/meta.yaml` — META-001 through META-005, the self-rules
+- `standards/meta.yaml` — META-001 through META-007, the self-rules
   that govern this repo's structure.
 - `playbooks/new-standard.md` — for rule changes in `standards/*.yaml`.
 - `playbooks/new-adr.md` — for ADRs in `docs/decisions/`.

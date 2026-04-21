@@ -77,9 +77,9 @@ Good examples:
 
 Bad examples:
 
-- `ADR-004-fix-ci.md` (too vague, reads as a ticket, not a decision)
-- `ADR-004-use-postgres.md` (active-verb framing; prefer
-  `ADR-004-postgres-as-primary-store.md`)
+- `ADR-099-fix-ci.md` (too vague, reads as a ticket, not a decision)
+- `ADR-099-use-postgres.md` (active-verb framing; prefer
+  `ADR-099-postgres-as-primary-store.md`)
 
 ---
 
@@ -223,8 +223,8 @@ hot-potato problem; writing it down ends the re-litigation.
 Commit messages follow Conventional Commits. For ADRs, use `docs:`:
 
 ```
-docs: add ADR-004 postgres as primary store
-docs: supersede ADR-003 with ADR-007 (conformance checker v2)
+docs: add ADR-099 postgres as primary store
+docs: supersede ADR-099 with ADR-100 (conformance checker v2)
 ```
 
 semantic-release treats `docs:` as a patch-level bump. If the ADR is

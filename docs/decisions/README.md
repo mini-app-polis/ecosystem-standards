@@ -18,6 +18,8 @@ For the process of writing or superseding an ADR, see
 | ADR-001 | Accepted  | [Federated Evaluation Configuration](ADR-001-federated-evaluation-config.md) |
 | ADR-002 | Accepted  | [Type/Trait Taxonomy, Rule Applicability Scoping, and Deferred Keyword](ADR-002-type-trait-taxonomy-and-deferral.md) |
 | ADR-003 | Accepted  | [Conformance Checker Architecture](ADR-003-conformance-checker-architecture.md) |
+| ADR-004 | Accepted  | [`applies_to` Has a Single Meaning; `evaluator-service` Removed](ADR-004-applies-to-single-meaning.md) |
+| ADR-005 | Accepted  | [Schema Clarity Audit — Document All Rule Fields, Formalize Traits, Specify Dispatch](ADR-005-schema-clarity-audit.md) |
 
 ---
 
@@ -44,6 +46,27 @@ with a `source` field distinguishing them. Deterministic checks for
 structural rules, LLM checks for soft rules, with the split tagged
 in each rule's `check_notes` via the `DETERMINISTIC CHECK.` /
 `LLM CHECK.` prefix (see META-005).
+
+**ADR-004 — `applies_to` Has a Single Meaning.**
+`applies_to` is optional and means exactly "repo types the
+conformance scanner scans for this rule." Rules that aren't repo-
+source scans (EVAL-003, MONO-003, EVAL-007) omit the field;
+`check_notes` is authoritative for what they read. The
+`evaluator-service` pseudo-type is removed from `schema.repo_types`
+— it existed only to give the field a target on rules that weren't
+actually scanning a repo type.
+
+**ADR-005 — Schema Clarity Audit.**
+Extends ADR-002. Documents all 13 rule fields in
+`schema.rule_fields` (previously only `applies_to` was documented).
+Replaces prose trait-exemption language with structured `exempts:`
+and `downgrades:` fields. Removes the unused `pre-rule` trait.
+Reduces statuses to three (`requirement`, `convention`, `gap`);
+`advisory` and `idea` removed. Adds optional `modifies:` to rules
+for meta-rule interactions (MONO-001 / MONO-002). Adds a
+`dispatch:` section documenting precedence across scope, trait
+exemption, repo exemption, repo deferral, trait downgrade, rule
+modifier, and default.
 
 ---
 

@@ -74,10 +74,11 @@ Every rule has:
 ```yaml
 - id: DOMAIN-NNN               # stable ID — used in cross-references and findings
   title: Short description
-  status: requirement          # requirement | convention | advisory | idea | gap
+  status: requirement          # requirement | convention | gap
   dimension: ...               # maps to pipeline_evaluations.dimension
   severity: ERROR              # ERROR | WARN | INFO at the rule level
-  applies_to: [pipeline-cog]   # repo types from index.yaml schema.repo_types
+  applies_to: [pipeline-cog]   # optional — repo types scanned for this rule
+  modifies: []                 # optional — rule IDs whose evaluation this rule alters
   description: >
     Full description of the rule and what it means in practice.
   checkable: true              # can an agent verify this automatically?
@@ -101,7 +102,7 @@ All changes to this repo follow a playbook. The top-level router is
 - `playbooks/new-adr.md` — write or supersede an ADR in `docs/decisions/`.
 - `playbooks/ecosystem-changes.md` — edit `ecosystem.yaml`, `index.yaml` schema, types, traits, canonical enums, or DoD checklists.
 
-The git history is the audit trail. The `origin` field on each rule is the permanent record of why it exists. Status progression for rules is `idea → (validated by real issue) → requirement → (check_notes added) → enforced by evaluator`.
+The git history is the audit trail. The `origin` field on each rule is the permanent record of why it exists. Status progression for rules is `gap → (check_notes added, implementation shipped) → requirement → enforced by evaluator`. Rules observed in practice but not yet ready to enforce sit at `convention` until they become checkable requirements.
 
 ---
 
@@ -134,7 +135,7 @@ Each evaluatable repo declares a type (and optional traits) in its own `evaluato
 ## Related Docs
 
 - `CONTRIBUTING.md` — top-level router for any change to this repo.
-- `docs/decisions/` — Architecture Decision Records. See `docs/decisions/README.md` for the index. Start with ADR-001 (federated evaluation), ADR-002 (type/trait taxonomy), ADR-003 (conformance checker architecture).
+- `docs/decisions/` — Architecture Decision Records. See `docs/decisions/README.md` for the index. Start with ADR-001 (federated evaluation), ADR-002 (type/trait taxonomy), ADR-003 (conformance checker architecture), ADR-004 (`applies_to` single meaning), ADR-005 (schema clarity audit).
 - `playbooks/` — narrative guides for common changes: `new-standard.md` (rules), `new-adr.md` (decisions), `ecosystem-changes.md` (registry, types, enums, DoD), `new-cog.md` (bootstrap a new cog).
 - `BACKLOG.md` — open items and roadmap for the standards themselves.
 - `CHANGELOG.md` — managed by semantic-release; never edit manually.
