@@ -1,3 +1,10 @@
+## [3.5.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.5.0...v3.5.1) (2026-04-21)
+
+
+### Bug Fixes
+
+* refactor(standards) apply review clarifications ([fe91cbe](https://github.com/mini-app-polis/ecosystem-standards/commit/fe91cbe355c6742794bf1280c9d72de1a12ed46d))
+
 # [3.5.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.4.2...v3.5.0) (2026-04-21)
 
 
