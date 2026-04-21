@@ -21,106 +21,182 @@ jobs:
       - name: Install PyYAML
         run: pip install pyyaml
 
-      - name: Validate all standards YAML files
+      - name: Validate standards catalog and META rules
         run: |
           python3 << 'EOF'
-          import yaml, glob, sys, os
+          # Enforces:
+          #   - YAML parse + required rule fields
+          #   - Canonical enums (status, severity, dimension, applies_to,
+          #     dod_type) read from index.yaml and definitions-of-done.yaml
+          #     — no hardcoded allowlists
+          #   - META-002: no `added:` on rules, no `# Version:` headers,
+          #     no top-level `updated:` / `maintainer:` fields
+          #   - META-005: checkable rules open check_notes with
+          #     DETERMINISTIC CHECK. or LLM CHECK.
+          #   - META-006: rule ID prefix matches file's declared
+          #     rule_prefix in index.yaml
+          #   - META-007 (lightweight): no duplicate IDs across the
+          #     catalog. Full append-only history check is done by
+          #     evaluator-cog, which has access to git log.
+          import yaml, glob, sys, json, re
+          from pathlib import Path
 
           errors = []
 
-          # Validate index.yaml
-          try:
-              data = yaml.safe_load(open('index.yaml'))
-              assert 'files' in data, "index.yaml missing files"
-              print(f"✅ index.yaml")
-          except Exception as e:
-              errors.append(f"❌ index.yaml: {e}")
+          def err(msg):
+              errors.append(msg)
 
-          # Validate package.json
+          # --- Load canonical sources ---
           try:
-              import json as _json
-              pkg = _json.load(open('package.json'))
-              assert 'version' in pkg, "package.json missing version"
-              assert 'name' in pkg, "package.json missing name"
-              print(f"✅ package.json")
-          except Exception as e:
-              errors.append(f"❌ package.json: {e}")
-
-          # Validate ecosystem.yaml
-          try:
+              index_data = yaml.safe_load(open('index.yaml'))
+              dod_data = yaml.safe_load(open('definitions-of-done.yaml'))
               eco_data = yaml.safe_load(open('ecosystem.yaml'))
-              assert 'services' in eco_data, "ecosystem.yaml missing services"
-              print(f"✅ ecosystem.yaml")
+              pkg = json.load(open('package.json'))
           except Exception as e:
-              errors.append(f"❌ ecosystem.yaml: {e}")
+              print(f"FATAL: could not load canonical sources: {e}")
+              sys.exit(2)
 
-          # Validate definitions-of-done.yaml
-          try:
-              data = yaml.safe_load(open('definitions-of-done.yaml'))
-              assert 'definitions_of_done' in data, "definitions-of-done.yaml missing definitions_of_done"
-              print(f"✅ definitions-of-done.yaml")
-          except Exception as e:
-              errors.append(f"❌ definitions-of-done.yaml: {e}")
+          if 'files' not in index_data:
+              err("index.yaml missing 'files'")
+          if 'services' not in eco_data:
+              err("ecosystem.yaml missing 'services'")
+          if 'definitions_of_done' not in dod_data:
+              err("definitions-of-done.yaml missing 'definitions_of_done'")
+          if 'version' not in pkg or 'name' not in pkg:
+              err("package.json missing version or name")
 
-          # Validate each standards file
-          all_ids = []
-          all_rules = []
-          for f in sorted(glob.glob('standards/*.yaml')):
-              try:
-                  data = yaml.safe_load(open(f))
-                  assert 'standards' in data, f"{f} missing 'standards' key"
-                  rules = data['standards']
-                  for r in rules:
-                      assert 'id' in r, f"Rule missing id in {f}"
-                      assert 'title' in r, f"Rule {r.get('id')} missing title"
-                      assert 'status' in r, f"Rule {r.get('id')} missing status"
-                      assert 'severity' in r, f"Rule {r.get('id')} missing severity"
-                      assert 'dimension' in r, f"Rule {r.get('id')} missing dimension"
-                      assert 'applies_to' in r, f"Rule {r.get('id')} missing applies_to"
-                      all_ids.append(r['id'])
-                      all_rules.append(r)
-                  print(f"✅ {f}: {len(rules)} rules")
-              except Exception as e:
-                  errors.append(f"❌ {f}: {e}")
+          # --- Canonical enums (read, not hardcoded) ---
+          valid_repo_types = set(
+              (index_data.get('schema', {}).get('repo_types') or {}).keys()
+          ) | {'all'}
+          valid_dod = set(
+              (dod_data.get('definitions_of_done') or {}).keys()
+          ) | {None}
+          valid_dimensions = set((index_data.get('dimensions') or {}).keys())
+          valid_statuses = set((index_data.get('statuses') or {}).keys())
+          valid_rule_severities = {'ERROR', 'WARN', 'INFO'}
 
-          # Check for duplicate IDs
-          dupes = [id for id in all_ids if all_ids.count(id) > 1]
-          if dupes:
-              errors.append(f"❌ Duplicate rule IDs found: {list(set(dupes))}")
-
-          # Check checkable: true rules have check_notes
-          for r in all_rules:
-              if r.get('checkable') is True and not r.get('check_notes'):
-                  errors.append(
-                      f"❌ {r['id']}: checkable: true but missing check_notes"
+          # --- Prefix -> file map from index.yaml (META-006 source) ---
+          file_to_prefixes = {}
+          for f in index_data.get('files', []):
+              path = f.get('file')
+              p = f.get('rule_prefix')
+              if path and p is not None:
+                  file_to_prefixes[path] = (
+                      set(p) if isinstance(p, list) else {p}
                   )
 
-          valid_repo_types = {
-              'pipeline-cog','trigger-cog','api-service','shared-library',
-              'static-site','react-app','standards-repo','evaluator-service','all'
-          }
-          for r in all_rules:
-              applies = r.get('applies_to', [])
-              for a in applies:
-                  assert a in valid_repo_types, f"{r['id']} applies_to has invalid value: {a}"
+          # --- Walk standards/*.yaml ---
+          all_ids = []
+          std_files = sorted(glob.glob('standards/*.yaml'))
+          for path in std_files:
+              try:
+                  data = yaml.safe_load(open(path))
+              except Exception as e:
+                  err(f"{path}: parse error: {e}")
+                  continue
+              if not data or 'standards' not in data:
+                  err(f"{path}: missing 'standards' key")
+                  continue
 
-          # dod_type retained on services for backward compatibility during migration
-          valid_dod = {
-              'new_cog','new_fastapi_service','new_hono_service',
-              'new_frontend_site','new_react_app','new_pipeline',
-              'library', None
-          }
+              declared = file_to_prefixes.get(path, set())
+              if not declared:
+                  err(f"{path}: no rule_prefix entry in index.yaml files:")
+
+              for r in data['standards']:
+                  rid = r.get('id')
+                  if not rid:
+                      err(f"{path}: rule missing id")
+                      continue
+                  all_ids.append(rid)
+
+                  for field in ('title', 'status', 'severity',
+                                'dimension', 'applies_to'):
+                      if field not in r:
+                          err(f"{rid}: missing '{field}'")
+
+                  # META-006
+                  m = re.match(r'^([A-Z]+)-(?:GAP-)?\d{3}$', rid)
+                  if not m:
+                      err(f"META-006: {rid} does not match "
+                          f"PREFIX-NNN or PREFIX-GAP-NNN shape")
+                  elif declared and m.group(1) not in declared:
+                      err(f"META-006: {rid} prefix '{m.group(1)}' "
+                          f"not in {sorted(declared)} declared for {path}")
+
+                  # Enum validity (reads from canonical sources)
+                  s = r.get('status')
+                  if s and s not in valid_statuses:
+                      err(f"{rid}: invalid status '{s}' "
+                          f"(allowed: {sorted(valid_statuses)})")
+                  sev = r.get('severity')
+                  if sev and sev not in valid_rule_severities:
+                      err(f"{rid}: invalid rule-level severity '{sev}' "
+                          f"(allowed: {sorted(valid_rule_severities)})")
+                  dim = r.get('dimension')
+                  if dim and dim not in valid_dimensions:
+                      err(f"{rid}: invalid dimension '{dim}' "
+                          f"(allowed: {sorted(valid_dimensions)})")
+                  for a in (r.get('applies_to') or []):
+                      if a not in valid_repo_types:
+                          err(f"{rid}: applies_to has invalid value "
+                              f"'{a}' (allowed: {sorted(valid_repo_types)})")
+
+                  # META-005
+                  if r.get('checkable') is True:
+                      notes = r.get('check_notes') or ''
+                      if not notes:
+                          err(f"{rid}: checkable: true but missing check_notes")
+                      else:
+                          first = next(
+                              (ln for ln in notes.splitlines() if ln.strip()),
+                              '',
+                          ).strip()
+                          if not (first.startswith('DETERMINISTIC CHECK.')
+                                  or first.startswith('LLM CHECK.')):
+                              err(f"META-005: {rid} check_notes does not start "
+                                  f"with 'DETERMINISTIC CHECK.' or 'LLM CHECK.' "
+                                  f"(got: {first[:60]!r})")
+
+                  # META-002 (per-rule): no `added:` field
+                  if 'added' in r:
+                      err(f"META-002: {rid} has forbidden 'added' field")
+
+          # META-007 lightweight: duplicate IDs
+          dupes = sorted({i for i in all_ids if all_ids.count(i) > 1})
+          if dupes:
+              err(f"Duplicate rule IDs: {dupes}")
+
+          # META-002 (file-level): forbidden headers and top-level fields
+          scan_targets = (
+              std_files
+              + ['index.yaml', 'ecosystem.yaml', 'definitions-of-done.yaml']
+          )
+          for target in scan_targets:
+              text = Path(target).read_text()
+              for i, line in enumerate(text.splitlines(), 1):
+                  if re.match(r'^# Version:', line):
+                      err(f"META-002: {target}:{i} has '# Version:' header")
+                  if re.match(r'^(updated|maintainer):', line):
+                      key = line.split(':', 1)[0]
+                      err(f"META-002: {target}:{i} has top-level '{key}:' field")
+
+          # Services: dod_type validity
           for svc in eco_data.get('services', []):
               if svc.get('status') == 'active':
-                  assert 'dod_type' in svc, f"{svc['id']} missing dod_type"
-                  assert svc['dod_type'] in valid_dod, f"{svc['id']} invalid dod_type: {svc['dod_type']}"
-                  
-          if errors:
-              for e in errors:
-                  print(e)
-              sys.exit(1)
+                  if 'dod_type' not in svc:
+                      err(f"{svc.get('id')}: missing dod_type")
+                  elif svc['dod_type'] not in valid_dod:
+                      err(f"{svc.get('id')}: invalid dod_type "
+                          f"'{svc['dod_type']}' (allowed: {sorted(v for v in valid_dod if v is not None)} or null)")
 
-          print(f"\n✅ All valid — {len(all_ids)} rules, 0 duplicates")
+          # --- Output ---
+          if errors:
+              print(f"\nFAIL - {len(errors)} problem(s):")
+              for e in errors:
+                  print(f"  - {e}")
+              sys.exit(1)
+          print(f"\nOK - {len(all_ids)} rules across {len(std_files)} files, no issues.")
           EOF
 
   release:
