@@ -69,7 +69,8 @@ standards:
       DETERMINISTIC CHECK.
       Runtime data-quality check against pipeline_evaluations for
       findings emitted by evaluator-cog in the last 30 days
-      (source=conformance_check OR source=standards_drift):
+      (source in {conformance_llm, conformance_deterministic,
+      standards_drift, data_quality}):
         (1) Every finding_text must contain at least one rule ID
             matching the pattern [A-Z]+-\d+ (e.g. API-001, CD-005,
             PIPE-013). Flag any finding whose text does not reference
@@ -121,17 +122,17 @@ standards:
       evaluation run.
 
       When drift is detected:
-        - Unimplemented checkable rules → severity WARN finding,
-          source=conformance_check
+        - Unimplemented checkable rules → severity WARN finding
         - Orphaned evaluator checks (no backing standard) → severity
           ERROR finding
         - Version skew (evaluator's pinned standards version is more
           than one minor version behind current package.json) →
           severity WARN finding
 
-      Findings are written to pipeline_evaluations via api-kaianolevine-com
-      with source=standards_drift, so they appear in the Pipeline Health
-      view alongside all other conformance findings.
+      All EVAL-007 findings are written to pipeline_evaluations via
+      api-kaianolevine-com with source=standards_drift, so they appear
+      in the Pipeline Health view alongside all other conformance
+      findings.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -249,34 +250,62 @@ standards:
   # PIPELINE_EVALUATIONS.SOURCE — CANONICAL VALUES
   #
   # The `source` field on pipeline_evaluations records where a finding was
-  # emitted from. The following five values are canonical. Adding a new
+  # emitted from. The following seven values are canonical. Adding a new
   # source value requires updating this list first.
   #
   # External emission origins (set by the emitting cog, must not be
   # overridden downstream):
   #
-  #   flow_inline        Posted from inside a flow body — e.g. the end-of-run
-  #                      evaluation task in a pipeline cog. Represents the
-  #                      cog's own assessment of its run outcome.
+  #   flow_inline              Posted from inside a flow body — e.g. the
+  #                            end-of-run evaluation task in a pipeline
+  #                            cog. Represents the cog's own assessment
+  #                            of its run outcome.
   #
-  #   flow_hook          Posted from a Prefect on_failure / on_crashed hook.
-  #                      Represents an abnormal-termination finding that the
-  #                      inline evaluation step never got to emit.
+  #   flow_hook                Posted from a Prefect on_failure /
+  #                            on_crashed hook. Represents an abnormal-
+  #                            termination finding that the inline
+  #                            evaluation step never got to emit.
   #
-  #   prefect_webhook    Posted by the evaluator-cog webhook handler on
-  #                      Prefect flow run state events. Represents an
-  #                      external-observer finding about a flow that did
-  #                      not self-report.
+  #   prefect_webhook          Posted by the evaluator-cog webhook
+  #                            handler on Prefect flow run state events.
+  #                            Represents an external-observer finding
+  #                            about a flow that did not self-report.
   #
-  # Evaluator-cog internal sources:
+  # Evaluator-cog internal sources — conformance of a repo against the
+  # standards catalog. The `conformance_*` pair mirrors the two paths a
+  # rule can be routed to by its check_notes marker (see routing in
+  # evaluator-cog's engine/routing.py):
   #
-  #   conformance_check  Posted by the scheduled conformance flow in
-  #                      evaluator-cog. Represents an assessment of a repo
-  #                      against ecosystem-standards.
+  #   conformance_deterministic  Posted by the deterministic path of the
+  #                              scheduled conformance flow (run_llm=False).
+  #                              Represents findings from explicit check
+  #                              functions over repo structure, YAML,
+  #                              pyproject, AST, etc.
   #
-  #   standards_drift    Posted by the drift-detection job. Represents
-  #                      mismatch between ecosystem-standards and the
-  #                      checks implemented in evaluator-cog (see EVAL-007).
+  #   conformance_llm            Posted by the LLM path of the scheduled
+  #                              conformance flow (run_llm=True). Represents
+  #                              Claude-judged soft-rule assessments for
+  #                              rules whose check_notes starts with
+  #                              `LLM CHECK.`.
+  #
+  # Evaluator-cog introspection sources — checks that are not about a
+  # target repo but about the evaluator's own outputs, the standards
+  # catalog, or the ecosystem inventory:
+  #
+  #   standards_drift          Posted by the drift-detection job (EVAL-007).
+  #                            Represents mismatch between
+  #                            ecosystem-standards and the checks
+  #                            implemented in evaluator-cog.
+  #
+  #   data_quality             Posted by runtime data-quality checks on
+  #                            the evaluator's own output or on the
+  #                            ecosystem inventory. Current consumers:
+  #                            EVAL-003 (finding specificity / actionability
+  #                            against stored pipeline_evaluations rows)
+  #                            and MONO-003 (monorepo dedup integrity of
+  #                            ecosystem.yaml). These checks do not target
+  #                            a specific repo's source tree; they target
+  #                            the ecosystem's recorded state.
   #
   # Rule: the `source` value is authoritative at the point of emission.
   # Downstream code (including the evaluator-cog API client) must not
