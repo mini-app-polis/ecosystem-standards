@@ -1,3 +1,10 @@
+# [4.1.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v4.0.0...v4.1.0) (2026-04-21)
+
+
+### Features
+
+* add XSTACK-001 to logger-primitive exemption; add per-repo downgrades to evaluator.yaml schema ([c916c26](https://github.com/mini-app-polis/ecosystem-standards/commit/c916c26de825a8e1f59377324e4460cb37021247))
+
 # [4.0.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.8.1...v4.0.0) (2026-04-21)
 
 
