@@ -109,16 +109,21 @@ standards:
       `pipeline_evaluations.source`. The block must enumerate every
       value a production cog or evaluator may emit and describe
       what each value means.
+
+      Steps (1) and (2) are structural — a deterministic sub-check can
+      verify presence and per-value description text. Step (3) is the
+      LLM-judged part, because it requires cross-referencing usage in
+      consumer repos (evaluator-cog, cogs) against the contract block
+      in this repo.
+
       Flag if:
-        (1) The CONTEXT CONTRACT block is missing.
+        (1) The CONTEXT CONTRACT block is missing. [deterministic]
         (2) The block lists values but does not describe what each
-            means.
+            means. [deterministic]
         (3) A value appears in evaluator-cog or cog source code that
-            is not enumerated in the CONTEXT CONTRACT block (detected
-            by evaluator-cog's runtime drift check — see EVAL-007).
-      This rule is LLM-judged because the completeness-of-enumeration
-      check requires cross-referencing usage in consumer repos
-      against the contract block in this repo.
+            is not enumerated in the CONTEXT CONTRACT block. [LLM;
+            also detected by evaluator-cog's runtime drift check —
+            see EVAL-007].
 
   - id: META-005
     title: Checkable rules declare DETERMINISTIC or LLM in check_notes

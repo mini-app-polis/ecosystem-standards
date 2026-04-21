@@ -110,6 +110,10 @@ standards:
     severity: ERROR
     applies_to: [standards-repo]
     description: >
+      This rule is runtime-enforced by evaluator-cog itself — `applies_to`
+      points at where the coverage contract lives (this repo), not where
+      the check runs. There is no repo-scanning conformance check for it.
+
       Every checkable rule in ecosystem-standards (those with
       `checkable: true`) must have a corresponding implementation in
       evaluator-cog's deterministic check engine. Every check in

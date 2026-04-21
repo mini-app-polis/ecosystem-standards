@@ -31,8 +31,9 @@ checking is implemented, where findings land, and how LLMs are used.
 
 Reuse the existing `pipeline_evaluations` table with
 `source=conformance_check`. No new table — the `source` field already exists
-and cleanly distinguishes conformance findings from behavioral
-(`pipeline_eval`) findings in downstream views.
+and cleanly distinguishes conformance findings from behavioral findings
+emitted by the `pipeline_eval` flow (which post as `source=flow_inline`
+or `flow_hook`) in downstream views.
 
 ### Invocation
 
@@ -79,7 +80,7 @@ into the same service that executes the checks. See `EVAL-007`.
   GitHub Actions job for drift, no cross-repo invocation plumbing.
 - `source=conformance_check` becomes a first-class value in the
   `pipeline_evaluations.source` canonical-values contract, alongside
-  `pipeline_eval` and `standards_drift`.
+  `flow_inline`, `flow_hook`, `prefect_webhook`, and `standards_drift`.
 - Soft rules that were previously documented-but-unenforceable become
   partially enforceable via LLM checks, with the trade-off that LLM
   findings are advisory and require human judgment.
@@ -106,7 +107,7 @@ being declared in `astro.config.mjs`, and `postcss.config.cjs` being wired.
   1. `tailwindcss` in `dependencies`,
   2. `tailwind.config.mjs` at root,
   3. `@astrojs/tailwind` in `astro.config.*`.
-- **Secondary note:** FE-003 `applies_to` is `[new_react_app]` — it should
-  not fire for `new_frontend_site` at all. The conformance flow is not
-  filtering rules by `applies_to` correctly. Tracked as a bug in
-  `evaluator-cog`.
+- **Secondary note:** FE-003 `applies_to` is `[react-app]` — it should
+  not fire for `static-site` repos like `website-astro-software` at all.
+  The conformance flow is not filtering rules by `applies_to` correctly.
+  Tracked as a bug in `evaluator-cog`.

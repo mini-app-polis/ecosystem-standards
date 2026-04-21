@@ -2,7 +2,7 @@
 # Testing standards for all Python cogs and FastAPI services.
 #
 # GAP: Most existing cogs currently have import-level tests only.
-# Remediation order: deejay-cog first, then by activity level.
+# Per-repo remediation sequencing lives in BACKLOG.md — see TEST-GAP-001.
 
 standards:
 
@@ -269,13 +269,14 @@ standards:
     applies_to: [pipeline-cog, api-service]
     description: >
       Most existing cogs currently have import-level tests only. This is a
-      known gap with active remediation underway. Remediation order:
-      deejay-cog first (new platform foundation), then by activity level.
-      When a cog is remediated, this gap entry is closed and the cog
-      is marked as compliant with TEST-001 through TEST-004.
+      known gap with active remediation underway. Per-repo remediation
+      sequencing (which cog goes first, priority order) lives in
+      BACKLOG.md — not here — so it can be edited without churning the
+      standards catalog. When a cog is remediated, this gap entry is
+      closed for that cog and it is marked as compliant with TEST-001
+      through TEST-004.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
       For each cog repo, check tests/ for the four critical path tests
       (TEST-001 through TEST-004). Flag any cog missing any of the four.
-      Track remediation progress here.

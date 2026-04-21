@@ -541,9 +541,12 @@ standards:
         - CLERK_SECRET_KEY    — Clerk secret key used to call the BAPI verify endpoint
 
       Required env vars on any service or cog calling the API:
-        - CLERK_SECRET_KEY (or equivalent M2M credential) — used by
-          `common_python_utils.auth.get_m2m_token` to obtain a
-          short-lived M2M opaque token, cached until expiry.
+        - CLERK_SECRET_KEY (or equivalent M2M credential) — configured
+          on the caller's environment. Callers do not touch this value
+          directly: `common_python_utils.auth.get_m2m_token` reads it
+          and returns a short-lived M2M opaque token, cached until expiry.
+          Calling code just receives the token and sets the
+          `Authorization: Bearer <token>` header.
 
       The retired mechanism (`X-Internal-API-Key` header with
       Doppler-managed per-caller keys) was superseded during Project
