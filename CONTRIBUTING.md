@@ -86,9 +86,11 @@ Highlights:
   `DETERMINISTIC CHECK.` or `LLM CHECK.` on the first line.
 - **META-006**: A rule's ID prefix must match its file's declared
   `rule_prefix` in `index.yaml`. No orphaned prefixes.
-- **META-007**: Rule IDs are append-only. Retired numbers are never
-  reused — the next ID is `max(ever-seen) + 1` computed from git
-  history. See `new-standard.md` Step 4 for the command.
+- **META-007** *(convention)*: Rule IDs should be append-only —
+  retired numbers should not be reused. The next ID is
+  `max(ever-seen) + 1` computed from git history. Full enforcement
+  is out of scope for CI; author discipline per `new-standard.md`
+  Step 4 is the primary control. CI only catches duplicates.
 
 ---
 
@@ -154,13 +156,16 @@ ecosystem-standards/
 ├── definitions-of-done.yaml        ← DoD checklists
 ├── standards/
 │   ├── principles.yaml             ← PRIN
-│   ├── python.yaml                 ← PY, CFG
+│   ├── python.yaml                 ← PY
+│   ├── config.yaml                 ← CFG
 │   ├── testing.yaml                ← TEST
 │   ├── documentation.yaml          ← DOC
-│   ├── api.yaml                    ← API, AUTH
+│   ├── api.yaml                    ← API
+│   ├── auth.yaml                   ← AUTH
 │   ├── pipeline.yaml               ← PIPE
 │   ├── frontend.yaml               ← FE
-│   ├── delivery.yaml               ← CD, VER
+│   ├── delivery.yaml               ← CD
+│   ├── versioning.yaml             ← VER
 │   ├── meta.yaml                   ← META (rules for this repo)
 │   ├── evaluation.yaml             ← EVAL
 │   ├── monorepo.yaml               ← MONO

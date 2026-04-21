@@ -183,8 +183,13 @@ files:
 
   - file: standards/python.yaml
     domain: python
-    description: Standards for all Python services, cogs, and libraries. Includes tooling, structure, naming, error handling, and configuration rules.
-    rule_prefix: [PY, CFG]
+    description: Standards for all Python services, cogs, and libraries. Tooling, structure, naming, and error handling.
+    rule_prefix: PY
+
+  - file: standards/config.yaml
+    domain: config
+    description: Application configuration standards — pydantic-settings Settings classes and .env.example contracts.
+    rule_prefix: CFG
 
   - file: standards/testing.yaml
     domain: testing
@@ -198,8 +203,13 @@ files:
 
   - file: standards/api.yaml
     domain: api
-    description: Standards for all API services — FastAPI (Python) and Hono (TypeScript). Includes auth rules from code review audit.
-    rule_prefix: [API, AUTH]
+    description: Standards for all API services — FastAPI (Python) and Hono (TypeScript). Structure, versioned routes, response envelopes, CORS, migrations.
+    rule_prefix: API
+
+  - file: standards/auth.yaml
+    domain: auth
+    description: Authentication standards for API services — Clerk verification posture, per-service invariants, and client-API parity.
+    rule_prefix: AUTH
 
   - file: standards/pipeline.yaml
     domain: pipeline
@@ -213,8 +223,13 @@ files:
 
   - file: standards/delivery.yaml
     domain: delivery
-    description: Continuous delivery, observability, and versioning standards. Includes semantic-release and GitHub Actions patterns.
-    rule_prefix: [CD, VER]
+    description: Continuous delivery and observability standards. Sentry, structured logging, Prefect Cloud, Healthchecks, Doppler, GitHub Actions patterns.
+    rule_prefix: CD
+
+  - file: standards/versioning.yaml
+    domain: versioning
+    description: Versioning standards — Conventional Commits, semantic-release plumbing, CHANGELOG and version-file ownership, BREAKING CHANGE footers.
+    rule_prefix: VER
 
   - file: standards/meta.yaml
     domain: meta

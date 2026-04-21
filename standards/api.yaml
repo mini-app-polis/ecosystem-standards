@@ -79,12 +79,36 @@ standards:
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Python services: check pyproject.toml for sqlalchemy dependency and
-      src/ for SQLAlchemy model definitions. Flag if raw SQL strings are
-      used outside of ORM context.
-      TypeScript/Hono services: check package.json for drizzle-orm dependency
-      and src/ for drizzle-kit config (drizzle.config.ts). Flag if neither
-      is present for a service that interacts with PostgreSQL.
+      Python services (language: python in ecosystem.yaml):
+        (1) `sqlalchemy` appears in pyproject.toml [project.dependencies].
+            Flag if absent on an api-service with a postgres driver (see
+            API-002).
+        (2) At least one class in src/**/*.py inherits from `Base`,
+            `DeclarativeBase`, or declares `__tablename__` (SQLAlchemy
+            model). Flag if no such class is found on a service with a
+            postgres driver.
+        (3) Flag any occurrence in src/**/*.py of a raw SQL string passed
+            directly to a DB execution call. Specifically:
+              - `session.execute("...")` or `connection.execute("...")`
+                where the argument is a bare string literal (not
+                `sqlalchemy.text(...)` wrapped).
+              - `text("SELECT ...")`, `text("INSERT ...")`, `text("UPDATE ...")`,
+                or `text("DELETE ...")` — using `text()` is permitted for
+                advanced queries only when accompanied by a comment
+                explaining why ORM constructs are insufficient.
+              - Direct `asyncpg.connect()` usage followed by `.execute()`
+                or `.fetch()` with inline SQL.
+            Exempt: migration scripts under `alembic/versions/**/*.py`
+            and test fixtures under `tests/**/*.py`.
+      TypeScript/Hono services (language: typescript):
+        (1) `drizzle-orm` appears in package.json `dependencies`. Flag if
+            absent on an api-service with a postgres driver.
+        (2) A `drizzle.config.ts` or `drizzle.config.js` file exists at
+            repo root. Flag if absent.
+        (3) Flag any occurrence in src/**/*.ts of `sql\`...\`` tagged
+            template literals containing `SELECT`, `INSERT`, `UPDATE`, or
+            `DELETE` outside of `drizzle-orm`'s `db.execute(sql\`...\`)`
+            pattern. Exempt: migration files under `drizzle/` directory.
 
   # ─────────────────────────────────────────────
   # STRUCTURE
@@ -126,11 +150,41 @@ standards:
     description: >
       All responses wrapped: { data: ..., meta: { count, version } }.
       Errors: { error: { code, message } }. No bare arrays or inconsistent shapes.
+      API-005 is the presence-of-envelope check. XSTACK-002 is the
+      cross-stack parity check (shape identical across Python and TypeScript).
+      API-005 fails when an endpoint returns nothing envelope-shaped at all;
+      XSTACK-002 fails when the envelope exists but diverges from the
+      canonical shape.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Check response_model types on all endpoints. Flag endpoints returning bare
-      arrays, raw dicts, or shapes inconsistent with the envelope standard.
+      Python/FastAPI services:
+        (1) Every route decorator (@app.get, @app.post, @router.get,
+            @router.post, @router.put, @router.patch, @router.delete,
+            including sub-routers) in src/**/*.py must declare
+            `response_model=` as a keyword argument. Flag any decorator
+            missing it.
+        (2) The value passed to `response_model=` must resolve to a
+            Pydantic model. Flag `response_model=dict`,
+            `response_model=list`, `response_model=List[...]`,
+            `response_model=Dict[...]`, or any bare container type.
+        (3) Exempt: routes with `response_class=StreamingResponse`,
+            `FileResponse`, `HTMLResponse`, or `Response` (raw HTTP
+            responses by design), and routes under /health, /metrics,
+            /docs, /openapi.json, /redoc, /version.
+      TypeScript/Hono services:
+        (1) Every route handler registered via `app.get`, `app.post`,
+            `app.put`, `app.patch`, `app.delete`, `router.get` (etc.) in
+            src/**/*.ts must return either:
+              - a call to `success(...)` or `error(...)` from
+                `common-typescript-utils`, OR
+              - a literal object with top-level keys exactly matching
+                either `{ data, meta }` or `{ error }`.
+            Flag any handler returning `c.json(someArray)`,
+            `c.json({ items: [...] })`, or any other shape that does not
+            match the two permitted literals.
+        (2) Exempt: /health, /metrics, and raw `c.text(...)` /
+            `c.html(...)` responses.
 
   - id: API-006
     title: Tables authorization-scoped to a Clerk user
@@ -273,53 +327,5 @@ standards:
       step may be at root level rather than per-app. Do not flag if found
       at the monorepo root CI.
 
-  # ─────────────────────────────────────────────
-  # AUTH (from code review audit)
-  # ─────────────────────────────────────────────
-
-  - id: AUTH-001
-    title: No unverified write endpoints reachable from the public internet
-    status: requirement
-    dimension: structural_conformance
-    severity: ERROR
-    applies_to: [api-service]
-    description: >
-      Any FastAPI service with write endpoints (POST, PATCH, DELETE) that depend on
-      an unverified header (X-Owner-Id or equivalent) must either be provably isolated
-      on a private network (Railway private networking, no public port), OR have
-      CLERK_AUTH_ENABLED=true and RS256 JWT verification active. A module-level
-      docstring in auth.py documenting the current posture and upgrade path is
-      required regardless of which condition is satisfied.
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      Verify: (1) service has no public port in Railway config, OR (2)
-      CLERK_AUTH_ENABLED=true is set and auth middleware applied to all write routes.
-      Check for auth.py module docstring.
-    origin: >
-      api-kaianolevine-com uses X-Owner-Id with no verification. Acceptable while all
-      write callers are internal Railway services. Standard formalizes the boundary
-      condition.
-
-  - id: AUTH-002
-    title: API auth scheme and HTTP client must match
-    status: requirement
-    dimension: cross_repo_coherence
-    severity: ERROR
-    applies_to: [api-service]
-    description: >
-      When api-kaianolevine-com's auth scheme changes, CommonPythonApiClient._headers() in
-      common-python-utils must change in the same release. A mismatch causes all
-      pipeline writes to return 401. Auth mechanism used by the API and sent by its
-      client must be documented in the same location (auth.py cross-referencing
-      common-python-utils and vice versa).
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      Compare auth header set in CommonPythonApiClient._headers() against auth header
-      expected by api-kaianolevine-com routes. Flag if they differ. Check auth.py for
-      cross-reference comment to common-python-utils.
-    origin: >
-      common-python-utils references KAIANO_API_CLERK_TOKEN in .env.example but
-      _headers() does not read it — a forward-reference that looks like a live feature.
+# AUTH-* rules moved to standards/auth.yaml.
 

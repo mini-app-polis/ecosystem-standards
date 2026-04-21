@@ -87,11 +87,27 @@ standards:
       steps — not combined. Allows independent retry.
     checkable: true
     check_notes: >
-      DETERMINISTIC CHECK.
-      Search the main flow file for @task decorated functions. Identify
-      tasks that process individual items versus tasks that build or update
-      a collection/summary. Flag if a single task appears to both process
-      a new item AND rebuild the full collection in the same function body.
+      LLM CHECK.
+      For each function in src/**/*.py decorated with `@task` (from
+      `prefect`), assess whether the task body performs BOTH of the
+      following within one function:
+        (a) Processing of a single, discrete input item — e.g. a single
+            file, row, or record passed as an argument and transformed
+            in place.
+        (b) Rebuilding or recomputing an aggregate structure — e.g.
+            regenerating a collection file, rewriting a summary sheet,
+            or producing an output that derives from ALL items rather
+            than from the one passed in.
+      Flag the task as violating PIPE-003 when both patterns coexist
+      in the same function body. The signal for (b) is: iterating over
+      a full input listing (glob, list_directory, full-table SELECT) in
+      a task whose declared purpose is per-item processing.
+      Remediation: split into two `@task` functions — one parameterized
+      on the single item, one parameterized on the full collection —
+      and invoke them as separate flow steps. This rule is LLM-judged
+      because the distinction between "touching multiple related
+      records" (legitimate) and "rebuilding the collection" (violation)
+      requires reading intent, not just matching patterns.
 
   - id: PIPE-004
     title: Concurrency groups required for shared resources
@@ -161,8 +177,20 @@ standards:
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Scan Prefect @flow decorated functions for get_run_logger() with fallback.
-      Flag flows using only standard logging.
+      For every function in src/**/*.py decorated with `@flow` (from
+      `prefect import flow`):
+        (1) The function body must contain a call to `get_run_logger()`
+            (imported from `prefect` or `prefect.logging`). Flag if absent.
+        (2) The `get_run_logger()` call must be wrapped in a `try` block
+            whose `except` branch assigns a standard-library logger
+            (e.g. `logger = logging.getLogger(__name__)` or an imported
+            `log` from `common_python_utils`). Flag if the call appears
+            without a `try`/`except` wrapper.
+        (3) Inside the flow body, only the resulting `logger` variable
+            may be used for logging — flag any direct `logging.info(...)`,
+            `print(...)`, or calls on an imported module-level logger
+            that bypass the dual-assigned `logger`.
+      Exempt: flows under tests/**/*.py.
 
   - id: PIPE-007
     title: Retry logic on external API calls

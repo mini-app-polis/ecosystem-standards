@@ -93,10 +93,16 @@ finding land on first?" That is the primary concern.
 ## Step 4 — Pick the next rule ID
 
 Rule IDs are **append-only**: three digits, sequential within their
-prefix, and retired numbers are never reused (META-007). The next
+prefix, and retired numbers should not be reused (META-007 — a
+convention, enforced by author discipline at this step). The next
 ID is `max(ever-seen ID for this prefix) + 1` — computed from git
 history, not from the file's current contents. A rule deleted in a
 past commit still occupies its number forever.
+
+CI catches the duplicate-ID case. The history-walking case — reusing
+the number of a rule that was deleted in an earlier commit — is not
+automatically caught, which is why running the command below is the
+load-bearing control.
 
 To find the next ID correctly:
 
@@ -264,10 +270,12 @@ When a rule no longer applies, **delete it**. Git history is the record.
 
 - Do not leave the rule behind as `status: retired` or similar. The
   catalog should reflect the current required state, not its history.
-- **The retired ID number is never reused** (META-007). A later rule
-  that seems to address the same topic gets a new number via Step 4.
-  Cross-references in findings, ADRs, and external repos stay
-  unambiguous across time only if IDs are append-only.
+- **The retired ID number should not be reused** (META-007 — a
+  convention). A later rule that seems to address the same topic
+  gets a new number via Step 4. Cross-references in findings, ADRs,
+  and external repos stay unambiguous across time only if IDs are
+  append-only, and CI does not catch reuse of historically-deleted
+  numbers — the Step 4 command is how you avoid it.
 - If a new rule replaces the retired one, add a `supersedes:` field on
   the **new** rule describing what it replaced. This is forward-pointing
   metadata on the active rule, not a retained retired rule.

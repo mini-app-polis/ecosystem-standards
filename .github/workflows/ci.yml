@@ -36,8 +36,10 @@ jobs:
           #   - META-006: rule ID prefix matches file's declared
           #     rule_prefix in index.yaml
           #   - META-007 (lightweight): no duplicate IDs across the
-          #     catalog. Full append-only history check is done by
-          #     evaluator-cog, which has access to git log.
+          #     catalog. META-007 is a convention — the full append-only
+          #     history walk is not enforced anywhere. Author discipline
+          #     per playbooks/new-standard.md Step 4 is the primary
+          #     control.
           import yaml, glob, sys, json, re
           from pathlib import Path
 

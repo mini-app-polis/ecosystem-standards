@@ -129,16 +129,27 @@ standards:
     status: requirement
     dimension: standards_currency
     severity: WARN
-    applies_to: [all]
+    applies_to: [standards-repo]
     description: >
       This document is updated as the ecosystem evolves. Outdated standards are
       worse than no standards — they create confusion and erode trust in the process.
       Standards must be reviewed at least every 90 days.
     checkable: true
     check_notes: >
-      LLM CHECK.
-      Check the timestamp of the most recent commit to the ecosystem-standards
-      repo via git log. Flag if more than 90 days have elapsed since last update.
+      DETERMINISTIC CHECK.
+      Run against the ecosystem-standards repo only (applies_to is
+      scoped there; a global `all` reading would fire on every repo,
+      which is wrong — it is this catalog's activity that signals
+      currency, not any consumer's).
+      (1) Fetch the timestamp of the most recent commit to `main` that
+          modifies any file under `standards/**/*.yaml`, `index.yaml`,
+          `ecosystem.yaml`, or `definitions-of-done.yaml`. Use
+          `git log -1 --format=%cI -- standards/ index.yaml ecosystem.yaml definitions-of-done.yaml`.
+          Exclude release-only commits (subject starts with
+          `chore(release):`) — they do not represent substantive
+          standards work.
+      (2) Flag if more than 90 days have elapsed between that
+          timestamp and the evaluation run time.
 
   - id: PRIN-010
     title: Bug fix tests are genuine regression tests

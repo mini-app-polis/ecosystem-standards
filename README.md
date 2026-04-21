@@ -41,13 +41,16 @@ ecosystem-standards/
 ├── BACKLOG.md
 ├── standards/
 │   ├── principles.yaml             ← PRIN — immutable core philosophy
-│   ├── python.yaml                 ← PY, CFG — Python tooling, structure, config
+│   ├── python.yaml                 ← PY — Python tooling, structure, error handling
+│   ├── config.yaml                 ← CFG — pydantic-settings & .env.example contracts
 │   ├── testing.yaml                ← TEST — critical path coverage, FastAPI testing
 │   ├── documentation.yaml          ← DOC — README, docstrings, OpenAPI
-│   ├── api.yaml                    ← API, AUTH — service structure, auth rules
+│   ├── api.yaml                    ← API — service structure, response envelopes
+│   ├── auth.yaml                   ← AUTH — Clerk verification, client-API parity
 │   ├── pipeline.yaml               ← PIPE — orchestration, idempotency, data safety
 │   ├── frontend.yaml               ← FE — Astro sites, React apps
-│   ├── delivery.yaml               ← CD, VER — CI/CD, observability, versioning
+│   ├── delivery.yaml               ← CD — CI/CD, observability, Sentry, logging
+│   ├── versioning.yaml             ← VER — Conventional Commits, semantic-release
 │   ├── meta.yaml                   ← META — rules governing this repo itself
 │   ├── evaluation.yaml             ← EVAL — how AI evaluation is performed
 │   ├── monorepo.yaml               ← MONO — pnpm workspace rules

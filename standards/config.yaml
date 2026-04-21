@@ -1,0 +1,49 @@
+# ecosystem-standards / config.yaml
+# Standards for application configuration — pydantic-settings Settings classes
+# and .env.example contracts. Split from python.yaml so each file owns exactly
+# one rule prefix (CFG).
+
+standards:
+
+  - id: CFG-001
+    title: No getattr() access for undeclared Settings fields
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    applies_to: [pipeline-cog, api-service, shared-library]
+    description: >
+      pydantic-settings with extra="ignore" silently drops env vars not declared
+      as fields. Using getattr(settings, "KEY", default) on an undeclared key is
+      always equivalent to using the hardcoded default. This pattern is prohibited.
+      Any key accessed via settings.KEY or getattr(settings, "KEY", ...) must be
+      declared as a typed field on the Settings class. Deferred fields must be
+      documented in a commented-out stub block in config.py.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      AST scan: find all getattr(settings, ...) calls and verify the key name
+      appears as a declared field on the Settings class. Also flag settings.KEY
+      attribute access where KEY is not a declared field.
+    origin: >
+      routers/webhook.py uses getattr(settings, "STANDARDS_VERSION", "6.0") but
+      STANDARDS_VERSION is not on Settings. The env var has no effect.
+
+  - id: CFG-002
+    title: Every key in .env.example must be declared in Settings
+    status: convention
+    dimension: structural_conformance
+    severity: WARN
+    applies_to: [pipeline-cog, api-service, shared-library]
+    description: >
+      Any key in .env.example that is not a declared field on Settings creates a
+      misleading contract. Exception: keys consumed by external tooling (RAILWAY_*,
+      NODE_ENV) may be listed with a comment indicating they are not read by the app.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Parse .env.example keys. For each key, verify it appears as a declared field
+      on Settings OR has a comment marking it as external tooling. Flag undocumented
+      mismatches.
+    origin: >
+      KAIANO_API_CLERK_TOKEN appears in common-python-utils/.env.example but is
+      not read anywhere in the current implementation.

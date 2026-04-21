@@ -1,0 +1,166 @@
+# ecosystem-standards / versioning.yaml
+# Standards for versioning and semantic-release integration. Conventional
+# Commits, BREAKING CHANGE footers, release-job plumbing, and commit-message
+# hygiene. Split from delivery.yaml so each file owns exactly one rule
+# prefix (VER).
+
+standards:
+
+  - id: VER-001
+    title: Conventional Commits format
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
+    description: >
+      All commit messages follow: type: description.
+      Types: feat, fix, docs, refactor, chore, test, ci.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Fetch the last 20 commit subjects from `main` via
+          `git log -n 20 --pretty=format:%s main`.
+      (2) For each subject, run it against the regex
+          `^(feat|fix|docs|refactor|chore|test|ci|perf|build|style)(\([^)]+\))?!?: .+`
+          — the optional `!` marks a breaking change; see VER-002.
+      (3) Flag any subject that does not match.
+      (4) Exempt, in this order, before flagging:
+            - Merge commits: any commit whose parent count is ≥ 2
+              (`git log --merges -n 20 --pretty=format:%H`) OR whose
+              subject starts with `Merge branch ` or `Merge pull request `.
+            - semantic-release release commits: subjects starting with
+              `chore(release):` (these are auto-generated).
+            - Revert commits: subjects starting with `Revert "` (git's
+              default revert format).
+
+  - id: VER-002
+    title: BREAKING CHANGE footer for major bumps
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
+    description: >
+      Use explicit BREAKING CHANGE in commit body for major version bumps.
+      The feat!: shorthand is unreliable. Correct pattern using two -m flags:
+        git commit -m 'feat: description' -m 'BREAKING CHANGE: explanation'
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Scan CHANGELOG.md for major version entries: lines matching the
+          regex `^##\s*\[?(\d+)\.0\.0\]?` where the first capture group is
+          ≥ 1 (major version bump, not 0.x).
+      (2) For each major version entry with version `X.0.0`, locate the
+          git tag matching `vX.0.0` (or `X.0.0` if the repo tags without
+          a `v` prefix) via `git tag --list`. Skip the check for entries
+          with no matching tag (CHANGELOG drift — a separate concern,
+          covered by VER-004).
+      (3) Read the full commit message of the tagged commit via
+          `git log -1 --format=%B <tag>`.
+      (4) Flag if the commit message body contains neither:
+            - a line matching `^BREAKING CHANGE:` (the canonical footer), NOR
+            - a subject line matching `^(feat|fix|refactor)(\([^)]+\))?!:`
+              (the `!` shorthand — accepted even though the description
+              prefers the explicit footer form).
+
+  - id: VER-003
+    title: semantic-release on all repos
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
+    description: >
+      Every repo has .releaserc.json and a release job in ci.yml. On merge to main:
+      tests run, semantic-release reads commits, determines bump, updates version
+      file, updates CHANGELOG.md, creates git tag, creates GitHub Release.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Check for .releaserc.json at repo root and a release job in
+      .github/workflows/ci.yml. Flag if either is absent.
+
+  - id: VER-004
+    title: Never manually edit version files or CHANGELOG
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
+    description: >
+      Never manually edit version in pyproject.toml or package.json. Never manually
+      edit CHANGELOG.md. Both are owned by semantic-release.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Check CHANGELOG.md for lines that do not follow the semantic-release
+      output format (## [X.Y.Z](...) (YYYY-MM-DD) headers, ### Features /
+      ### Bug Fixes sections). Hand-written entries have prose paragraphs
+      or ## X.Y.Z — date formats. Flag if any section deviates from the
+      machine-generated format. Also check pyproject.toml version — if it
+      does not match the latest CHANGELOG.md version, flag as manually edited.
+
+  - id: VER-005
+    title: "fetch-depth: 0 on CI checkout"
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
+    description: >
+      All CI jobs that run semantic-release must use fetch-depth: 0 on the checkout
+      step. Without this semantic-release cannot read full git history and will not
+      release correctly.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Scan .github/workflows/ci.yml for actions/checkout steps in the release job.
+      Flag if fetch-depth: 0 is absent.
+
+  - id: VER-006
+    title: Plugins installed explicitly before semantic-release
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
+    description: >
+      semantic-release plugins are installed via npm install --no-save in the release
+      job before running npx semantic-release. Not via package.json. Required because
+      npx only installs the core package.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Check release job in ci.yml for npm install --no-save step before npx
+      semantic-release. Flag if absent.
+
+  - id: VER-007
+    title: Pull before branching
+    status: convention
+    dimension: cd_readiness
+    severity: INFO
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
+    description: >
+      Always run git pull origin main before creating a new feature branch.
+      Prevents merge conflicts with semantic-release commits
+      (chore(release): X.Y.Z [skip ci]) that land on main after every release.
+    checkable: false
+
+  - id: VER-008
+    title: .releaserc.json assets must include all version-managed files
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
+    description: >
+      The assets array in the @semantic-release/git plugin must include every
+      file that semantic-release modifies during a release. At minimum:
+      CHANGELOG.md plus whichever version file the exec plugin updates —
+      index.yaml for ecosystem-standards, pyproject.toml for Python services,
+      package.json for TypeScript services. If a file is bumped by the exec
+      prepareCmd but not listed in assets, semantic-release commits back to
+      main without it, creating a version drift that is invisible until the
+      next clone.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Parse .releaserc.json. Find the @semantic-release/exec plugin and extract
+      the prepareCmd. Identify which files the prepareCmd writes to (pyproject.toml,
+      index.yaml, package.json, etc). Find the @semantic-release/git plugin and
+      extract its assets array. Flag any file written by prepareCmd that is not
+      present in assets. Also flag if CHANGELOG.md is absent from assets.

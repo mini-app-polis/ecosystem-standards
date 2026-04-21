@@ -38,9 +38,25 @@ standards:
       Covers the core transformation the cog exists to do.
     checkable: true
     check_notes: >
-      DETERMINISTIC CHECK.
-      Scan tests/ directory for test functions covering normalization or cleaning
-      logic. Flag if no such test exists.
+      LLM CHECK.
+      Scan all files under tests/**/*.py and identify test functions
+      (functions whose name starts with `test_`). Pass if at least one
+      test function satisfies BOTH:
+        (a) Its name or docstring references normalization, cleaning,
+            transformation, parsing, or the cog's core transform verb
+            (e.g. `test_normalize_*`, `test_clean_*`, `test_parse_*`,
+            `test_transform_*`).
+        (b) Its body passes a representative input to the cog's
+            normalization entry point (a function exported from
+            src/**/*.py that performs the transform) and asserts the
+            returned value equals or contains a normalized expected
+            value — i.e. the assertion is about the SHAPE or CONTENT
+            of the transform's output, not just that it did not raise.
+      Flag the repo if no test function meets both (a) and (b).
+      This is LLM-judged because the cog's "core transformation" is
+      not mechanically derivable from the repo alone — it requires
+      reading the cog's purpose (ecosystem.yaml description + README)
+      to know what to look for in tests.
 
   - id: TEST-002
     title: Deduplication test required per cog
@@ -53,9 +69,20 @@ standards:
       not silently overwritten.
     checkable: true
     check_notes: >
-      DETERMINISTIC CHECK.
-      Scan tests/ directory for test functions covering duplicate detection.
-      Flag if no such test exists.
+      LLM CHECK.
+      Scan tests/**/*.py for test functions satisfying BOTH:
+        (a) Name or docstring references duplicates, deduplication,
+            duplicate detection, or overwrite prevention (common
+            patterns: `test_duplicate_*`, `test_dedup_*`,
+            `test_no_overwrite_*`, `test_possible_duplicate_*`).
+        (b) Body passes the same input twice (or two inputs with
+            identical canonical content) to the cog and asserts the
+            second invocation produced a dedup outcome — either a
+            rename with `possible_duplicate_` prefix (see PY-013),
+            a skip/no-op return value, an `on_conflict_do_nothing`
+            DB outcome, or an assertion that the original was not
+            overwritten.
+      Flag the repo if no test function meets both (a) and (b).
 
   - id: TEST-003
     title: Failure path test required per cog
@@ -68,9 +95,23 @@ standards:
       error, marks the file, and continues rather than aborting.
     checkable: true
     check_notes: >
-      DETERMINISTIC CHECK.
-      Scan tests/ directory for test functions that pass malformed or invalid input
-      and assert the cog continues. Flag if no failure path test exists.
+      LLM CHECK.
+      Scan tests/**/*.py for test functions satisfying ALL THREE:
+        (a) Name or docstring references the failure path
+            (e.g. `test_*_failure`, `test_*_invalid`, `test_*_malformed`,
+            `test_*_error_handling`, `test_failed_prefix`).
+        (b) Body passes a malformed, invalid, or incomplete input
+            (e.g. missing required field, bad type, corrupted bytes)
+            to the cog's entry point.
+        (c) Asserts the cog did NOT raise to the caller — either the
+            call completed and returned, OR it wrote a FAILED_ prefix
+            (see PY-012), OR it logged an error and moved on. A test
+            that uses `pytest.raises(...)` WITHOUT also asserting
+            continuation (e.g. that subsequent items in a batch still
+            processed) does not satisfy this rule — that pattern
+            verifies the exception exists, not that the pipeline is
+            resilient.
+      Flag the repo if no test function meets all three.
 
   - id: TEST-004
     title: Output shape test required per cog
@@ -83,9 +124,20 @@ standards:
       matches the expected contract.
     checkable: true
     check_notes: >
-      DETERMINISTIC CHECK.
-      Scan tests/ directory for test functions asserting output structure or schema.
-      Flag if no output shape test exists.
+      LLM CHECK.
+      Scan tests/**/*.py for test functions whose body contains at
+      least one assertion about the SHAPE of the cog's output:
+        - `assert <result>.keys() == {...}` or `assert set(<result>) == {...}`
+          (dict shape).
+        - `assert isinstance(<result>, SomeModel)` where SomeModel is
+          a Pydantic model defined in src/ (typed output shape).
+        - `assert <result> == expected_row` where expected_row matches
+          a DB row dict (DB output shape).
+        - Schema validation via `jsonschema.validate(...)` or
+          `SomeModel.model_validate(<result>)`.
+      Simple `assert result is not None` or `assert len(result) > 0`
+      checks do NOT satisfy this — they verify existence, not shape.
+      Flag the repo if no test function contains a shape assertion.
 
   # ─────────────────────────────────────────────
   # TOOLING
@@ -277,6 +329,11 @@ standards:
       through TEST-004.
     checkable: true
     check_notes: >
-      DETERMINISTIC CHECK.
-      For each cog repo, check tests/ for the four critical path tests
-      (TEST-001 through TEST-004). Flag any cog missing any of the four.
+      LLM CHECK.
+      Apply TEST-001 through TEST-004 to this repo in sequence. This
+      rule is the rollup — it fires as INFO when ANY of the four
+      critical-path tests (TEST-001 normalization, TEST-002 dedup,
+      TEST-003 failure path, TEST-004 output shape) is missing. It is
+      LLM-judged because the underlying four rules are LLM-judged (see
+      their check_notes). This GAP rule is closed for a cog when all
+      four underlying rules pass.

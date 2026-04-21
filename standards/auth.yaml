@@ -1,0 +1,57 @@
+# ecosystem-standards / auth.yaml
+# Authentication standards for API services — Clerk-issued credentials,
+# verification posture, and client-API parity. Split from api.yaml so each
+# file owns exactly one rule prefix (AUTH).
+#
+# For the concrete Clerk Bearer-token ecosystem convention covering both
+# caller and receiver contracts, see CD-012 in standards/delivery.yaml.
+# AUTH rules here govern the per-service posture and client-API
+# consistency invariants.
+
+standards:
+
+  - id: AUTH-001
+    title: No unverified write endpoints reachable from the public internet
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    applies_to: [api-service]
+    description: >
+      Any FastAPI service with write endpoints (POST, PATCH, DELETE) that depend on
+      an unverified header (X-Owner-Id or equivalent) must either be provably isolated
+      on a private network (Railway private networking, no public port), OR have
+      CLERK_AUTH_ENABLED=true and RS256 JWT verification active. A module-level
+      docstring in auth.py documenting the current posture and upgrade path is
+      required regardless of which condition is satisfied.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Verify: (1) service has no public port in Railway config, OR (2)
+      CLERK_AUTH_ENABLED=true is set and auth middleware applied to all write routes.
+      Check for auth.py module docstring.
+    origin: >
+      api-kaianolevine-com uses X-Owner-Id with no verification. Acceptable while all
+      write callers are internal Railway services. Standard formalizes the boundary
+      condition.
+
+  - id: AUTH-002
+    title: API auth scheme and HTTP client must match
+    status: requirement
+    dimension: cross_repo_coherence
+    severity: ERROR
+    applies_to: [api-service]
+    description: >
+      When api-kaianolevine-com's auth scheme changes, CommonPythonApiClient._headers() in
+      common-python-utils must change in the same release. A mismatch causes all
+      pipeline writes to return 401. Auth mechanism used by the API and sent by its
+      client must be documented in the same location (auth.py cross-referencing
+      common-python-utils and vice versa).
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Compare auth header set in CommonPythonApiClient._headers() against auth header
+      expected by api-kaianolevine-com routes. Flag if they differ. Check auth.py for
+      cross-reference comment to common-python-utils.
+    origin: >
+      common-python-utils references KAIANO_API_CLERK_TOKEN in .env.example but
+      _headers() does not read it — a forward-reference that looks like a live feature.
