@@ -289,8 +289,9 @@ traits:
 ## Addendum — schema expansion and trait field formalization (2026-04)
 
 Subsequent to this ADR, the rule schema was expanded in
-`index.yaml` `schema.rule_fields` to document all 11 fields used on
-rules (from 1 field previously). Trait definitions gained structured
+`index.yaml` `schema.rule_fields` to document all 12 rule fields
+(from 1 field previously), including a new optional `modifies:`
+field for meta-rules. Trait definitions gained structured
 `exempts:` and `downgrades:` fields, moving exemption machinery out
 of prose. The `pre-rule` trait was removed as unused. The
 `advisory` and `idea` status values were removed (CD-001 converted to

@@ -111,3 +111,18 @@ being declared in `astro.config.mjs`, and `postcss.config.cjs` being wired.
   not fire for `static-site` repos like `website-astro-software` at all.
   The conformance flow is not filtering rules by `applies_to` correctly.
   Tracked as a bug in `evaluator-cog`.
+
+---
+
+## Addendum — `check_id` convention clarified (2026-04)
+
+The "Drift detection lives in evaluator-cog" section above references
+a `check_id` field on rules. No such field was ever added to the
+catalog. The intent — a stable identifier linking each rule to its
+implementation in evaluator-cog — is satisfied by the rule's own
+`id` field, which evaluator-cog's check registry uses as the
+registration key. ADR-005 formalized this and removed the
+phantom `check_id` reference from EVAL-007. No behavior changed; the
+contract clarified.
+
+See ADR-005 for the full schema-clarity audit.
