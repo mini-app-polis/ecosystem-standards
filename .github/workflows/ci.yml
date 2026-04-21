@@ -77,6 +77,20 @@ jobs:
           valid_dimensions = set((index_data.get('dimensions') or {}).keys())
           valid_statuses = set((index_data.get('statuses') or {}).keys())
           valid_rule_severities = {'ERROR', 'WARN', 'INFO'}
+          # Required fields — derived from schema.rule_fields in
+          # index.yaml. A field is required if its `required:`
+          # value is the boolean True. `required: false` and
+          # conditional values (e.g. "when checkable is true")
+          # are not enforced here — conditional requirements
+          # have their own dedicated checks below (e.g. the
+          # check_notes META-005 block for checkable rules).
+          required_fields = [
+              name for name, spec in (
+                  index_data.get('schema', {})
+                  .get('rule_fields', {}) or {}
+              ).items()
+              if spec.get('required') is True
+          ]
 
           # --- Prefix -> file map from index.yaml (META-006 source) ---
           file_to_prefixes = {}
@@ -112,8 +126,9 @@ jobs:
                       continue
                   all_ids.append(rid)
 
-                  for field in ('title', 'status', 'severity',
-                                'dimension', 'applies_to'):
+                  for field in required_fields:
+                      if field == 'id':
+                          continue  # already checked above
                       if field not in r:
                           err(f"{rid}: missing '{field}'")
 
