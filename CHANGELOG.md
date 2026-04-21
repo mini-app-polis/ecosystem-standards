@@ -1,3 +1,24 @@
+# [4.0.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.8.1...v4.0.0) (2026-04-21)
+
+
+* feat!: applies_to carries a single meaning; remove evaluator-service pseudo-type ([9f84d2b](https://github.com/mini-app-polis/ecosystem-standards/commit/9f84d2bf5b0841092a2ac15e135703607f892d27))
+* feat!: schema clarity audit — document all rule fields, formalize traits, specify dispatch precedence ([2d8cea0](https://github.com/mini-app-polis/ecosystem-standards/commit/2d8cea090a3fc572cb79b53f2703505d8340c278))
+
+
+### Bug Fixes
+
+* **ci:** derive required rule fields from schema.rule_fields instead of hardcoding ([f9ebf29](https://github.com/mini-app-polis/ecosystem-standards/commit/f9ebf29960c291f12a091a1a34b52e8ac9f6f4b7))
+
+
+### BREAKING CHANGES
+
+* `index.yaml` schema.rule_fields now documents all 11 rule fields (from 1 previously). Traits carry structured `exempts:` and `downgrades:` fields; `pre-rule` trait removed. Statuses reduced to requirement/convention/gap; advisory and idea removed. Rules gain optional `modifies:` field. New `dispatch:` section documents precedence order. See ADR-005. Evaluator-cog must be updated to honor the new schema before the new major version is fully functional.
+
+Made-with: Cursor
+* is now optional and means only "repo types the conformance scanner scans for this rule." Rules not tied to repo-source scanning (EVAL-003, MONO-003, EVAL-007) omit the field. The  entry is removed from . Evaluator-cog must be updated to dispatch rules without  based on  content. See ADR-004.
+
+Made-with: Cursor
+
 ## [3.8.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.8.0...v3.8.1) (2026-04-21)
 
 
