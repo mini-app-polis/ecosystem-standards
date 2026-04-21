@@ -1,3 +1,10 @@
+# [3.5.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.4.2...v3.5.0) (2026-04-21)
+
+
+### Features
+
+* feat(CD-012), feat(META-005), refactor(standards): prefix sweep, refactor(standards): reorder rules, chore: delete drift tooling, docs: README + ADR-003 ([7eba66e](https://github.com/mini-app-polis/ecosystem-standards/commit/7eba66e59f07aad49f3fbcf244c57c2239bbc6db))
+
 ## [3.4.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.4.1...v3.4.2) (2026-04-20)
 
 
