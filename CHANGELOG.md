@@ -1,3 +1,10 @@
+# [3.6.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.5.1...v3.6.0) (2026-04-21)
+
+
+### Features
+
+* **meta:** add META-006 prefix/file correlation and META-007 append-only IDs. ([e96ea35](https://github.com/mini-app-polis/ecosystem-standards/commit/e96ea35d9f454bf5d44d7dfde474393738b53af4))
+
 ## [3.5.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.5.0...v3.5.1) (2026-04-21)
 
 
