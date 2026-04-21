@@ -11,7 +11,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app, shared-library, standards-repo]
     description: >
       All commit messages follow: type: description.
       Types: feat, fix, docs, refactor, chore, test, ci.
@@ -38,7 +38,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app, shared-library, standards-repo]
     description: >
       Use explicit BREAKING CHANGE in commit body for major version bumps.
       The feat!: shorthand is unreliable. Correct pattern using two -m flags:
@@ -67,7 +67,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app, shared-library, standards-repo]
     description: >
       Every repo has .releaserc.json and a release job in ci.yml. On merge to main:
       tests run, semantic-release reads commits, determines bump, updates version

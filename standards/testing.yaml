@@ -32,7 +32,7 @@ standards:
     status: requirement
     dimension: testing_coverage
     severity: WARN
-    applies_to: [pipeline-cog, api-service]
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
       A test that verifies the normalization/cleaning logic on representative input.
       Covers the core transformation the cog exists to do.
@@ -63,7 +63,7 @@ standards:
     status: requirement
     dimension: testing_coverage
     severity: WARN
-    applies_to: [pipeline-cog, api-service]
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
       A test that verifies duplicate inputs are correctly identified and handled —
       not silently overwritten.
@@ -89,7 +89,7 @@ standards:
     status: requirement
     dimension: testing_coverage
     severity: ERROR
-    applies_to: [pipeline-cog, api-service]
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
       A test that verifies the cog handles a bad input correctly — logs the
       error, marks the file, and continues rather than aborting.
@@ -118,7 +118,7 @@ standards:
     status: requirement
     dimension: testing_coverage
     severity: WARN
-    applies_to: [pipeline-cog, api-service]
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
       A test that verifies the output (JSON schema, DB row, or file structure)
       matches the expected contract.
@@ -148,7 +148,7 @@ standards:
     status: requirement
     dimension: testing_coverage
     severity: WARN
-    applies_to: [pipeline-cog, api-service]
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
       pytest is the test runner for all Python projects. Configured in pyproject.toml.
     checkable: true
@@ -162,7 +162,7 @@ standards:
     status: requirement
     dimension: testing_coverage
     severity: WARN
-    applies_to: [pipeline-cog, api-service]
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
       Coverage measured on every CI run. Report in terminal. Threshold not enforced
       by number — enforced by critical path coverage (TEST-001 through TEST-004).
@@ -177,7 +177,7 @@ standards:
     status: requirement
     dimension: testing_coverage
     severity: ERROR
-    applies_to: [pipeline-cog, api-service]
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
       respx/httpx used for mocking HTTP calls in integration tests. No real external
       calls to Drive, Sheets, or any external API in unit or integration tests.
@@ -252,7 +252,7 @@ standards:
     status: requirement
     dimension: testing_coverage
     severity: ERROR
-    applies_to: [pipeline-cog, api-service]
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
       Every mock in a test must be verified with assert_called() or assert_called_once().
       Tests that pass because a mock was never called are false positives.
@@ -270,7 +270,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [pipeline-cog, api-service, shared-library]
+    applies_to: [pipeline-cog, trigger-cog, api-service, shared-library]
     description: >
       If a repo declares [tool.mypy] in pyproject.toml, a CI step invoking
       "uv run mypy src/" (or equivalent) is required. A mypy config that is never

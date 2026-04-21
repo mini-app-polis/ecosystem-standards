@@ -80,13 +80,17 @@ schema:
       YAML-only definition and tooling repository. Not a deployed service.
       Examples: ecosystem-standards.
     evaluator-service: >
-      Always-on Railway worker that reads the standards catalog and
-      produces pipeline_evaluations findings. This type applies to a
-      single service in the ecosystem: evaluator-cog. Rules applying
-      to `[evaluator-service]` describe the quality and shape of
-      evaluator-cog's output, as distinct from rules applying to
-      `[pipeline-cog]` which describe cog behavior generally. Example
-      rules: EVAL-003 (finding specificity), MONO-003 (monorepo dedup).
+      Narrow pseudo-type for rules that describe evaluator-cog's own
+      output quality. In `ecosystem.yaml`, evaluator-cog is classified
+      as `type: pipeline-cog` — that classification governs all
+      general-purpose rules (Python tooling, testing, delivery,
+      versioning, documentation). Only rules that check the quality
+      and shape of evaluator-cog's pipeline_evaluations findings use
+      `[evaluator-service]`. Rule authors: do not add
+      `evaluator-service` to an `applies_to` list intending to "also
+      cover evaluator-cog" — it is already covered via `pipeline-cog`.
+      Example `[evaluator-service]` rules: EVAL-003 (finding
+      specificity), MONO-003 (monorepo dedup).
 
   traits:
     logger-primitive: >
