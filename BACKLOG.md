@@ -133,7 +133,7 @@ The following cogs need remediation:
 ## Candidate standards — additions considered during 2026-04 audit
 
 The 2026-04 standards audit (which produced the DETERMINISTIC/LLM
-check split, the META prefix, the `evaluator-service` type, and
+check split, the META prefix, the evaluator pseudo-type, and
 zero remaining `requirement` + `checkable: false` rules) surfaced
 several rule-addition candidates. They are not urgent. They are
 deferred until the evaluator-cog implementation work for the
@@ -260,9 +260,6 @@ or an LLM prompt in the LLM conformance flow. Rough tally:
 
 Also required on the evaluator-cog side:
 
-- [ ] Change evaluator-cog's `evaluator.yaml` from
-  `type: pipeline-cog` to `type: evaluator-service`. Without this,
-  EVAL-003 and MONO-003 will not fire on it.
 - [ ] Update the deterministic engine (and LLM scoping) to route
   rules based on the `DETERMINISTIC CHECK.` / `LLM CHECK.` prefix
   in check_notes.

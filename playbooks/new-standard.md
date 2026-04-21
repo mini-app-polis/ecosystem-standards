@@ -217,18 +217,22 @@ rule definitions (see `index.yaml` `severities:`).
 
 ### applies_to
 
-Pick from `index.yaml` `schema.repo_types:`. Use `[all]` only when the
-rule genuinely applies to every repo type.
+Optional. When present, it lists repo types that the conformance
+scanner clones and runs this rule against.
 
-Prefer the narrowest correct list. `[pipeline-cog, api-service]` is
-better than `[all]` if those two types are the actual scope.
+Pick values from `index.yaml` `schema.repo_types:`. Use `[all]` only
+when the rule genuinely applies to every repo type. Prefer the
+narrowest correct list — `[pipeline-cog, api-service]` is better than
+`[all]` if those two types are the actual scope.
 
-`evaluator-service` is for rules that describe evaluator-cog's own
-output quality (e.g. EVAL-003, MONO-003). Do not use it for rules that
-describe repo behavior generally.
+Omit `applies_to` entirely if the rule is not a repo-source check —
+i.e. if the check reads the pipeline_evaluations table, the
+evaluator's own check registry, or any other non-per-repo source.
+`check_notes` is then authoritative for what the check reads.
+Current rules that omit `applies_to`: EVAL-003, MONO-003, EVAL-007.
 
-`standards-repo` is for rules that apply to this repo itself. These go
-in `meta.yaml` by convention.
+`standards-repo` is for rules whose source-scan target is this repo
+itself. These go in `meta.yaml` by convention.
 
 ---
 

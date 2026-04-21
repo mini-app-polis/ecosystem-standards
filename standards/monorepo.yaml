@@ -79,7 +79,6 @@ standards:
     status: requirement
     dimension: pipeline_consistency
     severity: WARN
-    applies_to: [evaluator-service]
     description: >
       When two apps in the same monorepo generate findings with the
       same rule_id and the same root cause (e.g. both fail CD-002
@@ -105,5 +104,3 @@ standards:
             example; XSTACK-001 is the canonical example of a rule
             where workspace-level satisfaction produces one finding
             for the monorepo).
-      This rule checks evaluator-cog's output, not evaluator-cog's
-      source code.

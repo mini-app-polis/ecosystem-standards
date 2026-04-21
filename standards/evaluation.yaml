@@ -58,7 +58,6 @@ standards:
     status: requirement
     dimension: pipeline_consistency
     severity: WARN
-    applies_to: [evaluator-service]
     description: >
       Every finding emitted by evaluator-cog references a specific
       standard by ID, describes what was observed with enough
@@ -83,9 +82,8 @@ standards:
         (4) remediation length must exceed finding_text length × 0.5
             OR be ≥ 40 characters. A remediation that is just a copy
             of the finding (or shorter) adds no actionable guidance.
-      This rule checks evaluator-cog's output, not evaluator-cog's
-      source code. The evaluator verifying this rule runs against
-      the api-kaianolevine-com pipeline_evaluations data.
+      The check reads the api-kaianolevine-com pipeline_evaluations
+      data.
 
   - id: EVAL-006
     title: Standards currency dimension
@@ -108,12 +106,7 @@ standards:
     status: requirement
     dimension: standards_currency
     severity: ERROR
-    applies_to: [standards-repo]
     description: >
-      This rule is runtime-enforced by evaluator-cog itself — `applies_to`
-      points at where the coverage contract lives (this repo), not where
-      the check runs. There is no repo-scanning conformance check for it.
-
       Every checkable rule in ecosystem-standards (those with
       `checkable: true`) must have a corresponding implementation in
       evaluator-cog's deterministic check engine. Every check in
@@ -156,8 +149,7 @@ standards:
             skew > 1 minor version triggers a finding.
       Findings are written to api-kaianolevine-com with
       source=standards_drift and appear in Pipeline Health alongside
-      all other conformance findings. This rule is runtime-enforced —
-      there is no repo-scanning conformance check for it.
+      all other conformance findings.
 
   - id: EVAL-008
     title: Every active repo must have an evaluator.yaml at its root

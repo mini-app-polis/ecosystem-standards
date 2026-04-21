@@ -51,10 +51,21 @@ statuses:
 schema:
   rule_fields:
     applies_to: >
-      List of repo type names this rule applies to. The conformance
-      checker skips rules where the repo's type is not in this list.
-      Use [all] to apply to every repo type. Valid type values are
-      defined in the repo_types section below.
+      Optional. List of repo type names this rule is scanned against
+      during repo-source conformance checking. The conformance checker
+      clones each repo whose type appears in this list and runs the
+      rule's check against its source. Use [all] to scan every repo
+      type. Valid type values are defined in the repo_types section
+      below.
+
+      Omit `applies_to` for rules that are not repo-source checks —
+      i.e. rules whose check reads the pipeline_evaluations table, the
+      evaluator's own check registry, or any other non-per-repo
+      source. For those rules, the `check_notes` field is authoritative
+      for what the check reads and when it runs. Examples of rules
+      that omit `applies_to`: EVAL-003 and MONO-003 (both check the
+      pipeline_evaluations table for data quality), EVAL-007 (checks
+      drift between this catalog and evaluator-cog's check registry).
 
   repo_types:
     pipeline-cog: >
@@ -79,18 +90,6 @@ schema:
     standards-repo: >
       YAML-only definition and tooling repository. Not a deployed service.
       Examples: ecosystem-standards.
-    evaluator-service: >
-      Narrow pseudo-type for rules that describe evaluator-cog's own
-      output quality. In `ecosystem.yaml`, evaluator-cog is classified
-      as `type: pipeline-cog` — that classification governs all
-      general-purpose rules (Python tooling, testing, delivery,
-      versioning, documentation). Only rules that check the quality
-      and shape of evaluator-cog's pipeline_evaluations findings use
-      `[evaluator-service]`. Rule authors: do not add
-      `evaluator-service` to an `applies_to` list intending to "also
-      cover evaluator-cog" — it is already covered via `pipeline-cog`.
-      Example `[evaluator-service]` rules: EVAL-003 (finding
-      specificity), MONO-003 (monorepo dedup).
 
   traits:
     logger-primitive: >
