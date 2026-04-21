@@ -20,6 +20,7 @@ standards:
       for new API work.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Verify the repo targets Railway as its deploy host:
         (1) A Railway config file exists at repo root: one of
             `nixpacks.toml`, `railway.toml`, or `Procfile`. Flag if none
@@ -47,6 +48,7 @@ standards:
       on Railway. Not D1, SQLite, or MySQL.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Scan dependency declarations for database drivers:
         (1) Required if any DB-driver dependency is present at all — if
             the service has no DB deps, skip this check (service may be
@@ -76,6 +78,7 @@ standards:
       No raw SQL without ORM.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Python services: check pyproject.toml for sqlalchemy dependency and
       src/ for SQLAlchemy model definitions. Flag if raw SQL strings are
       used outside of ORM context.
@@ -98,6 +101,7 @@ standards:
       in production.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Python/FastAPI: check route decorators (@app.get, @router.get, etc.)
       for /v1/ prefix. Resolve the effective mounted path per-route by
       composing: (1) any prefix passed to APIRouter(prefix=...) at router
@@ -124,6 +128,7 @@ standards:
       Errors: { error: { code, message } }. No bare arrays or inconsistent shapes.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check response_model types on all endpoints. Flag endpoints returning bare
       arrays, raw dicts, or shapes inconsistent with the envelope standard.
 
@@ -142,6 +147,7 @@ standards:
       ForeignKey to an identity table.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Search Python source files for SQLAlchemy model class definitions
       (subclasses of Base or DeclarativeBase). For each model, verify at
       least one of the three authorization-scoping patterns is present:
@@ -166,6 +172,7 @@ standards:
       Authentication via Clerk across all services. Consistent across the ecosystem.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Python services: search source files for clerk or verify_token imports.
       Check for a Depends(verify_token) pattern on protected route definitions.
       TypeScript services: check package.json for @clerk/clerk-sdk-node or
@@ -184,6 +191,7 @@ standards:
       not accidental.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Identify all FastAPI route definitions (Python) or Hono route handlers
       (TypeScript) that have no auth dependency. Exempt standard
       infrastructure endpoints: /health, /metrics, /docs, /openapi.json,
@@ -196,7 +204,6 @@ standards:
       found, assess whether it is plausibly intentional (e.g. public read
       endpoint, contact form) or potentially accidental (e.g. write
       endpoint, user-specific data endpoint with no auth).
-    added: 2026-03
 
   - id: API-009
     title: CORS configured via env var — never hardcoded
@@ -212,6 +219,7 @@ standards:
       in .env.example with a documented default.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Python/FastAPI: check for CORSMiddleware in app setup and CORS_ORIGINS
       env var usage — flag hardcoded origin strings.
       TypeScript/Hono: check for cors() middleware import and usage in app
@@ -234,6 +242,7 @@ standards:
       it signals process liveness only, not dependency health.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Search route handler files for a GET /health route definition.
       The route must: return HTTP 200, return a JSON body with at minimum
       a 'status' field, require no authentication, and perform no database
@@ -255,6 +264,7 @@ standards:
       tests pass and before the Railway deploy completes.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Python/FastAPI (Alembic): check ci.yml for 'alembic upgrade head' step
       in the deploy job. Flag if absent or if migration is run manually.
       TypeScript/Hono (Drizzle): check ci.yml for 'drizzle-kit push' or
@@ -282,11 +292,12 @@ standards:
       required regardless of which condition is satisfied.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Verify: (1) service has no public port in Railway config, OR (2)
       CLERK_AUTH_ENABLED=true is set and auth middleware applied to all write routes.
       Check for auth.py module docstring.
     origin: >
-      kaianolevine-api uses X-Owner-Id with no verification. Acceptable while all
+      api-kaianolevine-com uses X-Owner-Id with no verification. Acceptable while all
       write callers are internal Railway services. Standard formalizes the boundary
       condition.
 
@@ -297,15 +308,16 @@ standards:
     severity: ERROR
     applies_to: [api-service]
     description: >
-      When kaianolevine-api's auth scheme changes, CommonPythonApiClient._headers() in
+      When api-kaianolevine-com's auth scheme changes, CommonPythonApiClient._headers() in
       common-python-utils must change in the same release. A mismatch causes all
       pipeline writes to return 401. Auth mechanism used by the API and sent by its
       client must be documented in the same location (auth.py cross-referencing
       common-python-utils and vice versa).
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Compare auth header set in CommonPythonApiClient._headers() against auth header
-      expected by kaianolevine-api routes. Flag if they differ. Check auth.py for
+      expected by api-kaianolevine-com routes. Flag if they differ. Check auth.py for
       cross-reference comment to common-python-utils.
     origin: >
       common-python-utils references KAIANO_API_CLERK_TOKEN in .env.example but

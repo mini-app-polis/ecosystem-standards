@@ -205,7 +205,6 @@ files:
     domain: pipeline
     description: Pipeline design and orchestration standards. Prefect patterns, idempotency, and data safety rules.
     rule_prefix: PIPE
-    rule_count: 14
 
   - file: standards/frontend.yaml
     domain: frontend

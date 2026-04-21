@@ -15,9 +15,9 @@ standards:
     description: >
       The standards repo version of record lives in package.json,
       owned and written by semantic-release on every release. Humans
-      do not edit the version field. All consumers (evaluator-cog,
-      check_drift.py, any future consumer) resolve `standards_version`
-      by reading package.json at runtime.
+      do not edit the version field. All consumers (evaluator-cog
+      and any future consumer) resolve `standards_version` by reading
+      package.json at runtime.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -114,8 +114,42 @@ standards:
         (2) The block lists values but does not describe what each
             means.
         (3) A value appears in evaluator-cog or cog source code that
-            is not enumerated in the CONTEXT CONTRACT block (via
-            drift-check.yml's companion check — see EVAL-007).
+            is not enumerated in the CONTEXT CONTRACT block (detected
+            by evaluator-cog's runtime drift check — see EVAL-007).
       This rule is LLM-judged because the completeness-of-enumeration
       check requires cross-referencing usage in consumer repos
       against the contract block in this repo.
+
+  - id: META-005
+    title: Checkable rules declare DETERMINISTIC or LLM in check_notes
+    status: requirement
+    dimension: documentation_coverage
+    severity: WARN
+    applies_to: [standards-repo]
+    description: >
+      Every rule with `checkable: true` must open its `check_notes` block
+      with either `DETERMINISTIC CHECK.` or `LLM CHECK.` on the first line
+      of the value. This tells evaluator-cog (and human readers) at a
+      glance whether the check runs through the deterministic engine
+      (file-presence, regex, AST, CI YAML parsing) or the LLM engine
+      (judgment over source code or prose).
+
+      The convention is load-bearing: evaluator-cog routes checks to the
+      correct engine based on the prefix, and drift detection between
+      the standards catalog and the evaluator's registry (EVAL-007) keys
+      off the same classification. A checkable rule without a prefix
+      defaults to LLM, which is slower and less reliable than a
+      deterministic check that simply forgot to declare itself.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Scan every rule across standards/*.yaml. For each rule with
+      `checkable: true`:
+        (1) Extract the `check_notes` block.
+        (2) Trim leading whitespace and newlines.
+        (3) Verify the first non-blank line starts with either
+            `DETERMINISTIC CHECK.` or `LLM CHECK.` (exact, including
+            the trailing period).
+      Flag any checkable rule whose `check_notes` does not begin with
+      one of the two recognized prefixes. The fix is always a one-line
+      prepend — do not rewrite the rest of the check_notes content.

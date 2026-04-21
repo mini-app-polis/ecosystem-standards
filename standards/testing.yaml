@@ -22,7 +22,7 @@ standards:
     checkable: false
 
   # ─────────────────────────────────────────────
-  # CRITICAL PATH — PYTHON PROCESSORS
+  # CRITICAL PATH — PYTHON COGS
   # Four tests required per cog. Not 100% line coverage —
   # these four specific paths.
   # ─────────────────────────────────────────────
@@ -38,6 +38,7 @@ standards:
       Covers the core transformation the cog exists to do.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Scan tests/ directory for test functions covering normalization or cleaning
       logic. Flag if no such test exists.
 
@@ -52,6 +53,7 @@ standards:
       not silently overwritten.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Scan tests/ directory for test functions covering duplicate detection.
       Flag if no such test exists.
 
@@ -66,6 +68,7 @@ standards:
       error, marks the file, and continues rather than aborting.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Scan tests/ directory for test functions that pass malformed or invalid input
       and assert the cog continues. Flag if no failure path test exists.
 
@@ -80,6 +83,7 @@ standards:
       matches the expected contract.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Scan tests/ directory for test functions asserting output structure or schema.
       Flag if no output shape test exists.
 
@@ -97,6 +101,7 @@ standards:
       pytest is the test runner for all Python projects. Configured in pyproject.toml.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check for [tool.pytest.ini_options] in pyproject.toml. Flag if repo uses
       unittest directly without pytest.
 
@@ -111,6 +116,7 @@ standards:
       by number — enforced by critical path coverage (TEST-001 through TEST-004).
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check CI workflow for pytest --cov or pytest-cov invocation. Flag if coverage
       is not measured in CI.
 
@@ -125,57 +131,12 @@ standards:
       calls to Drive, Sheets, or any external API in unit or integration tests.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check pyproject.toml dev dependencies for respx. Search test files for
       any use of requests.get, httpx.get, or similar real HTTP calls outside
       of a respx.mock context. Flag any test file importing httpx or requests
       without a corresponding respx mock. Also flag if respx is absent from
       dev dependencies entirely.
-
-  - id: TEST-012
-    title: mypy must run in CI if [tool.mypy] is declared
-    status: requirement
-    dimension: cd_readiness
-    severity: WARN
-    applies_to: [pipeline-cog, api-service, shared-library]
-    description: >
-      If a repo declares [tool.mypy] in pyproject.toml, a CI step invoking
-      "uv run mypy src/" (or equivalent) is required. A mypy config that is never
-      run in CI gives false assurance and drifts silently.
-      Exception: mypy may be omitted during initial setup if repo is in a documented
-      "typing: in progress" state. This exception must not persist past first stable release.
-    checkable: true
-    check_notes: >
-      Check pyproject.toml for [tool.mypy] section. If present, scan
-      .github/workflows/ for a step invoking mypy. Flag if no mypy CI step exists
-      and repo is not in a documented "typing: in progress" state.
-    origin: "kaianolevine-api has no mypy CI step. common-python-utils does. Standard aligns them."
-
-  - id: TEST-013
-    title: Operational delays sourced from config, not hardcoded
-    status: convention
-    dimension: testing_coverage
-    severity: INFO
-    applies_to: [pipeline-cog, api-service, react-app]
-    description: >
-      Deliberate delays and waits in production code — retry intervals,
-      poll sleeps, request timeouts — should be sourced from Settings or
-      environment variables rather than hardcoded. This allows them to be
-      set to zero or near-zero in test environments without modifying
-      source code, keeping test runs fast without changing behavior.
-      This is a quality-of-life convention, not a blocking requirement.
-      Python: source from Settings or os.getenv(), default to production value.
-      TypeScript: source from process.env, default to production value.
-    checkable: true
-    check_notes: >
-      Python: search src/**/*.py for hardcoded numeric arguments to
-      time.sleep(), retry_delay_seconds=, timeout=, and backoff/tenacity
-      wait parameters. Flag any non-zero literal value not read from a
-      settings field or os.getenv().
-      TypeScript: search src/**/*.ts for hardcoded numeric arguments to
-      setTimeout(), setInterval(), and retry/timeout parameters. Flag
-      any non-zero literal not sourced from process.env.
-      Remediation: move the value to Settings/env var with a sensible
-      production default. Tests override via environment.
 
   # ─────────────────────────────────────────────
   # FASTAPI TESTING
@@ -192,6 +153,7 @@ standards:
       Tests run without a live server.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       For FastAPI services, search test files for 'from fastapi.testclient
       import TestClient' or 'from httpx import AsyncClient'. Flag any test
       function (def test_*) whose body contains a string literal matching
@@ -208,6 +170,7 @@ standards:
       rollback. Never run against the production database.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Search conftest.py for database fixture definitions. Require at least one
       of the following patterns in conftest.py: (a) DATABASE_URL override to a
       test-specific URL, (b) in-memory SQLite engine creation, (c) transaction
@@ -227,6 +190,7 @@ standards:
       One contract test per endpoint minimum. Contract tests run in CI on every push.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Count FastAPI route decorators. Count test functions asserting response shape.
       Flag if any endpoint has no corresponding contract test, or if contract tests
       are absent from CI workflow.
@@ -242,11 +206,60 @@ standards:
       Tests that pass because a mock was never called are false positives.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Search all test files for MagicMock, AsyncMock, patch, and mock_object
       usage. For each mock assignment, confirm a corresponding assert_called(),
       assert_called_once(), assert_called_once_with(), or assert_called_with()
       exists in the same test function. Flag test functions that create mocks
       but have no assertion on the mock object.
+
+  - id: TEST-012
+    title: mypy must run in CI if [tool.mypy] is declared
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    applies_to: [pipeline-cog, api-service, shared-library]
+    description: >
+      If a repo declares [tool.mypy] in pyproject.toml, a CI step invoking
+      "uv run mypy src/" (or equivalent) is required. A mypy config that is never
+      run in CI gives false assurance and drifts silently.
+      Exception: mypy may be omitted during initial setup if repo is in a documented
+      "typing: in progress" state. This exception must not persist past first stable release.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Check pyproject.toml for [tool.mypy] section. If present, scan
+      .github/workflows/ for a step invoking mypy. Flag if no mypy CI step exists
+      and repo is not in a documented "typing: in progress" state.
+    origin: "api-kaianolevine-com has no mypy CI step. common-python-utils does. Standard aligns them."
+
+  - id: TEST-013
+    title: Operational delays sourced from config, not hardcoded
+    status: convention
+    dimension: testing_coverage
+    severity: INFO
+    applies_to: [pipeline-cog, api-service, react-app]
+    description: >
+      Deliberate delays and waits in production code — retry intervals,
+      poll sleeps, request timeouts — should be sourced from Settings or
+      environment variables rather than hardcoded. This allows them to be
+      set to zero or near-zero in test environments without modifying
+      source code, keeping test runs fast without changing behavior.
+      This is a quality-of-life convention, not a blocking requirement.
+      Python: source from Settings or os.getenv(), default to production value.
+      TypeScript: source from process.env, default to production value.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Python: search src/**/*.py for hardcoded numeric arguments to
+      time.sleep(), retry_delay_seconds=, timeout=, and backoff/tenacity
+      wait parameters. Flag any non-zero literal value not read from a
+      settings field or os.getenv().
+      TypeScript: search src/**/*.ts for hardcoded numeric arguments to
+      setTimeout(), setInterval(), and retry/timeout parameters. Flag
+      any non-zero literal not sourced from process.env.
+      Remediation: move the value to Settings/env var with a sensible
+      production default. Tests override via environment.
 
   - id: TEST-GAP-001
     title: "GAP: Most existing cogs have import-level tests only"
@@ -262,6 +275,7 @@ standards:
       is marked as compliant with TEST-001 through TEST-004.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       For each cog repo, check tests/ for the four critical path tests
       (TEST-001 through TEST-004). Flag any cog missing any of the four.
       Track remediation progress here.

@@ -22,6 +22,7 @@ standards:
       delivery, use Astro. If it is an app with persistent UI state, use React.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check package.json for astro in dependencies. Check astro.config.mjs
       or astro.config.ts exists. Flag if the service entry in ecosystem.yaml
       has type: static-site but package.json has react without astro.
@@ -37,6 +38,7 @@ standards:
       TypeScript throughout. No exceptions.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check package.json for vite, react, and typescript in dependencies.
       Check tsconfig.json exists. Flag if package.json has webpack, create-
       react-app, or next as the bundler. Flag if TypeScript is absent from
@@ -53,6 +55,7 @@ standards:
       No CSS modules, no styled-components, no other CSS framework.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check package.json for tailwindcss in dependencies. Check for
       tailwind.config.js, tailwind.config.ts, OR tailwind.config.mjs (Astro
       projects use .mjs). For Astro repos, also accept @astrojs/tailwind in
@@ -73,6 +76,7 @@ standards:
       primitives and Tailwind.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check package.json for @radix-ui dependencies (indirect signal for
       shadcn). Check for a src/components/ui/ directory containing component
       files. Flag if a ui/ directory is absent in a React app. Flag if
@@ -90,6 +94,7 @@ standards:
       assumed by shadcn/ui form components and are the ecosystem standard.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check package.json for react-hook-form and zod in dependencies. Search
       source files for useForm imports from react-hook-form and z. from zod.
       Flag if a form element exists in JSX/TSX files without a corresponding
@@ -111,6 +116,7 @@ standards:
       API is down.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Search Astro data files and page components for API fetch calls. Check
       whether each fetch is wrapped in a try/catch with a fallback value (empty
       array, null, default object). Flag any fetch without error handling that
@@ -127,6 +133,7 @@ standards:
       env var used throughout.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Scan source files for hardcoded API URL strings (http://localhost, railway.app,
       etc.). Flag if found outside of .env files.
 
@@ -142,6 +149,7 @@ standards:
       document the version in use.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Verify Astro core dependencies are pinned to exact versions:
         (1) In package.json `dependencies` and `devDependencies`, the
             following packages must have exact version specifiers (no
@@ -165,6 +173,7 @@ standards:
       runtime API calls for content that could be fetched at build time.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Scan src/**/*.astro files for runtime fetch calls in contexts
       that should be build-time:
         (1) Identify fetch() calls inside <script> tags (runtime) vs
@@ -194,6 +203,7 @@ standards:
       which endpoints are called at runtime vs build time.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       For every runtime fetch() call in src/**/*.astro (inside <script>
       tags, not frontmatter), verify:
         (1) The containing component file has at least one `client:*`

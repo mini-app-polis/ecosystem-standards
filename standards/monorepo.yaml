@@ -32,6 +32,7 @@ standards:
       ecosystem.yaml and is declared in the workspace root package.json.
     checkable: true
     check_notes: >
+      LLM CHECK.
       When evaluating a service with a `monorepo` field:
       1. Look up the monorepo record in ecosystem.yaml.
       2. Check the workspace root package.json (at the monorepo repo root,
@@ -63,9 +64,10 @@ standards:
           one.
     checkable: true
     check_notes: >
+      LLM CHECK.
       When evaluating a service with a `monorepo` field:
       1. Check for .github/workflows/ci.yml at the monorepo repo root.
-      2. Assess all CD rules (CD-003 semantic-release, CD-004 action pinning,
+      2. Assess all CD rules (VER-003 semantic-release, CD-004 action pinning,
          etc.) against the root CI file.
       3. Do not flag a per-app subdirectory for absence of its own CI file
          if the root CI covers it.

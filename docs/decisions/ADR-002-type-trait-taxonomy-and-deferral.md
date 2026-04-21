@@ -1,7 +1,7 @@
 # ADR-002: Type/Trait Taxonomy, Rule Applicability Scoping, and Deferred Keyword
 
 **Date:** 2026-04-06  
-**Status:** Proposed  
+**Status:** Accepted  
 **Repo:** ecosystem-standards  
 **Depends on:** ADR-001 (Federated Evaluation Configuration)
 

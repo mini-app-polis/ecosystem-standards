@@ -125,6 +125,7 @@ standards:
       `response_model` on FastAPI route decorators for Python.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Scan route definitions:
         Python (FastAPI):
           (1) Every route decorator (@app.get, @app.post, @router.*, etc.)
@@ -145,10 +146,6 @@ standards:
               envelope for success / {error: {code, message}} for error.
           (2) Flag handlers that return raw `c.json({...})` with ad-hoc
               shapes (e.g. `c.json({items: [...]})` without wrapping).
-      Note: narrowed applies_to — this rule previously listed
-      [pipeline-cog, trigger-cog, api-service, static-site, react-app],
-      which was incorrect. Only api-service *emits* API responses; the
-      others consume them.
 
   - id: XSTACK-003
     title: pnpm for all TypeScript projects
@@ -164,6 +161,7 @@ standards:
       are used for monorepo package management (deejaytools-com).
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check for pnpm-lock.yaml in the repo root. Flag if package-lock.json
       or yarn.lock is present instead. Require that ci.yml contains either
       pnpm/action-setup or corepack enable. Flag if neither is present. Flag if npm
@@ -186,6 +184,7 @@ standards:
       for all declared variables.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       For Astro repos: search source files for import.meta.env references.
       Flag any that do not use the PUBLIC_ prefix for variables passed to
       client-side scripts. For Vite/React repos: search for import.meta.env

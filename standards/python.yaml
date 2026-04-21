@@ -18,6 +18,7 @@ standards:
       All new cogs use uv. Existing cogs migrate when touched.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check for uv.lock or [tool.uv] in pyproject.toml. Flag new repos using
       Poetry. Flag existing repos using Poetry only when actively being worked on.
 
@@ -32,6 +33,7 @@ standards:
       Configured in pyproject.toml.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check for [tool.ruff] in pyproject.toml. Flag if repo configures
       black, isort, or flake8 separately.
 
@@ -46,6 +48,7 @@ standards:
       Type hints used throughout.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check requires-python in pyproject.toml. Flag if minimum is below 3.11.
 
   - id: PY-004
@@ -59,6 +62,7 @@ standards:
       through Pydantic models before processing. Replaces ad-hoc dict access.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       In each Python source file under src/, check for Pydantic model imports
       (from pydantic import BaseModel). Flag any module that accesses external
       data (CSV parsing, Drive API responses, HTTP responses) using raw dict
@@ -84,6 +88,7 @@ standards:
       All packages use src/<package_name>/ + tests/<package_name>/. No flat layouts.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check for presence of src/ directory. Flag if Python package files are at
       the repo root (flat layout).
 
@@ -99,6 +104,7 @@ standards:
       API clients, or metadata helpers.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check pyproject.toml dependencies for common-python-utils. Flag if absent
       and repo is a Python cog.
 
@@ -112,6 +118,7 @@ standards:
       pyproject.toml is the only configuration file. No setup.py, no requirements.txt.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check for presence of setup.py or requirements.txt at repo root. Flag if found.
 
   - id: PY-008
@@ -124,6 +131,7 @@ standards:
       ruff and basic hooks configured via .pre-commit-config.yaml. Runs on every commit.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check for .pre-commit-config.yaml at repo root. Flag if absent.
 
   - id: PY-009
@@ -139,6 +147,7 @@ standards:
     decision: "Decided: hatchling. March 2026. Rationale: already used by shared library, simpler config, modern default."
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check [build-system] requires in pyproject.toml. Flag if value is not hatchling.
 
   - id: PY-010
@@ -153,6 +162,7 @@ standards:
     decision: "Decided: 88. March 2026. Rationale: Python community default, matches Black, lower cognitive load on diff review."
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Parse [tool.ruff] line-length in pyproject.toml. Flag if value is not 88
       or if field is absent.
 
@@ -175,6 +185,7 @@ standards:
       Log messages: emoji prefix for lifecycle events (🚀 start ✅ success ❌ failure).
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Check the package name in pyproject.toml matches the repo name with
       hyphens converted to underscores. Check that the src/ directory name
       matches. Check that all .py filenames under src/ are snake_case.
@@ -204,6 +215,7 @@ standards:
       for manual retry. Failed files must not be silently deleted or left unmarked.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Search all Python source files for the string 'FAILED_' in rename or
       move operations (shutil.move, os.rename, Path.rename). If the cog
       processes files and no FAILED_ rename pattern is found, flag as missing.
@@ -221,6 +233,7 @@ standards:
       Human review required.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Search all Python source files for the string 'possible_duplicate_' in
       rename or move operations. If the cog performs deduplication logic and
       no possible_duplicate_ rename pattern is found, flag as missing.
@@ -236,6 +249,7 @@ standards:
       block regardless of success or failure.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Search all Python source files for temp file creation patterns (tempfile,
       NamedTemporaryFile, tmp_ prefixed paths). For each occurrence, confirm
       cleanup is performed inside a finally block. Flag any temp file creation
@@ -256,6 +270,7 @@ standards:
       SQLAlchemy async.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Search Python source files for SQLAlchemy imports. Flag any import of
       Session or sessionmaker from sqlalchemy.orm without the Async prefix.
       Flag any create_engine() call without create_async_engine(). Check
@@ -282,6 +297,7 @@ standards:
       documented in a commented-out stub block in config.py.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       AST scan: find all getattr(settings, ...) calls and verify the key name
       appears as a declared field on the Settings class. Also flag settings.KEY
       attribute access where KEY is not a declared field.
@@ -301,6 +317,7 @@ standards:
       NODE_ENV) may be listed with a comment indicating they are not read by the app.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Parse .env.example keys. For each key, verify it appears as a declared field
       on Settings OR has a comment marking it as external tooling. Flag undocumented
       mismatches.

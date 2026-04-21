@@ -19,6 +19,7 @@ standards:
       CI/CD only — not pipeline orchestration.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Verify Prefect is present as the orchestration layer:
         (1) `prefect` appears in pyproject.toml [project.dependencies].
             Flag if absent on a pipeline-cog or trigger-cog repo.
@@ -75,41 +76,6 @@ standards:
       unique key (source file ID, content hash, or composite of
       run_id + repo).
 
-  - id: PIPE-013
-    title: Flow design is idempotent end-to-end
-    status: requirement
-    dimension: pipeline_consistency
-    severity: WARN
-    applies_to: [pipeline-cog, trigger-cog]
-    description: >
-      Beyond database writes (PIPE-002), the overall flow design must
-      produce the same result when re-run. This covers: file moves that
-      depend on current state, stateful counters, external side effects
-      that are not guarded by a deduplication key, and flow-level
-      retry semantics.
-    checkable: true
-    check_notes: >
-      LLM CHECK.
-      Assess the flow structure for the following anti-patterns, each
-      of which produces a distinct finding:
-        (1) File archive/move operations that assume the file has not
-            been processed before. An archive step that moves file X to
-            archive/ fails on re-run because X no longer exists at the
-            source. Flag flows that move files without first checking
-            whether the file was already processed.
-        (2) Stateful counters incremented per run rather than derived
-            from idempotent state. A counter that goes up on every run
-            regardless of work done produces wrong values on retry.
-        (3) External side effects (sending emails, posting to Slack,
-            creating calendar events) triggered per-run without a
-            deduplication guard keyed on run_id or input hash.
-        (4) Flow-level retry configuration that re-runs the whole flow
-            on failure. If the flow is not idempotent end-to-end, this
-            amplifies bad behavior rather than recovering from it.
-      For each anti-pattern detected, emit a finding citing PIPE-013
-      with the specific file and line. Remediation is always "add a
-      dedup key or a state check before the side effect."
-
   - id: PIPE-003
     title: Separate process and collect steps
     status: requirement
@@ -121,6 +87,7 @@ standards:
       steps — not combined. Allows independent retry.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Search the main flow file for @task decorated functions. Identify
       tasks that process individual items versus tasks that build or update
       a collection/summary. Flag if a single task appears to both process
@@ -137,6 +104,7 @@ standards:
       cancel-in-progress: false for data pipelines.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Search Python source files for @flow decorated functions. For each flow
       that writes to a shared resource (database writes, Drive moves, API
       POST/PATCH calls), check for EITHER:
@@ -179,37 +147,6 @@ standards:
       Exempt: test fixtures, build artifacts in `dist/` or `build/`,
       tempfile cleanup with explicit `tempfile` or `tmp_path` context.
 
-  - id: PIPE-014
-    title: Archiving pattern is consistent across all input types
-    status: requirement
-    dimension: structural_conformance
-    severity: WARN
-    applies_to: [pipeline-cog, trigger-cog]
-    description: >
-      For pipeline cogs that handle multiple input types (e.g. Drive
-      files + API submissions + scheduled batches), the archiving
-      behavior must be consistent across all of them. One input type
-      being archived to `processed/` while another is silently
-      retained in the source folder creates operational confusion.
-    checkable: true
-    check_notes: >
-      LLM CHECK.
-      Identify every input source handled by the cog. For each source,
-      determine whether a post-processing archive step exists and
-      where archived items land. Flag if:
-        (1) Some input types are archived and others are not.
-        (2) Archive destinations are inconsistent across input types
-            (one goes to `processed/`, another to `archive/`, a third
-            has no destination).
-        (3) The archive destination is documented nowhere (not in
-            README, not in the flow code's docstring, not in
-            ecosystem.yaml).
-      This rule is LLM-judged because it requires understanding what
-      counts as an "input type" and tracing post-processing behavior,
-      which is not mechanically detectable. Remediation: pick one
-      archive convention per cog, apply it to every input type, and
-      document it in the cog README.
-
   - id: PIPE-006
     title: Dual logger pattern in Prefect flows
     status: requirement
@@ -223,6 +160,7 @@ standards:
         except Exception: logger = log
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Scan Prefect @flow decorated functions for get_run_logger() with fallback.
       Flag flows using only standard logging.
 
@@ -237,6 +175,7 @@ standards:
       calling Google APIs inherit common-python-utils retry logic.
     checkable: true
     check_notes: >
+      DETERMINISTIC CHECK.
       Search Python source files for @task decorated functions. For each task
       that makes an external API call (httpx, Drive API, Sheets API, Anthropic
       API), check for retries= parameter on the @task decorator. Flag any
@@ -269,13 +208,178 @@ standards:
             to a URL matching `api.github.com/.../dispatches` — flag as
             GitHub API trigger relay.
         (3) References to `google-app-script-trigger` in any file (this
-            service is retired — see ecosystem.yaml).
+            service was retired in 2026-03 as part of the watcher-cog
+            migration).
         (4) `workflow_dispatch` invocations from inside Python source
             (via gh CLI subprocess or GitHub API HTTP call).
       Each hit is one finding with the specific file/line.
 
       COG SUBTYPE: This rule applies to pipeline cogs only. Skip for
       trigger cogs and watcher-cog itself.
+
+  - id: PIPE-009
+    title: Pipeline cogs must acquire a named Prefect concurrency slot before scanning shared resources
+    status: requirement
+    dimension: pipeline_reliability
+    severity: ERROR
+    applies_to: [pipeline-cog, trigger-cog]
+    description: >
+      Any pipeline cog that scans a shared resource (Drive folder, S3 bucket,
+      database table, etc.) and processes items sequentially must acquire a
+      named Prefect concurrency slot before scanning. This prevents two
+      concurrent runs from scanning the same resource state simultaneously,
+      which would cause duplicate LLM calls, redundant processing, and
+      potential data integrity issues even when a unique constraint is present.
+
+      The deployment concurrency_limit=1 is insufficient — it controls
+      scheduling but does not prevent a second run from executing if it was
+      picked up by the runner before the first run registered as active.
+      The runtime concurrency slot is the correct enforcement point.
+
+      Implementation:
+        from prefect.concurrency.sync import concurrency
+
+        with concurrency("cog-name", occupy=1):
+            # all scanning and processing logic here
+
+      The slot name must match a concurrency limit created in Prefect Cloud
+      (Settings → Concurrency). Limit must be set to 1. The limit must exist
+      before the cog is deployed or the slot acquisition will be silently
+      skipped by Prefect.
+
+      Naming convention: use the cog name as the slot name (e.g.
+      notes-ingest, deejay-cog, evaluator-cog).
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Search flow.py for 'from prefect.concurrency.sync import concurrency'
+      and a corresponding 'with concurrency(' block wrapping the flow body.
+      Flag if either is absent in a pipeline cog that scans a shared resource.
+      Also flag if the cog has deployment concurrency_limit=1 but no runtime
+      concurrency slot — this is insufficient protection.
+
+  - id: PIPE-011
+    title: AI evaluation step as final pipeline task
+    status: requirement
+    dimension: pipeline_consistency
+    severity: WARN
+    applies_to: [pipeline-cog]
+    description: >
+      All production pipeline cogs include a behavioral evaluation step as the
+      final task in the flow. The step calls evaluate_pipeline_run() from
+      evaluator-cog, summarising what the run did (items processed, failures,
+      skips) and posts a structured finding to pipeline_evaluations. This ensures
+      every run — successful or not — is visible in pipeline health. Crash and
+      failure hooks (on_crashed, on_failure) are separate and complementary —
+      they cover the case where the flow body never reaches the evaluation step.
+      Both patterns must be present: the inline evaluation step for successful
+      runs, and the crash/failure hooks for abnormal termination.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Search the main flow file for a final @task call that references
+      evaluation, pipeline_eval, or writes to pipeline_evaluations. Check
+      for imports of the evaluation client from common-python-utils or direct
+      POST to /v1/evaluations. Flag if no evaluation task is found as the
+      last substantive task in the flow. Exempt evaluator-cog itself.
+
+      COG SUBTYPE: This rule applies to pipeline cogs (cog_subtype: pipeline)
+      only. Do not flag trigger cogs (cog_subtype: trigger) — they fire flow
+      runs but do not run pipelines themselves and have no evaluation step.
+      Skip this check for any cog with cog_subtype: trigger.
+
+  - id: PIPE-012
+    title: Retry delay disabled in test context
+    status: convention
+    dimension: pipeline_consistency
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog]
+    description: >
+      Prefect @task decorators with retry_delay_seconds= must zero out
+      the delay when running under pytest. Use os.getenv("PYTEST_CURRENT_TEST")
+      as the guard — pytest sets this automatically on every test run.
+      Retries still happen; only the wait between retries is zeroed out.
+      This prevents retry cooldowns from inflating test suite duration.
+      Correct pattern:
+        @task(
+            retries=2,
+            retry_delay_seconds=0 if os.getenv("PYTEST_CURRENT_TEST") else 30,
+        )
+      Never monkeypatch retry settings in tests — fix the decorator.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Search src/**/*.py for @task decorators containing retry_delay_seconds=
+      with a hardcoded non-zero numeric value. Flag any that do not guard
+      the value with os.getenv("PYTEST_CURRENT_TEST"). Pass if the value
+      is already zero, sourced from a settings field, or uses the
+      PYTEST_CURRENT_TEST conditional pattern.
+
+  - id: PIPE-013
+    title: Flow design is idempotent end-to-end
+    status: requirement
+    dimension: pipeline_consistency
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog]
+    description: >
+      Beyond database writes (PIPE-002), the overall flow design must
+      produce the same result when re-run. This covers: file moves that
+      depend on current state, stateful counters, external side effects
+      that are not guarded by a deduplication key, and flow-level
+      retry semantics.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      Assess the flow structure for the following anti-patterns, each
+      of which produces a distinct finding:
+        (1) File archive/move operations that assume the file has not
+            been processed before. An archive step that moves file X to
+            archive/ fails on re-run because X no longer exists at the
+            source. Flag flows that move files without first checking
+            whether the file was already processed.
+        (2) Stateful counters incremented per run rather than derived
+            from idempotent state. A counter that goes up on every run
+            regardless of work done produces wrong values on retry.
+        (3) External side effects (sending emails, posting to Slack,
+            creating calendar events) triggered per-run without a
+            deduplication guard keyed on run_id or input hash.
+        (4) Flow-level retry configuration that re-runs the whole flow
+            on failure. If the flow is not idempotent end-to-end, this
+            amplifies bad behavior rather than recovering from it.
+      For each anti-pattern detected, emit a finding citing PIPE-013
+      with the specific file and line. Remediation is always "add a
+      dedup key or a state check before the side effect."
+
+  - id: PIPE-014
+    title: Archiving pattern is consistent across all input types
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog]
+    description: >
+      For pipeline cogs that handle multiple input types (e.g. Drive
+      files + API submissions + scheduled batches), the archiving
+      behavior must be consistent across all of them. One input type
+      being archived to `processed/` while another is silently
+      retained in the source folder creates operational confusion.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      Identify every input source handled by the cog. For each source,
+      determine whether a post-processing archive step exists and
+      where archived items land. Flag if:
+        (1) Some input types are archived and others are not.
+        (2) Archive destinations are inconsistent across input types
+            (one goes to `processed/`, another to `archive/`, a third
+            has no destination).
+        (3) The archive destination is documented nowhere (not in
+            README, not in the flow code's docstring, not in
+            ecosystem.yaml).
+      This rule is LLM-judged because it requires understanding what
+      counts as an "input type" and tracing post-processing behavior,
+      which is not mechanically detectable. Remediation: pick one
+      archive convention per cog, apply it to every input type, and
+      document it in the cog README.
 
   - id: PIPE-015
     title: Cog trigger architecture matches the canonical pattern
@@ -318,98 +422,3 @@ standards:
       service wiring.
 
       COG SUBTYPE: Skip for trigger cogs and watcher-cog itself.
-
-  - id: PIPE-011
-    title: AI evaluation step as final pipeline task
-    status: requirement
-    dimension: pipeline_consistency
-    severity: WARN
-    applies_to: [pipeline-cog]
-    description: >
-      All production pipeline cogs include a behavioral evaluation step as the
-      final task in the flow. The step calls evaluate_pipeline_run() from
-      evaluator-cog, summarising what the run did (items processed, failures,
-      skips) and posts a structured finding to pipeline_evaluations. This ensures
-      every run — successful or not — is visible in pipeline health. Crash and
-      failure hooks (on_crashed, on_failure) are separate and complementary —
-      they cover the case where the flow body never reaches the evaluation step.
-      Both patterns must be present: the inline evaluation step for successful
-      runs, and the crash/failure hooks for abnormal termination.
-    checkable: true
-    check_notes: >
-      Search the main flow file for a final @task call that references
-      evaluation, pipeline_eval, or writes to pipeline_evaluations. Check
-      for imports of the evaluation client from common-python-utils or direct
-      POST to /v1/evaluations. Flag if no evaluation task is found as the
-      last substantive task in the flow. Exempt evaluator-cog itself.
-
-      COG SUBTYPE: This rule applies to pipeline cogs (cog_subtype: pipeline)
-      only. Do not flag trigger cogs (cog_subtype: trigger) — they fire flow
-      runs but do not run pipelines themselves and have no evaluation step.
-      Skip this check for any cog with cog_subtype: trigger.
-
-  - id: PIPE-012
-    title: Retry delay disabled in test context
-    status: convention
-    dimension: pipeline_consistency
-    severity: WARN
-    applies_to: [pipeline-cog, trigger-cog]
-    description: >
-      Prefect @task decorators with retry_delay_seconds= must zero out
-      the delay when running under pytest. Use os.getenv("PYTEST_CURRENT_TEST")
-      as the guard — pytest sets this automatically on every test run.
-      Retries still happen; only the wait between retries is zeroed out.
-      This prevents retry cooldowns from inflating test suite duration.
-      Correct pattern:
-        @task(
-            retries=2,
-            retry_delay_seconds=0 if os.getenv("PYTEST_CURRENT_TEST") else 30,
-        )
-      Never monkeypatch retry settings in tests — fix the decorator.
-    checkable: true
-    check_notes: >
-      Search src/**/*.py for @task decorators containing retry_delay_seconds=
-      with a hardcoded non-zero numeric value. Flag any that do not guard
-      the value with os.getenv("PYTEST_CURRENT_TEST"). Pass if the value
-      is already zero, sourced from a settings field, or uses the
-      PYTEST_CURRENT_TEST conditional pattern.
-
-  - id: PIPE-009
-    title: Pipeline cogs must acquire a named Prefect concurrency slot before scanning shared resources
-    status: requirement
-    dimension: pipeline_reliability
-    severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog]
-    description: >
-      Any pipeline cog that scans a shared resource (Drive folder, S3 bucket,
-      database table, etc.) and processes items sequentially must acquire a
-      named Prefect concurrency slot before scanning. This prevents two
-      concurrent runs from scanning the same resource state simultaneously,
-      which would cause duplicate LLM calls, redundant processing, and
-      potential data integrity issues even when a unique constraint is present.
-
-      The deployment concurrency_limit=1 is insufficient — it controls
-      scheduling but does not prevent a second run from executing if it was
-      picked up by the runner before the first run registered as active.
-      The runtime concurrency slot is the correct enforcement point.
-
-      Implementation:
-        from prefect.concurrency.sync import concurrency
-
-        with concurrency("cog-name", occupy=1):
-            # all scanning and processing logic here
-
-      The slot name must match a concurrency limit created in Prefect Cloud
-      (Settings → Concurrency). Limit must be set to 1. The limit must exist
-      before the cog is deployed or the slot acquisition will be silently
-      skipped by Prefect.
-
-      Naming convention: use the cog name as the slot name (e.g.
-      notes-ingest, deejay-cog, evaluator-cog).
-    checkable: true
-    check_notes: >
-      Search flow.py for 'from prefect.concurrency.sync import concurrency'
-      and a corresponding 'with concurrency(' block wrapping the flow body.
-      Flag if either is absent in a pipeline cog that scans a shared resource.
-      Also flag if the cog has deployment concurrency_limit=1 but no runtime
-      concurrency slot — this is insufficient protection.

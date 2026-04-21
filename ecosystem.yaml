@@ -23,7 +23,6 @@ services:
     description: >
       Config-driven Google Drive folder watcher. Polls Drive API on a
       1-minute interval, fires Prefect flow runs when new files are detected.
-    replaces: google-app-script-trigger
 
   - id: deejay-cog
     type: pipeline-cog
@@ -35,7 +34,6 @@ services:
     description: >
       DJ set CSV processor. Normalizes, validates, and ingests DJ set data
       into PostgreSQL via api-kaianolevine-com.
-    replaces: deejay-set-processor-dev
 
   - id: evaluator-cog
     type: pipeline-cog
@@ -80,7 +78,6 @@ services:
       Primary ecosystem API. DJ sets, tracks, catalog, evaluations, feature
       flags, contact form, resume endpoints. Sole API for the kaianolevine.com
       ecosystem.
-    replaces: deejay-marvel-api
 
   # ── Shared libraries ──────────────────────────────────────────
 
@@ -93,18 +90,6 @@ services:
       Shared Python utilities. Google API client (Drive, Sheets), LLM client
       (Anthropic, OpenAI), structured logging, API client, metadata helpers.
       All Python processors and cogs declare this as a dependency.
-    replaces: kaiano-common-utils
-
-  - id: kaiano-ts-utils
-    type: shared-library
-    status: retired
-    language: typescript
-    retired_date: 2026-04
-    replaced_by: common-typescript-utils
-    description: >
-      Former shared TypeScript utilities library. Lived in packages/ts-utils
-      inside the deejaytools-com monorepo. Extracted and renamed to
-      common-typescript-utils in April 2026.
 
   - id: common-typescript-utils
     type: shared-library
@@ -187,53 +172,6 @@ services:
     language: astro
     host: cloudflare-pages
     description: West Coast Swing personal site. wcs.kaianolevine.com.
-    replaces: kaiano-wcs-website
-
-  # ── Retired / archived ────────────────────────────────────────
-
-  - id: google-app-script-trigger
-    type: infra
-    status: retired
-    language: javascript
-    retired_date: 2026-03
-    replaced_by: watcher-cog
-    description: >
-      Apps Script + GitHub Actions bridge for Drive-triggered workflows.
-      Replaced by watcher-cog which polls Drive directly and fires Prefect
-      flow runs without an intermediate GitHub Actions step.
-
-  - id: kaiano-common-utils
-    type: library
-    status: retired
-    language: python
-    retired_date: 2026-03
-    replaced_by: common-python-utils
-    description: Former shared Python utilities library.
-
-  - id: deejay-set-processor-dev
-    type: worker
-    status: retired
-    language: python
-    retired_date: 2026-03
-    replaced_by: deejay-cog
-    description: Former DJ set CSV processor. Replaced by deejay-cog.
-
-  - id: deejay-marvel-api
-    type: api
-    status: retired
-    language: python
-    retired_date: 2026-03
-    replaced_by: api-kaianolevine-com
-    description: >
-      Former DJ data API. Fully merged into api-kaianolevine-com.
-
-  - id: kaiano-wcs-website
-    type: site
-    status: retired
-    language: astro
-    retired_date: 2026-03
-    replaced_by: website-astro-wcs
-    description: Former WCS personal site. Replaced by website-astro-wcs.
 
 
 # ── Monorepos ─────────────────────────────────────────────────
@@ -289,32 +227,22 @@ patterns:
   drive_trigger:
     description: How Drive file drops trigger processor flows
     current: watcher-cog polls Drive API → fires Prefect create_flow_run
-    retired: Apps Script → repository_dispatch → GitHub Actions
-    changed: 2026-03
 
   orchestration:
     description: How pipelines are scheduled and executed
     current: Prefect Cloud deployments — watcher-cog fires triggers, Prefect executes flows
-    retired: GitHub Actions as orchestrator
-    changed: 2026-03
 
   python_shared_library:
     description: Shared Python utility library name
     current: common-python-utils
-    retired: kaiano-common-utils
-    changed: 2026-03
 
   typescript_shared_library:
     description: Shared TypeScript utility library name
     current: common-typescript-utils
-    retired: kaiano-ts-utils
-    changed: 2026-04
 
   api_services:
     description: Active API services
     current: api-kaianolevine-com (sole API for kaianolevine.com ecosystem)
-    retired: deejay-marvel-api (merged into api-kaianolevine-com)
-    changed: 2026-03
 
 terminology:
 
@@ -335,11 +263,6 @@ terminology:
       trigger_cog: >
         Detects events and fires Prefect flow runs via API. No @flow
         decorator. Examples: watcher-cog.
-    replaces: processor
-    note: >
-      "Processor" was the original term for this service type. It is retired.
-      All new services of this type are named {purpose}-cog and use the
-      new_cog DoD checklist.
 
   pipeline:
     definition: >
