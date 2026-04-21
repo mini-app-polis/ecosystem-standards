@@ -37,29 +37,6 @@ is established.
 
 ---
 
-## CONTRIBUTING.md — how to add a new standard
-
-The README explains the rule format but not the ritual for adding one.
-A short CONTRIBUTING.md or README section should document:
-
-  1. Hit an issue in the ecosystem.
-  2. Open this repo.
-  3. Add or update a rule in the relevant standards/*.yaml file.
-  4. Set status: idea if unvalidated, requirement if the issue
-     proved it necessary.
-  5. For checkable rules, ensure check_notes begins with either
-     `DETERMINISTIC CHECK.` or `LLM CHECK.` and contains concrete
-     criteria (no "assess whether," "look for," or "should").
-  6. Commit with a conventional-commit message (feat/fix/chore)
-     that explains the issue that drove it.
-  7. Push. Semantic-release owns version bumps and the changelog
-     entry — humans do not edit package.json or CHANGELOG.md.
-
-The git history is the audit trail. The origin field on each rule
-is the permanent record of why it exists.
-
----
-
 ## Capture endpoint — backlog items not yet auto-routed here
 
 The planned capture system (POST /capture on api-kaianolevine-com → GitHub Issue
@@ -88,33 +65,6 @@ Priority: low — functional but will drift further as UI evolves.
 
 ---
 
-## evaluations endpoint — latest-run-only filter
-
-`GET /v1/evaluations` now returns only findings from the most recent
-run per `repo` + `source` combination. This is intentional — findings
-are advisory snapshots, not permanent records. Full history is preserved
-in the database but not exposed by default.
-
-If a verbose/history endpoint is ever needed, add
-`GET /v1/evaluations/history` rather than modifying the default behavior.
-
----
-
-## Conformance checker — service-type-aware deterministic checks
-
-The deterministic engine (`engine/deterministic.py` in evaluator-cog)
-currently applies all checks to every repo regardless of type. Python
-checks (pyproject.toml, src layout, etc.) fire on frontend sites.
-Test checks fire on libraries.
-
-The LLM layer is already type-aware (domains filtered by service type).
-The deterministic layer should be too — pass `service_type` into
-`run_all_checks` and skip irrelevant checks per type.
-
-Priority: medium — causes noisy false positives on non-Python repos.
-
----
-
 ## PIPE-009 Remediation
 
 PIPE-009 requires pipeline cogs to acquire a named Prefect concurrency slot
@@ -133,12 +83,13 @@ The following cogs need remediation:
 ## Candidate standards — additions considered during 2026-04 audit
 
 The 2026-04 standards audit (which produced the DETERMINISTIC/LLM
-check split, the META prefix, the evaluator pseudo-type, and
-zero remaining `requirement` + `checkable: false` rules) surfaced
-several rule-addition candidates. They are not urgent. They are
-deferred until the evaluator-cog implementation work for the
-existing checkable rules stabilizes — adding more rules now would
-get the catalog out ahead of reality.
+check split, the META prefix, and zero remaining `requirement` +
+`checkable: false` rules) surfaced several rule-addition candidates.
+ADR-004 later removed the `evaluator-service` pseudo-type introduced
+during that audit, and ADR-005 formalized the full rule-field schema
+and trait structure. The additions below remain candidates; they are
+not urgent and should land only when evaluator-cog is ready to honor
+them.
 
 Grouped by impact-to-effort ratio. Each group is independently
 actionable.
@@ -233,57 +184,39 @@ These would enforce the structural patterns established by the
 2026-04 audit, so that the invariants stay invariant as the catalog
 grows:
 
-- [ ] **META-005: check_notes prefix convention.** Every checkable
-  rule's `check_notes` begins with either `DETERMINISTIC CHECK.`
-  or `LLM CHECK.` on its own line. Evaluator-cog routes rules to
-  different execution paths based on this prefix, so drift here
-  silently breaks routing.
-
-- [ ] **META-006: requirements must be verifiable.** Every rule
+- [ ] **META-008: requirements must be verifiable.** Every rule
   with `status: requirement` has `checkable: true`. No conscious
   carve-outs after the audit cleanup. (This would prevent the
   pattern we just finished cleaning up from re-emerging.)
+  Note: the META-005 check-notes-prefix proposal and the META-006
+  prefix-matches-file proposal both shipped under those IDs — this
+  candidate would land under the next available META ID.
 
-## Evaluator-cog implementation work surfaced by the audit
+## Evaluator-cog follow-up
 
-The 2026-04 audit promoted, split, or sharpened roughly 25 rules
-across priorities 1 through 4. Each newly-checkable rule requires
-a deterministic check implementation in `engine/deterministic.py`
-or an LLM prompt in the LLM conformance flow. Rough tally:
+Cross-repo follow-up tracked in the evaluator-cog repo. Summary of
+what that repo needs in order to fully honor the current standards
+schema:
 
-  - Priority 1 (promotions): 11 deterministic checks
-  - Priority 2 (splits): 4 tightened deterministic + 4 new LLM
-    prompts, plus 4 META rules
-  - Priority 3/4 (sharpens + promotions): CD-012 deterministic,
-    PRIN-008 deterministic + PRIN-010 LLM, EVAL-003 and MONO-003
-    as runtime data-quality checks against pipeline_evaluations
+- Honor structured trait fields — `exempts:` and `downgrades:` on
+  `schema.traits` (ADR-005).
+- Honor the optional `modifies:` field on rules (ADR-005, MONO-001
+  and MONO-002 are the current consumers).
+- Implement the seven-step dispatch precedence defined in
+  `index.yaml` `schema.dispatch.precedence` (ADR-005).
+- Implement runtime data-quality checks for rules that omit
+  `applies_to` — currently EVAL-003, MONO-003, and EVAL-007
+  (ADR-004).
+- Reject rules carrying `status: advisory` or `status: idea` —
+  both statuses were removed in ADR-005.
 
-Also required on the evaluator-cog side:
-
-- [ ] Update the deterministic engine (and LLM scoping) to route
-  rules based on the `DETERMINISTIC CHECK.` / `LLM CHECK.` prefix
-  in check_notes.
-- [ ] Runtime data-quality checks (EVAL-003, MONO-003) read
-  pipeline_evaluations rather than scanning source — a different
-  check shape than the rest of the engine. New subsystem.
-
-Expect a findings-burst on the first run after implementation:
-CD-012 will flag every cog still on `X-Internal-API-Key`, META-002
-will flag any repo with vestigial metadata, FE-008 will flag Astro
-sites with ranged `@astrojs/*` deps. These are real migration
-tickets disguised as findings.
+These are not standards-repo work. Listed here only so a future
+audit can cross-check that the catalog and evaluator stay in sync.
 
 ## Open structural questions surfaced by the audit
 
 These are conversations, not tickets. Worth addressing before the
 next major audit round.
-
-- [ ] **Should conventions produce findings?** After the audit,
-  the catalog has 14 `status: convention` rules. Nothing currently
-  reads them. Options: (a) treat conventions as purely documentation
-  (current state), (b) emit INFO-severity findings as reminders,
-  (c) require deviations from conventions to carry an inline code
-  comment and check for the comment's presence.
 
 - [ ] **Is `applies_to: [all]` ever the right scope?** A handful
   of rules use it. Going through each, several are really
