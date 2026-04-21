@@ -158,3 +158,77 @@ standards:
       Flag any checkable rule whose `check_notes` does not begin with
       one of the two recognized prefixes. The fix is always a one-line
       prepend — do not rewrite the rest of the check_notes content.
+
+  - id: META-006
+    title: Rule ID prefix matches the file's declared rule_prefix
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    applies_to: [standards-repo]
+    description: >
+      Every rule in `standards/<file>.yaml` must have an ID whose
+      prefix appears in that file's `rule_prefix` entry in
+      `index.yaml`. The prefix-to-file mapping in `index.yaml`
+      `files:` is authoritative — it is how readers navigate the
+      catalog, and how this playbook's "pick the right file" step
+      resolves. A rule whose prefix disagrees with its file silently
+      breaks that navigation.
+      Gap rules use the form `<PREFIX>-GAP-NNN` and must still match
+      the file's declared prefix.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      For each entry in `index.yaml` `files:`:
+        (1) Read the `rule_prefix` value (string or list of strings).
+        (2) Open the referenced standards file and iterate every
+            rule under `standards:`.
+        (3) For each rule `id` of form `PREFIX-NNN` or
+            `PREFIX-GAP-NNN`, confirm PREFIX matches one of the
+            declared `rule_prefix` values for that file.
+        (4) Flag any rule whose prefix does not match.
+      The fix is either to move the rule to the correct file or to
+      add the prefix to `index.yaml` `files:` if the placement is
+      intentional and the file genuinely owns a new prefix.
+
+  - id: META-007
+    title: Rule IDs are append-only — retired numbers are never reused
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    applies_to: [standards-repo]
+    description: >
+      When a rule is retired, its entry is deleted from the YAML
+      file (git history is the record — see
+      `playbooks/new-standard.md` Step 8). The retired ID number is
+      **never reused** by a subsequent rule. A new rule takes
+      `max(ever-seen ID for this prefix) + 1`, determined from git
+      history — not `max(current IDs) + 1`.
+      This guarantees that stable cross-references — findings in
+      `pipeline_evaluations`, prose in ADRs, links in playbooks,
+      inline comments in downstream repos — continue to identify a
+      single rule across time. A repurposed ID would silently change
+      what an old reference means.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      For each `standards/*.yaml` file under version control:
+        (1) Walk the file's git history with
+            `git log --all -p -- <file>`.
+        (2) Build a timeline per ID: list of (commit_sha, event)
+            where event is `added` (line starts with `+  - id:`) or
+            `removed` (line starts with `-  - id:`).
+        (3) Any ID whose timeline contains `added → removed → added`
+            is a repurpose — flag ERROR with the two introducing
+            commits named.
+      Additional invariant check (cheaper, covers new authors):
+        For each prefix that appears in the file, let `H` be the
+        highest three-digit suffix ever observed in the file's
+        history for that prefix, and `C` be the highest suffix
+        currently in the file. Require `C <= H`. If `C > H` with a
+        commit adding the new ID, that is fine (a fresh append). If
+        a commit adds an ID at suffix `N <= H` where `N` was
+        previously assigned to a different (now-deleted) rule, flag
+        it.
+      Gap rules (`<PREFIX>-GAP-NNN`) are a separate numbering
+      series — apply the same append-only check independently for
+      the `-GAP-` series.

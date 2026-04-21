@@ -36,6 +36,7 @@ ecosystem-standards/
 ├── evaluator.yaml                  ← per-repo config for this repo
 ├── definitions-of-done.yaml        ← per-artifact DoD checklists
 ├── README.md
+├── CONTRIBUTING.md                 ← router for all changes
 ├── CHANGELOG.md
 ├── BACKLOG.md
 ├── standards/
@@ -53,7 +54,12 @@ ecosystem-standards/
 │   └── cross-stack.yaml            ← XSTACK — Python/TypeScript parity rules
 ├── docs/
 │   └── decisions/                  ← ADRs (ADR-NNN-slug.md)
-└── playbooks/                      ← narrative guides for common workflows
+│       └── README.md               ← ADR index
+└── playbooks/
+    ├── new-standard.md             ← rule changes
+    ├── new-adr.md                  ← ADR lifecycle
+    ├── ecosystem-changes.md        ← registry, types, enums, DoD
+    └── new-cog.md                  ← bootstrap a new cog
 ```
 
 ---
@@ -83,29 +89,16 @@ Rule-level severity is `ERROR | WARN | INFO`. `CRITICAL` and `SUCCESS` are emiss
 
 ---
 
-## How Standards Evolve
+## Making changes
 
-**When you hit an issue:**
+All changes to this repo follow a playbook. The top-level router is
+[`CONTRIBUTING.md`](CONTRIBUTING.md) — start there. It points at:
 
-1. Open this repo.
-2. Add or update a rule in the relevant YAML file.
-3. Commit with a conventional-commit message explaining the issue that drove it — semantic-release owns version bumps and the changelog.
+- `playbooks/new-standard.md` — add, edit, or retire a rule in `standards/*.yaml`.
+- `playbooks/new-adr.md` — write or supersede an ADR in `docs/decisions/`.
+- `playbooks/ecosystem-changes.md` — edit `ecosystem.yaml`, `index.yaml` schema, types, traits, canonical enums, or DoD checklists.
 
-The git history is the audit trail. The `origin` field on each rule is the permanent record of why it exists.
-
-**Status progression:**
-
-```
-idea → (validated by real issue) → requirement → (check_notes added) → enforced by evaluator
-```
-
-**Standard types** (full definitions in `index.yaml` `statuses:`):
-
-- `requirement` — must-comply, agents flag violations as blocking.
-- `convention` — should-comply, deviation requires an inline comment.
-- `advisory` — guidance only, reported as informational.
-- `idea` — under consideration, not yet enforced.
-- `gap` — known deficiency, tracked for remediation.
+The git history is the audit trail. The `origin` field on each rule is the permanent record of why it exists. Status progression for rules is `idea → (validated by real issue) → requirement → (check_notes added) → enforced by evaluator`.
 
 ---
 
@@ -137,7 +130,8 @@ Each evaluatable repo declares a type (and optional traits) in its own `evaluato
 
 ## Related Docs
 
-- `docs/decisions/` — Architecture Decision Records. Start with ADR-001 (federated evaluation), ADR-002 (type/trait taxonomy), ADR-003 (conformance checker architecture).
-- `playbooks/` — narrative guides (e.g. `new-cog.md`) for common workflows that span many rules.
+- `CONTRIBUTING.md` — top-level router for any change to this repo.
+- `docs/decisions/` — Architecture Decision Records. See `docs/decisions/README.md` for the index. Start with ADR-001 (federated evaluation), ADR-002 (type/trait taxonomy), ADR-003 (conformance checker architecture).
+- `playbooks/` — narrative guides for common changes: `new-standard.md` (rules), `new-adr.md` (decisions), `ecosystem-changes.md` (registry, types, enums, DoD), `new-cog.md` (bootstrap a new cog).
 - `BACKLOG.md` — open items and roadmap for the standards themselves.
 - `CHANGELOG.md` — managed by semantic-release; never edit manually.
