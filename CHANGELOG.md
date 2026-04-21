@@ -1,3 +1,10 @@
+# [3.7.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.6.0...v3.7.0) (2026-04-21)
+
+
+### Features
+
+* **ci:** enforce META-002, META-005, META-006 in validation; read enums from source ([f32f01e](https://github.com/mini-app-polis/ecosystem-standards/commit/f32f01e157c430529fc5897486560aac2c4a1ba2))
+
 # [3.6.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v3.5.1...v3.6.0) (2026-04-21)
 
 
