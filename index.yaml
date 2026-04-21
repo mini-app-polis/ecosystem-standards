@@ -41,32 +41,187 @@ severities:
   SUCCESS: "Clean-run completion finding emitted by pipeline cogs. Emission-only — not used on rule definitions."
 
 # Statuses used across all standards files.
+# `status` controls how the evaluator treats findings for the rule.
 statuses:
-  requirement: "Must-comply. Agents flag violations as blocking."
-  convention: "Should-comply. Deviation requires an inline comment explaining why."
-  advisory: "Guidance only. Agents report as informational."
-  idea: "Under consideration. Not yet validated by a real issue. Not enforced."
-  gap: "Known deficiency. Tracked for remediation."
+  requirement:
+    description: >
+      Must-comply. The evaluator runs the check (if `checkable: true`)
+      and emits findings at the rule's declared severity on violation.
+      Findings are surfaced in Pipeline Health as active.
+  convention:
+    description: >
+      Should-comply. The evaluator runs the check (if `checkable:
+      true`) and emits findings at the rule's declared severity on
+      violation. Findings are surfaced in Pipeline Health as active,
+      distinguished from requirements only by the rule's own `status`
+      field on the finding record. A repo may deviate from a
+      convention by declaring an `exemption` in its `evaluator.yaml`
+      with a reason.
+  gap:
+    description: >
+      Known deficiency. The rule is tracked but the check is not yet
+      implemented or not yet reliable. The evaluator emits an INFO
+      finding on every run noting the gap. `checkable` may be `true`
+      (partial check shipped, imperfect) or `false` (no check yet).
+      Gap rules are the roadmap — promote to `requirement` when the
+      check is ready.
 
 schema:
   rule_fields:
-    applies_to: >
-      Optional. List of repo type names this rule is scanned against
-      during repo-source conformance checking. The conformance checker
-      clones each repo whose type appears in this list and runs the
-      rule's check against its source. Use [all] to scan every repo
-      type. Valid type values are defined in the repo_types section
-      below.
+    id:
+      required: true
+      type: string
+      description: >
+        Stable identifier of the form `PREFIX-NNN` (e.g. `CD-004`,
+        `PY-011`). Gap rules use `PREFIX-GAP-NNN`. The prefix must
+        match one of the `rule_prefix` values declared for the rule's
+        file in `index.yaml` `files:` (enforced by META-006). IDs are
+        append-only — a retired ID is not reused (META-007).
+        The `id` is also the canonical check identifier used by
+        evaluator-cog's check registry. Implementations register
+        their deterministic checks under this same string — there is
+        no separate `check_id` field.
 
-      Omit `applies_to` for rules that are not repo-source checks —
-      i.e. rules whose check reads the pipeline_evaluations table, the
-      evaluator's own check registry, or any other non-per-repo
-      source. For those rules, the `check_notes` field is authoritative
-      for what the check reads and when it runs. Examples of rules
-      that omit `applies_to`: EVAL-003 and MONO-003 (both check the
-      pipeline_evaluations table for data quality), EVAL-007 (checks
-      drift between this catalog and evaluator-cog's check registry).
+    title:
+      required: true
+      type: string
+      description: >
+        One-line human-readable rule title. Appears in Pipeline Health
+        finding cards and in the rule catalog.
 
+    status:
+      required: true
+      type: string
+      allowed_values: [requirement, convention, gap]
+      description: >
+        Governs how the evaluator treats violations. See the top-level
+        `statuses:` block for per-status evaluator behavior.
+
+    dimension:
+      required: true
+      type: string
+      description: >
+        Single dimension from the top-level `dimensions:` block. Used
+        to aggregate findings in Pipeline Health. Every rule declares
+        exactly one dimension.
+
+    severity:
+      required: true
+      type: string
+      allowed_values: [ERROR, WARN, INFO]
+      description: >
+        Rule-level severity. Applied to findings when the rule is
+        violated. `CRITICAL` and `SUCCESS` are emission-only severities
+        and never appear on rule definitions — see the top-level
+        `severities:` block.
+
+    applies_to:
+      required: false
+      type: list of strings
+      description: >
+        List of repo type names the conformance scanner runs this rule
+        against. The scanner clones each repo whose type appears in
+        this list and executes the rule's check against its source.
+        Use `[all]` to scan every member of `schema.repo_types`; new
+        types added to `repo_types` later are automatically included.
+        Valid type values are defined in `repo_types` below.
+
+        Omit `applies_to` for rules that are not repo-source checks —
+        rules whose check reads the `pipeline_evaluations` table, the
+        evaluator's own check registry, or any other non-per-repo
+        source. For those rules, `check_notes` is authoritative for
+        what the check reads. Current rules omitting `applies_to`:
+        EVAL-003 (reads pipeline_evaluations for finding quality),
+        MONO-003 (reads pipeline_evaluations for monorepo dedup),
+        EVAL-007 (reads the standards catalog and evaluator-cog's
+        check registry for drift).
+
+    modifies:
+      required: false
+      type: list of strings
+      description: >
+        Rule IDs whose evaluation behavior is altered when this rule
+        applies. Used for meta-rules (e.g. monorepo rules that change
+        how sibling source-scan rules are run). The altering logic
+        lives in this rule's `check_notes`; `modifies:` is a
+        structural pointer the evaluator uses to resolve rule
+        precedence. When a rule in `modifies:` would fire, the
+        evaluator first consults the modifier's check to determine
+        the correct behavior.
+
+    description:
+      required: true
+      type: string
+      description: >
+        Human-readable explanation of what the rule requires and why.
+        Intended for rule authors, reviewers, and anyone investigating
+        a finding. Not consumed by the evaluator for dispatch — only
+        `check_notes` is.
+
+    checkable:
+      required: true
+      type: boolean
+      description: >
+        Whether the evaluator runs an automated check for this rule.
+        When `true`, `check_notes` must be present and must begin with
+        `DETERMINISTIC CHECK.` or `LLM CHECK.` on its first non-blank
+        line (enforced by META-005). When `false`, `check_notes` is
+        absent — the rule documents intent only and is not enforced
+        by automation.
+
+    check_notes:
+      required: when checkable is true
+      type: string
+      description: >
+        Evaluator-facing check specification. The first non-blank line
+        is one of:
+          - `DETERMINISTIC CHECK.` — evaluator routes to the
+            deterministic engine (file presence, regex, AST, YAML/TOML
+            parse, version compare).
+          - `LLM CHECK.` — evaluator routes to the LLM engine
+            (judgment over prose, semantic cross-reference, intent).
+        Rules that mix both kinds begin with `LLM CHECK.` and tag
+        numbered steps with `[deterministic]` or `[LLM]` inline. See
+        META-004 and META-005.
+
+        `check_notes` is the sole source of dispatch for rules that
+        omit `applies_to`. Such rules describe their read source in
+        `check_notes` directly (e.g. "Runtime data-quality check
+        against pipeline_evaluations for...").
+
+    origin:
+      required: false
+      type: string
+      description: >
+        Historical annotation explaining the concrete context that
+        motivated the rule. Preserved for provenance. Not consumed by
+        the evaluator. Optional; omit for rules without noteworthy
+        history. Retained rather than relocated to the ADR so that
+        single-rule context stays next to the rule.
+
+    decision:
+      required: false
+      type: string
+      description: >
+        Brief inline decision record for rules that codify a specific
+        technical choice (e.g. "Decided: hatchling. March 2026.
+        Rationale: ..."). Preferred over an ADR when the rationale is
+        a one-liner and belongs visibly next to the rule. Not consumed
+        by the evaluator.
+
+    supersedes:
+      required: false
+      type: string
+      description: >
+        Free-form description of what this rule replaces. Used when a
+        new rule obsoletes a prior pattern or retired mechanism.
+        Preserved for provenance. Not consumed by the evaluator.
+
+  # The `applies_to` value `[all]` expands to every key of
+  # `repo_types` below, including keys added in future. Rules that
+  # genuinely apply to every repo type should use `[all]` rather
+  # than enumerating types — this keeps them correct as the type
+  # taxonomy grows.
   repo_types:
     pipeline-cog: >
       Always-on Railway worker running one or more Prefect @flow(s).
@@ -91,27 +246,105 @@ schema:
       YAML-only definition and tooling repository. Not a deployed service.
       Examples: ecosystem-standards.
 
+  # Trait definitions. Each trait has a human-readable `description`
+  # and optionally carries structured exemption data:
+  #   - `exempts:` list of rule IDs the trait unconditionally exempts.
+  #     The evaluator skips the listed checks for any repo carrying
+  #     this trait and records an INFO finding citing the trait.
+  #   - `downgrades:` list of {rule, to, reason} objects. The
+  #     evaluator still runs the check, but any finding is emitted at
+  #     the listed severity rather than the rule's declared severity.
+  #     Used for known false-positives (source-scanner limitations)
+  #     rather than true semantic exemptions.
+  # A repo declares traits in its `evaluator.yaml` under `traits:`.
   traits:
-    logger-primitive: >
-      This repo IS the shared logger implementation — the CD-009 shared
-      logger requirement cannot apply to itself. Applies to common-python-utils
-      and common-typescript-utils, and to logger wrapper modules within services.
-    cloudflare-pages: >
-      Deployed via Cloudflare Pages Git integration (auto-deploy on push
-      to main). No ci.yml required — Cloudflare Pages is the CI/CD pipeline.
-      Automatically excepts VER-003, VER-005, VER-006.
-    multi-flow: >
-      Runs multiple Prefect flows registered via separate entry points.
-      The CD-015 source scanner may not resolve prefect.serve() in this
-      configuration — finding is informational not a violation.
-    pipeline-cog-evaluator: >
-      This repo IS evaluator-cog — the PIPE-011 evaluation step requirement
-      cannot apply to the evaluator itself.
-    pre-rule: >
-      Used with a specific rule_id to indicate this repo predates the rule
-      and has a documented migration path. Use sparingly — prefer deferred
-      if the fix is planned, or an exemption if the rule genuinely does
-      not apply.
+    logger-primitive:
+      description: >
+        This repo IS the shared logger implementation — the CD-009
+        shared logger requirement cannot apply to itself. Applies to
+        common-python-utils and common-typescript-utils, and to logger
+        wrapper modules within services.
+      exempts: [CD-009]
+
+    cloudflare-pages:
+      description: >
+        Deployed via Cloudflare Pages Git integration (auto-deploy on
+        push to main). No ci.yml required — Cloudflare Pages is the
+        CI/CD pipeline.
+      exempts: [VER-003, VER-005, VER-006]
+
+    multi-flow:
+      description: >
+        Runs multiple Prefect flows registered via separate entry
+        points. The CD-015 source scanner may not resolve
+        prefect.serve() in this configuration.
+      downgrades:
+        - rule: CD-015
+          to: INFO
+          reason: >
+            Source scanner false-positive. The multi-flow pattern is
+            correct; the scanner's resolution is incomplete.
+
+    pipeline-cog-evaluator:
+      description: >
+        This repo IS evaluator-cog — the PIPE-011 evaluation step
+        requirement cannot apply to the evaluator itself.
+      exempts: [PIPE-011]
+
+  # Dispatch — how the evaluator resolves whether and how to run
+  # a given rule against a given repo. The precedence is:
+  #
+  #   1. Scope — if the rule has `applies_to` and the repo's type is
+  #      not in the list, the rule is not run for this repo. No
+  #      finding emitted. Rules without `applies_to` bypass this
+  #      check; their `check_notes` defines their own read source.
+  #
+  #   2. Trait exemption — if the repo declares a trait in its
+  #      `evaluator.yaml` `traits:` list, and that trait's `exempts:`
+  #      includes this rule, the rule is not run. An INFO finding
+  #      naming the trait is recorded for auditability.
+  #
+  #   3. Per-repo exemption — if the repo's `evaluator.yaml`
+  #      `exemptions:` lists this rule with a reason, the rule is not
+  #      run. An INFO finding naming the reason is recorded.
+  #
+  #   4. Per-repo deferral — if the repo's `evaluator.yaml`
+  #      `deferrals:` lists this rule, the check IS run. If failing,
+  #      the finding is emitted at INFO severity with status=deferred
+  #      regardless of the rule's declared severity. Deferred findings
+  #      are excluded from error/warn counts but remain visible in a
+  #      dedicated Deferred section of Pipeline Health.
+  #
+  #   5. Trait downgrade — if the repo declares a trait whose
+  #      `downgrades:` includes this rule, the check IS run and any
+  #      finding is emitted at the downgraded severity named in the
+  #      trait. Used for known false-positives, not semantic
+  #      exemptions.
+  #
+  #   6. Modifier — if another rule's `modifies:` includes this rule
+  #      AND the modifier's `applies_to` matches the repo, the
+  #      modifier's `check_notes` is consulted first to determine
+  #      altered evaluation behavior. The modifier and the original
+  #      rule both run; the modifier's logic may suppress duplicate
+  #      or per-app findings.
+  #
+  #   7. Default — the rule is run against the repo and findings are
+  #      emitted at the rule's declared severity.
+  #
+  # The mechanisms are additive at authoring time (a repo may declare
+  # traits and exemptions and deferrals simultaneously) but are
+  # resolved in the order above per rule. A rule exempted by trait
+  # (step 2) short-circuits — no per-repo exemption or deferral is
+  # consulted for that rule.
+  dispatch:
+    precedence:
+      - scope
+      - trait_exemption
+      - repo_exemption
+      - repo_deferral
+      - trait_downgrade
+      - rule_modifier
+      - default
 
   evaluator_yaml:
     purpose: >

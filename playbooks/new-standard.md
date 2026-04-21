@@ -39,7 +39,7 @@ Split into multiple rules if any of the following apply:
 1. The parts could be checked independently (different checks, different
    remediation).
 2. The parts have different severities in practice (one is blocking,
-   another is advisory).
+   another is informational).
 3. The parts apply to different repo types.
 4. The parts might be remediated by different people or at different
    times.
@@ -141,7 +141,8 @@ Every rule has this shape. Fields marked **required** must be present;
   status: requirement            # required — see Step 6
   dimension: ...                 # required — see Step 6
   severity: ERROR                # required — ERROR | WARN | INFO
-  applies_to: [pipeline-cog]     # required — list; see Step 6
+  applies_to: [pipeline-cog]     # optional — list; see Step 6
+  modifies: [XSTACK-001]         # optional — meta-rule pointer; see Step 6
   description: >                 # required — full prose explanation
     ...
   checkable: true                # required — true or false
@@ -170,15 +171,11 @@ Values are defined in `index.yaml` `statuses:`. Pick by intent:
 - `requirement` — must-comply. Evaluator flags violations as blocking.
 - `convention` — should-comply. Deviation requires an inline comment in
   the offending repo.
-- `advisory` — guidance only. Evaluator reports as informational.
-- `idea` — under consideration. Not yet enforced. Used while you're
-  validating the rule against at least one real incident.
 - `gap` — known deficiency tracked for remediation. The rule *would*
   pass if the codebase were in the desired state; it currently doesn't.
 
-An `idea` rule should graduate to `requirement` (or `convention`) once a
-real issue validates it. A rule sitting at `idea` for more than a
-release cycle is a signal to either delete it or promote it.
+For canonical behavior and allowed values, defer to
+`index.yaml` `schema.rule_fields.status`.
 
 ### dimension
 
@@ -231,8 +228,15 @@ evaluator's own check registry, or any other non-per-repo source.
 `check_notes` is then authoritative for what the check reads.
 Current rules that omit `applies_to`: EVAL-003, MONO-003, EVAL-007.
 
+For meta-rules that alter sibling rule behavior (for example monorepo
+rules), add `modifies:` listing the affected rule IDs. Keep the actual
+altering logic in `check_notes`.
+
 `standards-repo` is for rules whose source-scan target is this repo
 itself. These go in `meta.yaml` by convention.
+
+For complete field contracts (requiredness, types, and parser-facing
+semantics), defer to `index.yaml` `schema.rule_fields.*`.
 
 ---
 
@@ -337,7 +341,7 @@ origin: "api-kaianolevine-com has no mypy CI step. common-python-utils
 
 Origins should name the repo and the concrete symptom. They should not
 be abstract ("we want better docs"). If you can't write a concrete
-origin, the rule may be premature — use `status: idea` until a real
+origin, the rule may be premature — use `status: gap` until a real
 issue validates it.
 
 ---

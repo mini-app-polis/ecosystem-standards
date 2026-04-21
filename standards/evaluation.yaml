@@ -113,11 +113,12 @@ standards:
       evaluator-cog's deterministic engine must map back to a real rule
       in ecosystem-standards.
 
-      The mapping contract is expressed via a `check_id` field on
-      checkable rules (this repo) and a corresponding `CHECK_ID` constant
-      or decorator on each check implementation in evaluator-cog. Drift
-      between the two repos is detected automatically by evaluator-cog
-      itself on every evaluation run.
+      The mapping contract uses the rule's `id` as the stable check
+      identifier. Each deterministic check in evaluator-cog registers
+      itself under the matching rule `id` string (e.g. a check for
+      CD-004 registers as `"CD-004"`). Drift between the two repos is
+      detected automatically by evaluator-cog itself on every
+      evaluation run.
 
       When drift is detected:
         - Unimplemented checkable rules → severity WARN finding,
@@ -138,9 +139,10 @@ standards:
       fetches the standards catalog on every evaluation. The drift check:
         (1) Parses every `standards/*.yaml` rule from the fetched catalog
             and extracts `checkable: true` rules' IDs.
-        (2) Inspects evaluator-cog's own deterministic check registry for
-            the `CHECK_ID = "XXX-NNN"` constants (or equivalent decorator
-            metadata) that each implementation exposes.
+        (2) Inspects evaluator-cog's own deterministic check registry
+            for the rule-id-keyed registrations that each
+            implementation exposes (e.g. a check for CD-004 is
+            registered under the string `"CD-004"`).
         (3) Computes set differences in both directions:
               - In standards but not in evaluator → unimplemented.
               - In evaluator but not in standards → orphaned.

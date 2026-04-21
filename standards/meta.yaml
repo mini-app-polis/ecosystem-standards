@@ -145,6 +145,10 @@ standards:
       off the same classification. A checkable rule without a prefix
       defaults to LLM, which is slower and less reliable than a
       deterministic check that simply forgot to declare itself.
+
+      This prefix is part of the canonical `check_notes` schema — see
+      `index.yaml` `schema.rule_fields.check_notes`. META-005 is the
+      deterministic enforcement of that schema contract.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.

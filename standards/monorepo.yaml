@@ -17,6 +17,7 @@ standards:
     dimension: monorepo_coherence
     severity: ERROR
     applies_to: [api-service, react-app]
+    modifies: [XSTACK-001]
     description: >
       For services inside a pnpm monorepo, shared library requirements
       (XSTACK-001) are checked at the workspace root package.json, not at
@@ -48,6 +49,7 @@ standards:
     dimension: monorepo_coherence
     severity: WARN
     applies_to: [api-service, react-app]
+    modifies: [CD-004, VER-003, VER-005, VER-006]
     description: >
       For services inside a pnpm monorepo, CI configuration (ci.yml,
       .github/workflows/) is evaluated at the monorepo repo root.

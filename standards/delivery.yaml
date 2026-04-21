@@ -9,7 +9,7 @@ standards:
 
   - id: CD-001
     title: Feature flags for major functionality toggles
-    status: advisory
+    status: convention
     dimension: cd_readiness
     severity: WARN
     applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]

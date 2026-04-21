@@ -283,3 +283,25 @@ traits:
 - Rule applicability logic in `evaluator-cog` becomes more sophisticated — it must resolve type + trait combinations rather than a flat exception list
 - Requires a one-time migration pass across all repos
 - Standards YAML files need `applies_to` updated to use the new type names (breaking change in the standards schema — requires a major version bump)
+
+---
+
+## Addendum — schema expansion and trait field formalization (2026-04)
+
+Subsequent to this ADR, the rule schema was expanded in
+`index.yaml` `schema.rule_fields` to document all 11 fields used on
+rules (from 1 field previously). Trait definitions gained structured
+`exempts:` and `downgrades:` fields, moving exemption machinery out
+of prose. The `pre-rule` trait was removed as unused. The
+`advisory` and `idea` status values were removed (CD-001 converted to
+`convention`; `idea` had no usages). The `dispatch:` section was
+added to document the precedence order across the four skip
+mechanisms. Rules gained an optional `modifies:` field used by
+monorepo rules (MONO-001, MONO-002) to declare their effect on
+sibling rules.
+
+None of this changes the type/trait decisions in the original ADR. It
+formalizes contracts that were previously implicit in prose and
+evaluator-cog source code.
+
+See ADR-005 for the full change record.
