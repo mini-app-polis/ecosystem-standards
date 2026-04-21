@@ -128,7 +128,7 @@ Canonical definitions live in `index.yaml` `dimensions:` — edit there, not her
 
 ## Repo Types and Traits
 
-Each evaluatable repo declares a type (and optional traits) in its own `evaluator.yaml` at its repo root (see EVAL-008). The taxonomy is defined in `index.yaml` `schema.repo_types` and `schema.traits`. Rules gate themselves by type via `applies_to:`; traits carry additional context. Each trait may declare structured `exempts:` (rule IDs the trait unconditionally exempts) or `downgrades:` (rule IDs whose severity is lowered when the trait applies). Example: `logger-primitive` exempts the shared logger repo from CD-009. The full dispatch precedence across types, traits, exemptions, and deferrals is documented in `index.yaml` `schema.dispatch`.
+Each evaluatable repo declares a type (and optional traits) in its own `evaluator.yaml` at its repo root (see EVAL-008). The taxonomy is defined in `index.yaml` `schema.repo_types` and `schema.traits`. Rules gate themselves by type via `applies_to:`; traits carry additional context. Each trait may declare structured `exempts:` (rule IDs the trait unconditionally exempts) or `downgrades:` (rule IDs whose severity is lowered when the trait applies). Example: `logger-primitive` exempts the shared logger repo from CD-009. The full dispatch precedence across types, traits, exemptions, deferrals, and downgrades is documented in `index.yaml` `schema.dispatch`.
 
 ---
 

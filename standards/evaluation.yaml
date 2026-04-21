@@ -162,8 +162,10 @@ standards:
     description: >
       All active repos in the ecosystem must have an evaluator.yaml file at
       the repo root. This file declares the repo's type, traits, exemptions,
-      and deferrals — the per-repo evaluation configuration introduced in
-      ADR-001 (federated evaluation) and ADR-002 (type/trait taxonomy).
+      deferrals, and downgrades — the per-repo evaluation configuration
+      introduced in ADR-001 (federated evaluation) and ADR-002 (type/trait
+      taxonomy). See index.yaml schema.evaluator_yaml for the authoritative
+      field contract.
 
       Required fields:
         type: one of the repo types defined in index.yaml schema.repo_types
@@ -174,6 +176,10 @@ standards:
                     do not apply to this repo
         deferrals: list of {rule, reason, until} objects for known failures
                    not currently prioritized
+        downgrades: list of {rule, to, reason} objects for rules whose check
+                    fires incorrectly on this repo for a documented reason —
+                    the check still runs but the finding is emitted at the
+                    listed severity
 
       Minimum valid evaluator.yaml:
         type: pipeline-cog

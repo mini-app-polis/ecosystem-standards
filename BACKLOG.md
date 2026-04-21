@@ -200,10 +200,17 @@ schema:
 
 - Honor structured trait fields — `exempts:` and `downgrades:` on
   `schema.traits` (ADR-005).
+- Honor per-repo `downgrades:` on `schema.evaluator_yaml` — the
+  per-repo counterpart to trait-level downgrades. Added in v4.1.0;
+  used for repo-specific checker limitations not covered by a
+  shared trait. Currently unused by any repo, so the gap is latent
+  rather than actively broken.
 - Honor the optional `modifies:` field on rules (ADR-005, MONO-001
   and MONO-002 are the current consumers).
-- Implement the seven-step dispatch precedence defined in
-  `index.yaml` `schema.dispatch.precedence` (ADR-005).
+- Implement the eight-step dispatch precedence defined in
+  `index.yaml` `schema.dispatch.precedence` (ADR-005 introduced
+  seven; v4.1.0 inserted `repo_downgrade` as step 6 between
+  `trait_downgrade` and `rule_modifier`).
 - Implement runtime data-quality checks for rules that omit
   `applies_to` — currently EVAL-003, MONO-003, and EVAL-007
   (ADR-004).

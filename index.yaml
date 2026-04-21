@@ -343,10 +343,10 @@ schema:
   #      emitted at the rule's declared severity.
   #
   # The mechanisms are additive at authoring time (a repo may declare
-  # traits and exemptions and deferrals simultaneously) but are
-  # resolved in the order above per rule. A rule exempted by trait
-  # (step 2) short-circuits — no per-repo exemption or deferral is
-  # consulted for that rule.
+  # traits, exemptions, deferrals, and downgrades simultaneously) but
+  # are resolved in the order above per rule. A rule exempted by trait
+  # (step 2) short-circuits — no per-repo exemption, deferral, or
+  # downgrade is consulted for that rule.
   dispatch:
     precedence:
       - scope
@@ -361,9 +361,10 @@ schema:
   evaluator_yaml:
     purpose: >
       Per-repo configuration file (evaluator.yaml at repo root) that declares
-      the repo type, traits, exemptions, and deferrals. Required on all active
-      repos (EVAL-008). The evaluator reads this file after cloning the repo
-      to determine which rules apply and how findings should be surfaced.
+      the repo type, traits, exemptions, deferrals, and downgrades. Required
+      on all active repos (EVAL-008). The evaluator reads this file after
+      cloning the repo to determine which rules apply and how findings should
+      be surfaced.
     type:
       format: "string — one of the repo_types values above"
       required: true
