@@ -1,3 +1,10 @@
+## [4.1.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v4.1.0...v4.1.1) (2026-04-22)
+
+
+### Bug Fixes
+
+* false positives from definition of rules ([71527e0](https://github.com/mini-app-polis/ecosystem-standards/commit/71527e0723a57a260257dbed0433ef74d4eea627))
+
 # [4.1.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v4.0.0...v4.1.0) (2026-04-21)
 
 ### Features
