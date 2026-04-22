@@ -62,8 +62,8 @@ standards:
       Every finding emitted by evaluator-cog references a specific
       standard by ID, describes what was observed with enough
       specificity to locate the violation, and suggests a concrete
-      remediation. Vague findings ("improve error handling," "better
-      logging") are not acceptable.
+      remediation. The remediation must describe a concrete action —
+      placeholders like "Fix this" or "See docs" are not acceptable.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -80,9 +80,9 @@ standards:
             specificity this rule requires.
         (3) Every finding must have a non-null remediation (or
             equivalent column). Flag findings with empty remediation.
-        (4) remediation length must exceed finding_text length × 0.5
-            OR be ≥ 40 characters. A remediation that is just a copy
-            of the finding (or shorter) adds no actionable guidance.
+        (4) remediation must be a non-empty string with length
+            ≥ 60 characters. This is an absolute minimum quality
+            floor — finding_text length is not part of this check.
       The check reads the api-kaianolevine-com pipeline_evaluations
       data.
 
