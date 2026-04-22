@@ -28,10 +28,18 @@ standards:
     status: requirement
     dimension: documentation_coverage
     severity: WARN
-    applies_to: [all]
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
       For pipeline/trigger cogs: what files are expected, where they come from, what is
       produced and where it goes. For APIs: what endpoints exist and what they serve.
+
+      Scoped to repos that have a well-defined input→output boundary. Static
+      sites render content (the "input" is the content directory, not an
+      external data source); react-apps consume APIs (the input/output
+      description belongs on the API); shared libraries document their
+      public API via docstrings and pyproject metadata. The pipeline-signal
+      vocabulary used by the LLM check (source folder, produces, writes to,
+      etc.) is a poor fit for those repo types.
     checkable: true
     check_notes: >
       LLM CHECK.
@@ -156,10 +164,15 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: WARN
-    applies_to: [all]
+    applies_to: [pipeline-cog, trigger-cog, api-service, react-app]
     description: >
       Commented-out code is removed, not left in place. Version control is the
       history — the codebase is the present.
+
+      Scoped to repos with an active code surface. Static sites are primarily
+      content (commented-out Markdown / HTML structure is not dead code in the
+      same sense); shared libraries intentionally retain commented reference
+      implementations for API callers; the standards repo is catalog YAML.
     checkable: true
     check_notes: >
       LLM CHECK.

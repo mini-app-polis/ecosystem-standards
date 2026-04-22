@@ -21,10 +21,16 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: [all]
+    applies_to: [pipeline-cog, trigger-cog]
     description: >
       Pipelines continue on per-file errors. One bad input does not abort a run.
       Failures are logged, prefixed, and left for retry — never silently dropped.
+
+      Scoped to pipeline-cog and trigger-cog: the rule describes iteration over
+      a batch of items, which is only meaningful for repos that process such
+      batches. API services handle one request at a time; static sites and
+      react-apps don't iterate inputs; shared libraries and the standards repo
+      don't run pipelines.
     checkable: true
     check_notes: >
       LLM CHECK.
@@ -58,11 +64,16 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [all]
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
       If you cannot see what a system is doing in production, you cannot deploy
       it confidently. Logging, error tracking, and run history are requirements,
       not enhancements. Every production service must have all three.
+
+      Scoped to production services. Shared libraries are consumed by services
+      that own observability at their boundary; static sites and react-apps
+      have different observability concerns (client-side error tracking) that
+      are covered by the frontend standards, not this rule.
     checkable: true
     check_notes: >
       LLM CHECK.
