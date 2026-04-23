@@ -215,7 +215,7 @@ standards:
     title: Retired trigger patterns are not used
     status: requirement
     dimension: structural_conformance
-    severity: ERROR
+    severity: WARN
     applies_to: [pipeline-cog]
     description: >
       Pipeline cogs do not contain any of the retired trigger patterns
@@ -229,18 +229,43 @@ standards:
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Scan all source files and workflow files for the retired patterns:
-        (1) `.github/workflows/*.yml` containing `on: repository_dispatch:`
-            where the job body invokes application code (not pure CI).
-        (2) Python source containing `requests.post(...)` or `httpx.post(...)`
-            to a URL matching `api.github.com/.../dispatches` — flag as
-            GitHub API trigger relay.
-        (3) References to `google-app-script-trigger` in any file (this
-            service was retired in 2026-03 as part of the watcher-cog
-            migration).
-        (4) `workflow_dispatch` invocations from inside Python source
-            (via gh CLI subprocess or GitHub API HTTP call).
-      Each hit is one finding with the specific file/line.
+      The canonical production trigger path in MiniAppPolis is:
+      watcher-cog detects a source-of-truth change → fires a Prefect
+      deployment trigger → pipeline-cog flow runs. GitHub Actions
+      should not be a relay for production flow triggers.
+
+      Flag a workflow if ALL of the following are true:
+        (1) It uses `on: repository_dispatch:` or a similar event-driven
+            trigger (NOT `on: workflow_dispatch:` which is manual).
+        (2) It invokes application code directly — e.g.
+            `uv run python -u src/<cog>/<module>.py`, `pnpm run <script>`
+            executing app logic, or a custom action that runs a flow.
+        (3) The same functionality exists, or should exist, as a Prefect
+            flow triggered by watcher-cog. The giveaway is a production
+            flow registered via `prefect.serve()` whose work is
+            duplicated or shadowed by the workflow.
+
+      DO NOT flag a workflow in any of these cases:
+        - It uses `on: workflow_dispatch:` (manual-only). Manual triggers
+          for debugging, one-off runs, or convenience are legitimate.
+        - It handles deprecated or archival functionality that has been
+          intentionally kept out of Prefect (e.g. to avoid consuming
+          Hobby-tier deployment slots for rarely-run operations). Look
+          for a comment in the workflow, a note in the README, or a
+          retired/deprecated marker. If the repo's docs indicate the
+          functionality is legacy, the workflow is not drift.
+        - It is pure CI/CD — running tests, linting, building, deploying.
+          Those are not application-code triggers.
+        - It dispatches a Prefect deployment via the Prefect API rather
+          than invoking app code directly. That IS the canonical trigger
+          path — it's just initiated from GitHub instead of watcher-cog,
+          which is a different question (and out of scope for PIPE-008).
+
+      When flagging, cite the specific workflow file(s) and name the
+      Prefect flow or watcher-cog path that should be the canonical
+      trigger instead. If the canonical path does not yet exist, say so
+      — that changes the remediation from "remove the workflow" to
+      "consolidate onto the canonical path."
 
       COG SUBTYPE: This rule applies to pipeline cogs only. Skip for
       trigger cogs and watcher-cog itself.
