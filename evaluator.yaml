@@ -3,5 +3,6 @@
 
 type: standards-repo
 
-# All previous exceptions (XSTACK-001, CD-009, CD-010, PIPE-008, PIPE-011)
-# are now covered by standards-repo type scoping — no exemptions needed.
+exemptions:
+  - rule: DOC-004
+    reason: "ecosystem-standards is a YAML catalog consumed by evaluator-cog as data, not a runtime service. It has no deployment, no server process, and no environment variables. DOC-004's requirement for .env.example presumes a service that reads env vars at runtime, which does not apply to a pure catalog repo."
