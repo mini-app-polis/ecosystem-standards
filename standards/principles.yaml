@@ -107,33 +107,21 @@ standards:
     checkable: false
 
   - id: PRIN-008
-    title: Bug fix commits touch tests
-    status: requirement
+    title: Bug fixes should bring regression coverage
+    status: convention
     dimension: testing_coverage
     severity: ERROR
     applies_to: [pipeline-cog, trigger-cog, api-service, shared-library]
     description: >
-      If a bug was found in production, a test is written that would
-      have caught it. This rule covers the concrete "did a test file
-      change alongside the source change" check. The assessment of
-      whether the test is actually a regression test for the specific
-      bug lives in PRIN-010.
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      Fetch recent commits on main with conventional-commit prefix
-      `fix:` or `fix(<scope>):`, last 90 days.
-      For each fix commit, verify that at least one file matching
-      either `tests/**/*.py`, `src/**/test_*.py`, or `**/*.test.ts`
-      was added or modified either:
-        (a) in the same commit, OR
-        (b) in a commit within 24 hours of the fix commit that
-            references the same issue number (via "Fixes #N",
-            "Closes #N", or similar).
-      Flag any fix commit failing both conditions.
-      Exempt: fix commits touching only documentation files
-      (docs/**/*.md, README.md) or only build config files
-      (pyproject.toml, package.json, .github/**).
+      When a bug is found in production, the fix should land alongside
+      a test that would have caught it. In practice this is a code-
+      review expectation rather than an automated gate — "did a test
+      file change alongside the source change" is only a weak proxy
+      (a touched test isn't necessarily a regression test, and some
+      fixes legitimately have no unit-testable surface area). Whether
+      a given test is actually a regression test for the specific bug
+      lives in PRIN-010.
+    checkable: false
 
   - id: PRIN-009
     title: Standards are a living document

@@ -153,21 +153,22 @@ standards:
   # ─────────────────────────────────────────────
 
   - id: CD-004
-    title: GitHub Actions version tags must be valid
-    status: requirement
+    title: Pinned GitHub Action versions should resolve
+    status: convention
     dimension: cd_readiness
     severity: ERROR
     applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app, shared-library, standards-repo]
     description: >
-      All "uses: owner/repo@vN" references in .github/workflows/ must reference
-      version tags that exist in the action's release history. Invalid version tags
-      cause CI to fail silently. Verify the tag exists before committing any
-      version pin.
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      Parse all uses: references in .github/workflows/*.yml. For each action,
-      verify the pinned version tag exists via the GitHub API. Flag any returning 404.
+      Every `uses: owner/repo@vN` reference in `.github/workflows/` should
+      point at a version tag that exists in the action's release history.
+      Invalid tags cause CI to fail silently at workflow-parse time.
+      Verification is expected at the point of change — when bumping or
+      adding an action pin, confirm the tag exists in the upstream repo.
+      This is a code-review expectation rather than a pipeline gate;
+      automating it would mean hitting the GitHub API for every pinned
+      tag on every conformance run, which is costly and doesn't add
+      signal over the first CI execution catching the typo.
+    checkable: false
     origin: "Invalid version tags cause CI to fail silently, creating false confidence in a passing pipeline."
 
 # VER-001..VER-006 moved to standards/versioning.yaml.

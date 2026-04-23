@@ -87,20 +87,23 @@ standards:
       data.
 
   - id: EVAL-006
-    title: Standards currency dimension
-    status: requirement
+    title: Evaluations should stay current with the standards version
+    status: convention
     dimension: standards_currency
     severity: INFO
     applies_to: [pipeline-cog, api-service]
     description: >
-      Evaluation dimension: has this repo been evaluated against the current version
-      of the standards document? Is it behind? Flag if the last evaluation used a
-      standards version more than one minor version behind current.
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      Check pipeline_evaluations for this repo. Compare standards_version on the
-      most recent evaluation against current package.json version. Flag if behind.
+      A repo's most recent evaluation should have been scored against
+      the current standards catalog version, not a materially older
+      one. Drift here means the pipeline page is showing findings
+      generated against stale rules — misleading, though usually
+      self-correcting on the next scheduled conformance run. Because
+      conformance runs daily across every repo in `active_repos`,
+      long-lived drift only happens when a repo is dropped from the
+      active list or its runs have been failing. Both are easier to
+      notice through run-health monitoring than through a separate
+      automated check.
+    checkable: false
 
   - id: EVAL-007
     title: Standards/evaluator check coverage must be tracked and in sync
