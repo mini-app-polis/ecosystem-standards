@@ -1,3 +1,10 @@
+# [4.2.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v4.1.1...v4.2.0) (2026-04-23)
+
+
+### Features
+
+* uprev ([9605ba1](https://github.com/mini-app-polis/ecosystem-standards/commit/9605ba1bfa3f6e119c7f4e53d317d5bd88a02a03))
+
 ## [4.1.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v4.1.0...v4.1.1) (2026-04-22)
 
 
