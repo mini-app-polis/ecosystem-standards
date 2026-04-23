@@ -1,3 +1,10 @@
+## [4.2.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v4.2.1...v4.2.2) (2026-04-23)
+
+
+### Bug Fixes
+
+* **meta-001:** declare semantic-release and plugins in package.json devDependencies ([cde35fc](https://github.com/mini-app-polis/ecosystem-standards/commit/cde35fca93aeb357d743a2debc82ef1a00e1e267))
+
 ## [4.2.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v4.2.0...v4.2.1) (2026-04-23)
 
 
