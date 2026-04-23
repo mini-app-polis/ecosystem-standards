@@ -1,3 +1,25 @@
+# [5.0.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v4.2.2...v5.0.0) (2026-04-23)
+
+
+### Features
+
+* **py-013:** rework from prescriptive to detective ([acb7e6a](https://github.com/mini-app-polis/ecosystem-standards/commit/acb7e6ad9cf4e01fadc3581a322f184c614d514a))
+
+
+### BREAKING CHANGES
+
+* **py-013:** PY-013's title, description, and check_notes have
+changed meaningfully. Cogs that were failing PY-013 with a deferral
+because they use non-file-rename dedup strategies will pass the new
+rule cleanly once the checker is updated. Cogs that were passing
+PY-013 by matching possible_duplicate_ continue to pass (the
+substring 'duplicate' is one of the new signals). No cog should
+fail PY-013 post-upgrade that passed pre-upgrade, but the rule's
+semantic meaning is different — consumers should re-read the new
+description and check_notes.
+
+Made-with: Cursor
+
 ## [4.2.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v4.2.1...v4.2.2) (2026-04-23)
 
 
