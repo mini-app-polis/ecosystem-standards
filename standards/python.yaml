@@ -223,20 +223,47 @@ standards:
       path code.
 
   - id: PY-013
-    title: possible_duplicate_ prefix for duplicates
+    title: Deduplication handling is visible
     status: requirement
     dimension: structural_conformance
     severity: WARN
     applies_to: [pipeline-cog, trigger-cog]
     description: >
-      Duplicate files are renamed rather than overwritten or deleted.
-      Human review required.
+      A pipeline-cog or trigger-cog that processes potentially-repeating
+      input shows explicit handling of duplicate input in its source.
+      The specific mechanism is an implementation decision — common
+      patterns include file-level renames (e.g. possible_duplicate_
+      prefix), row-level uniqueness constraints with skip-on-conflict,
+      content-hash dedup, or equivalent. The chosen strategy is
+      recorded in docs/decisions/ as an ADR.
+
+      Cogs whose inputs cannot contain duplicates by construction
+      (e.g. a pure-compute transform over already-canonicalized input)
+      are expected to declare this in evaluator.yaml as an exemption
+      with a reason naming why duplicates are impossible.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Search all Python source files for the string 'possible_duplicate_' in
-      rename or move operations. If the cog performs deduplication logic and
-      no possible_duplicate_ rename pattern is found, flag as missing.
+      Search all Python source files under src/ for any case-insensitive
+      substring match against dedup-awareness signals:
+        - 'dedup'
+        - 'duplicate'
+        - 'already exists'
+        - 'already processed'
+        - 'on_conflict'
+        - 'on conflict'
+        - 'integrityerror'
+        - 'unique constraint'
+        - 'uniqueviolation'
+      If no signal is found, flag the cog — the source does not
+      visibly acknowledge duplicate-input handling. The finding
+      message names the missing signals and suggests adding explicit
+      dedup handling or documenting why duplicates are impossible.
+
+      This check does not verify the correctness of the dedup
+      implementation — that is a semantic property beyond
+      deterministic checking. The check establishes only that the
+      cog has considered duplicates.
 
   - id: PY-014
     title: finally for temp file cleanup

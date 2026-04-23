@@ -77,11 +77,13 @@ standards:
             `test_no_overwrite_*`, `test_possible_duplicate_*`).
         (b) Body passes the same input twice (or two inputs with
             identical canonical content) to the cog and asserts the
-            second invocation produced a dedup outcome — either a
-            rename with `possible_duplicate_` prefix (see PY-013),
-            a skip/no-op return value, an `on_conflict_do_nothing`
-            DB outcome, or an assertion that the original was not
-            overwritten.
+            second invocation produced a dedup outcome appropriate
+            to the cog's chosen strategy (see PY-013) — e.g. a
+            file rename with `possible_duplicate_` prefix, a
+            skip/no-op return value, an `on_conflict_do_nothing`
+            DB outcome, an assertion that the original was not
+            overwritten, or a uniqueness-constraint `IntegrityError`
+            that the cog handles by skipping.
       Flag the repo if no test function meets both (a) and (b).
 
   - id: TEST-003
