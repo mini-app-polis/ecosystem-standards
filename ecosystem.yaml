@@ -65,6 +65,26 @@ services:
       archives processed files. Outputs to wcs_transcripts and wcs_notes
       tables. Consumed by wcs.kaianolevine.com.
 
+  - id: voicenotes-cog
+    type: pipeline-cog
+    status: active
+    dod_type: new_cog
+    language: python
+    cog_subtype: pipeline
+    host: railway
+    description: >
+      Voice sticky-note pipeline. Triggered by watcher-cog when audio
+      files land in the voice-inbox/ Drive folder. Per-file pipeline:
+      Whisper transcribes, Claude Sonnet extracts a structured task
+      ({title, summary, due_date, needs_review}), post_task creates
+      the matching task in Todoist with a drive_file_id marker for
+      idempotency, then the audio is archived to processed/YYYY-MM/.
+      A single Prefect deployment (voicenotes-router) dispatches
+      between ingest mode (watcher-fired) and cleanup mode (cron
+      daily, prunes processed/ older than ARCHIVE_RETENTION_DAYS).
+      No database — the Drive folder location and the Todoist task
+      content are the only state.
+
   # ── API services ──────────────────────────────────────────────
 
   - id: api-kaianolevine-com
