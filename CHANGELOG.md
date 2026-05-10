@@ -1,3 +1,10 @@
+## [5.0.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v5.0.0...v5.0.1) (2026-05-10)
+
+
+### Bug Fixes
+
+* documentation for pipeline evals ([bf484ea](https://github.com/mini-app-polis/ecosystem-standards/commit/bf484eae59c15f31420b6f8249b581c4eb389f85))
+
 # [5.0.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v4.2.2...v5.0.0) (2026-04-23)
 
 
