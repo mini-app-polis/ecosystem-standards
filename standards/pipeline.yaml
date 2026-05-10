@@ -67,7 +67,7 @@ standards:
             lacks ON CONFLICT DO UPDATE or ON CONFLICT DO NOTHING.
         (3) HTTP `POST` or `PATCH` calls to api-kaianolevine-com
             endpoints that are known idempotency-sensitive
-            (/v1/pipeline_evaluations, /v1/live-plays, /v1/wcs_notes) —
+            (/v1/evaluations, /v1/live-plays, /v1/wcs_notes) —
             flag any POST without an Idempotency-Key header or
             equivalent dedup identifier.
       Exempt: test files, migration scripts, one-shot backfill scripts
