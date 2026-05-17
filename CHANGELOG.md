@@ -1,3 +1,10 @@
+# [5.1.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v5.0.1...v5.1.0) (2026-05-17)
+
+
+### Features
+
+* updated with notes restructure ([4af8160](https://github.com/mini-app-polis/ecosystem-standards/commit/4af81606ecef8b680a2304740847393e6cd8022d))
+
 ## [5.0.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v5.0.0...v5.0.1) (2026-05-10)
 
 
