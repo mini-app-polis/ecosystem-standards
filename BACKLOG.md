@@ -68,8 +68,9 @@ Priority: low — functional but will drift further as UI evolves.
 ## PIPE-009 Remediation
 
 PIPE-009 requires pipeline cogs to acquire a named Prefect concurrency slot
-before scanning shared resources. notes-ingest-cog is compliant as of 2026-04.
-The following cogs need remediation:
+before scanning shared resources. transcription-cog (which absorbed the
+former notes-ingest-cog as its `wcs-transcripts` mode in May 2026) is
+compliant as of 2026-04. The following cogs need remediation:
 
 - [ ] **deejay-cog** — add `with concurrency("deejay-cog", occupy=1)` wrapping
   the flow body in `flow.py`. Create `deejay-cog` concurrency limit in Prefect

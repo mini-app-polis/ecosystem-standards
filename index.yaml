@@ -225,7 +225,7 @@ schema:
   repo_types:
     pipeline-cog: >
       Always-on Railway worker running one or more Prefect @flow(s).
-      Processes data. Examples: deejay-cog, evaluator-cog, notes-ingest-cog.
+      Processes data. Examples: deejay-cog, evaluator-cog, transcription-cog.
     trigger-cog: >
       Always-on Railway worker running a plain asyncio loop. Detects
       events and fires Prefect flow runs via API. No @flow decorator.

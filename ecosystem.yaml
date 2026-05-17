@@ -50,7 +50,7 @@ services:
       pipeline_evaluations table via api-kaianolevine-com with source field
       distinguishing evaluation type.
 
-  - id: notes-ingest-cog
+  - id: transcription-cog
     type: pipeline-cog
     status: active
     dod_type: new_cog
@@ -58,32 +58,39 @@ services:
     cog_subtype: pipeline
     host: railway
     description: >
-      WCS lesson transcript ingestion pipeline. Triggered by watcher-cog when
-      new transcript files land in the configured Google Drive input folder.
-      Reads transcripts, calls LLM to produce structured notes JSON, stores
-      raw transcripts and notes in Postgres via api-kaianolevine-com, and
-      archives processed files. Outputs to wcs_transcripts and wcs_notes
-      tables. Consumed by wcs.kaianolevine.com.
-
-  - id: voicenotes-cog
-    type: pipeline-cog
-    status: active
-    dod_type: new_cog
-    language: python
-    cog_subtype: pipeline
-    host: railway
-    description: >
-      Voice sticky-note pipeline. Triggered by watcher-cog when audio
-      files land in the voice-inbox/ Drive folder. Per-file pipeline:
-      Whisper transcribes, Claude Sonnet extracts a structured task
-      ({title, summary, due_date, needs_review}), post_task creates
-      the matching task in Todoist with a drive_file_id marker for
-      idempotency, then the audio is archived to processed/YYYY-MM/.
-      A single Prefect deployment (voicenotes-router) dispatches
-      between ingest mode (watcher-fired) and cleanup mode (cron
-      daily, prunes processed/ older than ARCHIVE_RETENTION_DAYS).
-      No database — the Drive folder location and the Todoist task
-      content are the only state.
+      Two pipelines under one Prefect deployment (transcription-cog) and
+      one Railway service, dispatched by mode via a router flow:
+        * mode="wcs-transcripts" — WCS lesson transcript ingestion.
+          Triggered by watcher-cog when new transcript files land in
+          the configured Google Drive input folder. Reads transcripts,
+          calls LLM to produce structured notes JSON, stores raw
+          transcripts and notes in Postgres via api-kaianolevine-com,
+          and archives processed files. Outputs to wcs_transcripts and
+          wcs_notes tables. Consumed by wcs.kaianolevine.com.
+        * mode="voicenotes" — Voice sticky-note pipeline. Triggered by
+          watcher-cog when audio files land in the voice-inbox/ Drive
+          folder. Per-file pipeline: Whisper transcribes, Claude
+          Sonnet extracts a structured task
+          ({title, summary, due_date, needs_review}), post_task creates
+          the matching task in Todoist with a drive_file_id marker for
+          idempotency, then the audio is archived to processed/YYYY-MM/.
+          No database — the Drive folder location and the Todoist task
+          content are the only state.
+        * mode="voicenotes-cleanup" — Cron-fired (daily) cleanup mode
+          that prunes processed/ older than ARCHIVE_RETENTION_DAYS.
+      Self-reports findings under two distinct repo identifiers via
+      ``post_run_finding`` and ``post_findings`` (mini_app_polis.pipeline_status):
+      ``transcription-cog`` for the WCS-transcripts flow and
+      ``voicenotes-cog`` for the voicenotes flow, so the Pipeline Health
+      UI can keep the two pipelines visible separately even though they
+      ship in one repo and one deployment.
+      History: merged from the standalone ``notes-ingest-cog`` and
+      ``voicenotes-cog`` repos in May 2026
+      (docs/decisions/ADR-004-voicenotes-merge.md). The old service
+      identifiers ``notes-ingest-cog`` and ``voicenotes-cog`` are
+      retired here and replaced by this single entry; the
+      ``voicenotes-cog`` repo-label on emitted findings is retained
+      intentionally as a self-report dimension, not a separate service.
 
   # ── API services ──────────────────────────────────────────────
 
