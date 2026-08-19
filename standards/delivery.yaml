@@ -719,17 +719,44 @@ standards:
                   which the application decides.
         Sentry  — an explicit sentry_sdk.capture_exception() call.
 
-      The Sentry leg is the one that needs stating. CD-002 and CD-010
-      scope Sentry to *unhandled* exceptions, and a provider failure the
-      application catches in order to degrade gracefully is by definition
-      handled — so it reaches Sentry only if captured deliberately. This
-      rule extends Layer 3's remit to cover this one class of handled
-      exception. That is a deliberate, bounded exception to CD-010's
+      The Sentry leg is the one that needs stating, and the reason is
+      fidelity rather than presence. Sentry's Python SDK enables its
+      Logging integration by default with event_level=ERROR, so an
+      ERROR-level record through the shared stdlib logger (CD-009)
+      already produces a Sentry event without any explicit call — the
+      give-up path in common-python-utils' google/_retry.py is an
+      existing example. But a log-derived event carries a formatted
+      string and nothing else: no exception object, so no stack trace,
+      no exception type, and grouping driven by message text that
+      changes with every interpolated provider name and error detail.
+      sentry_sdk.capture_exception() is what produces a usable issue.
+      "It shows up in Sentry somehow" is not the bar.
+
+      This also extends Layer 3's remit. CD-002 and CD-010 scope Sentry
+      to *unhandled* exceptions, and a provider failure the application
+      catches in order to degrade gracefully is by definition handled.
+      That is a deliberate, bounded exception to CD-010's
       "non-overlapping and non-redundant" framing: the three layers answer
       different questions about the same event — is the service alive,
       what happened during this run, and what was the exception with its
       stack and context — and a provider failure is precisely the case
       where an operator wants all three views.
+
+      Two limits on Layer 3 that make the explicit capture load-bearing
+      for cogs specifically, rather than a nicety:
+
+        - Prefect catches exceptions raised inside a @flow in order to
+          mark the run Failed or Crashed. They do not propagate to
+          sys.excepthook, so Sentry's Excepthook integration does not
+          fire for flow-body code — which is most cog code. The
+          on_failure / on_crashed hooks (PIPE, mini_app_polis.
+          pipeline_status.make_failure_hook) cover the Pipeline Health
+          leg for that case, not the Sentry leg.
+        - Failures at module import time happen before
+          sentry_sdk.init() runs, whatever "initialise at the entry
+          point" is taken to mean, and are structurally invisible to
+          Sentry. deejay-cog's 2026-08-19 ModuleNotFoundError
+          crash-loop produced zero Sentry events for this reason.
 
       This rule says nothing about how the failure is handled. Skipping a
       step, failing an item, aborting the run, and exiting the process are
@@ -755,7 +782,11 @@ standards:
       (1) [deterministic] Confirm sentry_sdk is a declared dependency and
           sentry_sdk.init() is called at the service entry point. This
           overlaps CD-002 by design — CD-018 is unsatisfiable without it,
-          and a repo failing both should see both findings.
+          and a repo failing both should see both findings. Do not accept
+          an ERROR-level log call as satisfying the Sentry leg: the
+          default Logging integration turns it into an event, but a
+          message-only one with no exception attached. An explicit
+          sentry_sdk.capture_exception() is required.
       (2) [deterministic] Locate handlers that catch the error types
           PY-016 requires (or catch around an outbound-call site) and then
           continue rather than re-raise — the degradation paths. For each,
