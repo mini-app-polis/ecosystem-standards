@@ -544,13 +544,251 @@ standards:
       process with full access to environment variables and the filesystem.
       Any cog using flow.deploy() targeting a work pool, or referencing a
       work pool name in its Prefect configuration, is violating this pattern.
+
+      Registration may go through the shared wrapper
+      mini_app_polis.serve_resilience.serve_with_retry() instead of calling
+      prefect.serve() directly — the wrapper calls prefect.serve() and is
+      the same pattern, not a deviation. CD-016 requires it. A cog that
+      adopts the wrapper has no bare serve( token left in its source, so
+      the check below must recognize serve_with_retry( or it will report a
+      compliant cog as having no registration mechanism at all.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
       Search Python source files for flow.deploy() calls or work_pool_name
       references. Search prefect.yaml if present for work pool configuration.
-      Flag any found. Confirm prefect.serve() is used as the flow registration
-      mechanism in the cog's main entry point. Flag if neither serve() nor
-      deploy() is found — the registration pattern is missing entirely.
+      Flag any found. Confirm one of the following is used as the flow
+      registration mechanism in the cog's main entry point:
+        (a) prefect.serve(...) or flow.serve(...)
+        (b) a bare serve(...) call where `serve` is imported from prefect
+        (c) serve_with_retry(...) imported from mini_app_polis.serve_resilience
+      Flag if none of (a)/(b)/(c) and no deploy() is found — the registration
+      pattern is missing entirely. Do not flag (c): it wraps prefect.serve()
+      and satisfies this rule.
+
+  - id: CD-016
+    title: serve() startup registration wrapped in serve_with_retry
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    applies_to: [pipeline-cog, trigger-cog]
+    description: >
+      Cogs register their deployments via
+      mini_app_polis.serve_resilience.serve_with_retry() rather than calling
+      prefect.serve() directly.
+
+      prefect.serve() makes a blocking, fail-fast HTTP call to Prefect Cloud
+      (read_deployment_by_name) before its runner loop begins. Unguarded,
+      a transient upstream error on that single call propagates out of main()
+      and the process exits at boot. Because every cog shares the same
+      serve()-in-main() scaffolding (CD-015), this is one single point of
+      failure shared across the whole fleet, not a per-cog risk.
+
+      serve_with_retry() retries transient failures (any HTTP 5xx, plus 408
+      and 429, plus network-level httpx transport errors) with bounded
+      exponential backoff up to a wall-clock ceiling, fails fast on the rest
+      of 4xx (401/403/404), and on give-up posts one source="startup"
+      CRITICAL finding before re-raising so the process still exits non-zero.
+
+      The 5xx classification is a range rather than an allowlist because
+      Prefect Cloud is Cloudflare-fronted: its edge emits 520-529 (522, 524)
+      when an origin is degraded, which is the most common client-side
+      presentation of a Prefect Cloud incident.
+
+      This is layer 1 of two. CD-017 is layer 2 (Railway restart policy).
+      They are independent — retry rides out the blip in-process, restart
+      recovers when retries are exhausted or when the failure is something
+      retries cannot fix. Implement both.
+
+      The helper is shared library code, not per-cog code. A cog that
+      hand-rolls its own retry around serve() violates this rule: the point
+      is that one fix covers the fleet, and four copies drift.
+
+      SCOPE LIMIT: this rule checks the cog's *source* — that main.py
+      imports and calls serve_with_retry. It does not and cannot check
+      that the common-python-utils version the repo actually resolves to
+      contains serve_with_retry. A repo whose uv.lock pins a git SHA
+      predating the helper passes this check and still dies at import on
+      deploy (deejay-cog, 2026-08-19). Keeping the locked dependency
+      current is per-repo release hygiene, not a catalog rule; the
+      practical guard is to relock as part of the change that needs the
+      new code, and to have one test that imports the entry-point module
+      so CI fails instead of the container. See the scope warning on the
+      lockfile-integrity candidate in BACKLOG.md — `uv lock --check`
+      does not cover this either.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (0) APPLICABILITY GATE. Scan the repo's Python source for any of
+          prefect.serve( / flow.serve( / a bare serve( where `serve` is
+          imported from prefect / serve_with_retry( . If none is present,
+          this repo has no serve() entry point and the rule does not
+          apply — skip it and emit no finding. This gate exists because
+          trigger-cog is in applies_to for the cogs that do serve, but a
+          trigger-cog that runs a plain asyncio loop with no @flow has
+          nothing to register; flagging it would be a false ERROR on a
+          correct repo.
+      (1) Resolve the main entry point from railway.json deploy.startCommand
+          (CD-017 makes that field mandatory, so it is normally present);
+          fall back to src/<pkg>/main.py when railway.json is absent or has
+          no startCommand. In that module, confirm an import of
+          serve_with_retry from mini_app_polis.serve_resilience and a call
+          to serve_with_retry(...). Flag if the module calls prefect.serve()
+          / flow.serve() / a bare serve( directly instead.
+      (2) Confirm the serve_with_retry(...) call passes a `repo=` keyword.
+          The shared helper cannot infer the cog identity and the emitted
+          finding is unattributable without it. Flag a call with no repo=.
+      (3) Confirm common-python-utils is declared as a dependency in
+          pyproject.toml. Flag if absent — the import cannot resolve.
+      Shared-library and standards repos are already out of scope by type.
+    origin: >
+      2026-07-22: a transient Prefect Cloud 503 on the deployment-registration
+      endpoint crashed all four serve()-based cogs simultaneously. Each cog's
+      only except clause was KeyboardInterrupt, so the 503 propagated out of
+      main() and every process exited non-zero. None auto-restarted (CD-017)
+      and no finding was posted — the flows' on_crashed hooks attach to flow
+      runs, and this crash happened before any flow run existed. The fleet was
+      down silently. See deejay-cog ADR-005 and ecosystem-standards ADR-006.
+
+  - id: CD-017
+    title: Version-controlled Railway restart policy — ON_FAILURE
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    applies_to: [pipeline-cog, trigger-cog, api-service]
+    description: >
+      Every Railway-hosted service declares its restart policy in a
+      version-controlled railway.json at the repo root, with
+      restartPolicyType "ON_FAILURE" and a restartPolicyMaxRetries of at
+      least 10.
+
+      Version-controlled rather than dashboard-configured so the setting is
+      reviewable in a PR, diffable over time, and reproduced automatically
+      when a service is recreated. A dashboard-only value is invisible to
+      code review and silently lost on service recreation — which is how
+      the July 2026 fleet-down incident ended up with restartPolicyType
+      NEVER on services nobody remembered configuring.
+
+      ON_FAILURE rather than ALWAYS: a clean exit (exit code 0) is a
+      deliberate shutdown and should not be fought. Only non-zero exits —
+      crashes — are restarted.
+
+      This is layer 2 of two. CD-016 is layer 1 (in-process retry). The
+      layers multiply: total unattended outage coverage is roughly the
+      layer-1 wall-clock ceiling times restartPolicyMaxRetries. A low
+      max-retries value silently caps that coverage, which is why the
+      floor is 10 rather than "any value".
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Confirm railway.json exists at the repo root and parses as JSON.
+          Flag if absent or malformed.
+      (2) Confirm deploy.restartPolicyType == "ON_FAILURE". Flag "NEVER",
+          "ALWAYS", null, or a missing key.
+      (3) Confirm deploy.restartPolicyMaxRetries is an integer >= 10. Flag
+          a lower value, null, or a missing key.
+      (4) Confirm deploy.startCommand is present and non-empty. Flag if
+          absent — a railway.json that omits it leaves the effective start
+          command dashboard-owned, which defeats the purpose of the file.
+      Monorepo services: read railway.json at the service's monorepo_path,
+      falling back to the repo root.
+    origin: >
+      2026-07-22: after a transient Prefect Cloud 503 crashed all four
+      serve()-based cogs, none of them came back. Railway restart policy was
+      NEVER (or an exhausted low cap) on every affected service, and the
+      setting existed only in the dashboard, so nothing in any repo recorded
+      or enforced it. See deejay-cog ADR-005 and ecosystem-standards ADR-006.
+
+  - id: CD-018
+    title: External-service failures are logged, reported, and captured in Sentry
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    applies_to: [pipeline-cog, trigger-cog, api-service]
+    description: >
+      Every failure in either class defined by PY-016 — COMMUNICATION
+      FAILURE and RESPONSE ERROR — reaches all three observability layers,
+      even when the application handles it and carries on:
+
+        Log     — a structured log line via the shared logger (CD-009),
+                  naming the provider and which of the two classes it was.
+        Report  — a Pipeline Health finding via
+                  mini_app_polis.pipeline_status with
+                  source="external_dependency" and a provider=<id> extra
+                  (ADR-007). Severity reflects what happened to the work,
+                  which the application decides.
+        Sentry  — an explicit sentry_sdk.capture_exception() call.
+
+      The Sentry leg is the one that needs stating. CD-002 and CD-010
+      scope Sentry to *unhandled* exceptions, and a provider failure the
+      application catches in order to degrade gracefully is by definition
+      handled — so it reaches Sentry only if captured deliberately. This
+      rule extends Layer 3's remit to cover this one class of handled
+      exception. That is a deliberate, bounded exception to CD-010's
+      "non-overlapping and non-redundant" framing: the three layers answer
+      different questions about the same event — is the service alive,
+      what happened during this run, and what was the exception with its
+      stack and context — and a provider failure is precisely the case
+      where an operator wants all three views.
+
+      This rule says nothing about how the failure is handled. Skipping a
+      step, failing an item, aborting the run, and exiting the process are
+      all valid and application-dependent (ADR-007, PRIN-002). It requires
+      only that the failure is not silent.
+
+      TELEMETRY CARVE-OUT. Providers whose only role is receiving our
+      observability data are exempt and must fail silently: Sentry itself,
+      and the finding-posting path (api-kaianolevine-com plus the Clerk
+      M2M token exchange that authenticates it). A finding reporting that
+      findings cannot be posted cannot be posted, and a Sentry capture of
+      Sentry being unreachable has nowhere to go. Failures of these
+      providers are logged and nothing more. post_run_finding is already
+      best-effort by construction (deejay-cog ADR-004), as is the
+      reporting call inside serve_resilience.
+
+      Startup-lifecycle failures satisfy the Report leg via
+      source="startup" rather than source="external_dependency" — see
+      CD-016 and ADR-006. Do not emit both for one event.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      (1) [deterministic] Confirm sentry_sdk is a declared dependency and
+          sentry_sdk.init() is called at the service entry point. This
+          overlaps CD-002 by design — CD-018 is unsatisfiable without it,
+          and a repo failing both should see both findings.
+      (2) [deterministic] Locate handlers that catch the error types
+          PY-016 requires (or catch around an outbound-call site) and then
+          continue rather than re-raise — the degradation paths. For each,
+          check the handler body for all three of: a shared-logger call, a
+          post_run_finding / post_findings call, and a
+          sentry_sdk.capture_exception call. Flag handlers missing any leg.
+      (3) [deterministic] Where a finding is posted from such a handler,
+          confirm source="external_dependency" and a provider= keyword are
+          present. Flag a finding that reports a provider failure without
+          naming the provider — an unattributable row is the problem this
+          is meant to solve.
+      (4) [deterministic] Confirm the telemetry carve-out is respected in
+          the other direction: flag any sentry_sdk.capture_exception or
+          post_run_finding call inside a handler wrapping a call to Sentry
+          itself, to KaianoApiClient's evaluations POST, or to the Clerk
+          M2M token exchange. That is the infinite-regress case.
+      (5) [LLM] Judge whether any remaining swallowed external failure
+          exists — a caught provider error whose handler neither re-raises
+          nor emits any of the three legs. Bare `pass`,
+          `contextlib.suppress` around an outbound call, or a lone `return
+          None` are the shapes to look for. Exclude the carve-out
+          providers in (4).
+      A handler that re-raises is not flagged: the failure is still
+      travelling and will be caught, reported, or captured as an unhandled
+      exception further up.
+    origin: >
+      2026-08. Provider outages are currently indistinguishable from our
+      own defects in Pipeline Health — a Spotify outage during
+      process-new-files reports as sets_failed=N with nothing recording
+      that a vendor was down. Separately, any provider failure a cog
+      handles in order to degrade never reaches Sentry at all, because
+      CD-002 and CD-010 scope Sentry to unhandled exceptions. The result
+      is that the ecosystem's most routine class of failure is its least
+      observable. See ADR-007.
 
 # VER-007..VER-008 moved to standards/versioning.yaml.

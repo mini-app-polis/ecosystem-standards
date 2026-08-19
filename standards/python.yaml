@@ -305,4 +305,98 @@ standards:
       but asyncpg is absent. Flag any session usage without await on execute,
       commit, or refresh calls.
 
+  - id: PY-016
+    title: External-service interfaces separate communication failure from response error
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    applies_to: [pipeline-cog, trigger-cog, api-service, shared-library]
+    description: >
+      Any interface to an external service — Prefect Cloud, Google, Clerk,
+      Anthropic, OpenAI, Spotify, AcoustID, MusicBrainz, Todoist, GitHub,
+      or another Kaiano service — must let its caller tell these two
+      conditions apart:
+
+        COMMUNICATION FAILURE — no usable response was received. Connection
+          refused, DNS failure, TLS failure, connect/read/write timeout,
+          connection reset, truncated or unparseable response at the
+          protocol level. We do not know whether the request took effect.
+
+        RESPONSE ERROR — the provider answered and the answer is an error,
+          or the payload is well-formed HTTP but unusable. Any 4xx or 5xx
+          status, a schema mismatch, an unparseable body on a complete
+          response. We know the outcome.
+
+      The distinction is epistemic, not cosmetic: after a response error we
+      know what happened, and after a communication failure we do not. That
+      is what makes retry safety, idempotency (PIPE-013), and operator
+      triage decidable. A 500 is a RESPONSE ERROR even though it means the
+      provider is unhealthy, because we still know our request was received
+      and rejected.
+
+      This rule constrains only the *shape of the interface*, never the
+      handling. What a caller does with either class — skip the step, fail
+      the item, abort the run, exit the process — is application-dependent
+      and deliberately unstandardized (ADR-007). The requirement exists so
+      that differentiated handling is *possible* and intentional rather
+      than accidental.
+
+      Two acceptable implementations: distinct exception types for the two
+      classes, or a single exception type carrying an explicit, documented
+      discriminator (a boolean or enum field — not a sentinel value, and
+      not the error message text).
+
+      Known violations at authoring time, both in common-python-utils:
+      `api/client.py` collapses both into `KaianoApiError` and discriminates
+      only via an undocumented `status_code=0` sentinel, which is also used
+      for a missing-secret config error; `llm/anthropic_client.py` wraps
+      everything in `except Exception as e: raise LLMError(...)`, flattening
+      an Anthropic outage, a malformed request, and a bad API key into one
+      type with the distinction surviving only inside a formatted string.
+
+      Where the transport supports it, further splitting COMMUNICATION
+      FAILURE into "never arrived" (connect refused, DNS) and "sent, no
+      answer" (read timeout, reset mid-flight) is valuable — only the
+      second leaves a write in an unknown state — but it is not required
+      here.
+
+      TypeScript services are out of scope for now; no Hono service
+      currently has a non-trivial external integration beyond Clerk. An
+      XSTACK counterpart should be written when one does.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      (1) [deterministic] Identify outbound-call sites: imports of or calls
+          through httpx, requests, googleapiclient, spotipy, anthropic,
+          openai, prefect client, musicbrainzngs, or acoustid.
+      (2) [deterministic] Flag the collapsing anti-pattern — a bare
+          `except Exception` (or `except BaseException`) wrapping such a
+          call site whose handler raises a single error type built from an
+          f-string interpolation of the caught exception, with no branch on
+          the exception's class. This is the shape that destroys the
+          distinction.
+      (3) [deterministic] Flag sentinel discrimination — an error type whose
+          only transport-vs-response signal is a magic value such as
+          `status_code=0`, `status=None`, or `code=-1`. Sentinels are
+          ambiguous and undocumented by construction; a named field is
+          required.
+      (4) [LLM] For each remaining external-service interface, judge whether
+          a caller could branch on the two classes using only the public
+          error surface — distinct types, or a documented discriminator
+          field. Reading the exception's message string does not count.
+      (5) [LLM] Confirm the interface's docstring states which class each
+          error type or discriminator value represents. An undocumented
+          distinction is one callers will not use.
+      Do not flag on the basis of how callers *handle* the classes — this
+      rule is about the interface only. A caller that catches both and does
+      the same thing is compliant with this rule.
+    origin: >
+      2026-08 audit of every external-call surface in common-python-utils,
+      prompted by the July fleet-down incident. google/_retry.py,
+      spotify/spotify.py, and serve_resilience.py all separate the classes
+      correctly; api/client.py and the llm/ clients do not. The
+      inconsistency means a cog cannot reliably report whether the Kaiano
+      API was unreachable or had rejected it — which is a precondition for
+      CD-018 and for the provider attribution in ADR-007.
+
 # CFG-* rules moved to standards/config.yaml.

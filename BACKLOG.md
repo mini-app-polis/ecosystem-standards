@@ -5,6 +5,106 @@ that need to be built, decided, or documented when the time is right.
 
 ---
 
+## pipeline-eval-deprecation — retire evaluator-cog's pipeline_eval path
+
+`evaluator_cog/flows/pipeline_eval.py` exists for two reasons that the
+May 2026 self-report refactor made redundant:
+
+  1. `evaluate_pipeline_run` — LLM-scores CSV / collection runs by
+     calling Claude with a structured prompt. Cogs now self-report
+     SUCCESS/WARN/ERROR with concrete counters via
+     `mini_app_polis.pipeline_status.post_run_finding`. The LLM's
+     output adds latency, cost, and an extra place the payload shape
+     can drift; the cog itself is the authoritative source.
+  2. `handle_prefect_flow_run_event` — Prefect Cloud webhook fallback
+     for flow-run state changes the cog never reported on. With the
+     failure hooks (`make_failure_hook` in
+     `mini_app_polis.pipeline_status`) wired into every production
+     flow's `on_failure` / `on_crashed`, this webhook is also
+     redundant for any cog using the library.
+
+Plan:
+
+  - [x] Confirm every production flow (deejay-cog, transcription-cog)
+        is wired through the library shim with a failure hook.
+        (deejay-cog: done. transcription-cog: done. evaluator-cog:
+        retains for conformance_check_flow only.)
+  - [ ] Stand the Prefect Cloud webhook automation down (or repoint at
+        a no-op endpoint) so `handle_prefect_flow_run_event` stops
+        receiving traffic.
+  - [ ] Delete `evaluate_pipeline_run`, `handle_prefect_flow_run_event`,
+        `_FLOW_REPO_MAP`, `_flow_name_to_repo`, related helpers, and
+        the corresponding test files (`test_webhook.py`,
+        `test_llm.py::test_flow_name_to_repo_*`, related
+        `_build_prompt_*` test scaffolding).
+  - [ ] Drop unused `evaluator_cog.engine.llm._build_prompt_csv` /
+        `_build_prompt_collection` if no other caller remains.
+  - [ ] Remove evaluator-cog as a runtime dependency of any cog that
+        no longer needs it (the conformance-checking flow stays;
+        pipeline_eval comes out).
+
+See the module-level TODO in
+`evaluator-cog/src/evaluator_cog/flows/pipeline_eval.py` for the
+inline plan.
+
+**Coverage note before deleting the webhook path.** The argument above
+is that failure hooks make `handle_prefect_flow_run_event` redundant.
+That holds for *flow-run* state changes, which is all the webhook ever
+covered. It does not extend to the pre-flow window: a cog that dies
+during `prefect.serve()` deployment registration has no flow run, so
+neither the hooks nor the webhook ever fired. That window is now
+covered separately by `serve_with_retry`
+(`mini_app_polis.serve_resilience`, CD-016, ADR-006), which emits a
+`source="startup"` CRITICAL finding. Recording it here so the webhook
+deletion isn't later blamed for a gap it never filled.
+
+---
+
+## Nobody notices a service that exhausted its restart budget
+
+Deferred from ADR-007's recovery contract, recorded here rather than
+solved there.
+
+CD-016 (in-process retry ceiling) times CD-017 (`ON_FAILURE`, max
+retries 10) gives roughly five hours of unattended coverage for a
+service that cannot start. After that the service stays down until a
+human redeploys it, and **nothing in the ecosystem observes that**.
+
+The gap is monitoring, not restart policy — deliberately so. Unbounded
+restarts would erase the distinction between "the world is broken" and
+"we shipped a broken build", and the second is the case that needs to
+stop churning (see deejay-cog's 2026-08-19 `ModuleNotFoundError`
+crash-loop). More restarts is the wrong fix.
+
+What is actually needed is something watching from *outside* the
+failing service, which does not exist today. Sketch of the options:
+
+  - [ ] **Silence detection in evaluator-cog's conformance flow.** It
+        already runs daily against every repo. It could assert that
+        each active cog has posted *some* finding within its expected
+        window and raise one when a cog has gone quiet. Cheapest —
+        reuses a scheduled component that already exists. Weak for
+        deejay-cog specifically, which is exempt from CD-010 precisely
+        because it has no expected cadence (ADR-003) — silence there
+        is normal.
+  - [ ] **Railway deployment-status polling.** Query the Railway API
+        for services in a crashed/stopped state. Direct and
+        unambiguous — it observes the actual condition rather than
+        inferring it from absence — but adds a Railway API dependency
+        and a place to run the poll.
+  - [ ] **External uptime check.** Third-party pinger against a
+        liveness surface. Cogs bind no port (they are not HTTP
+        services), so this needs a heartbeat push rather than a pull,
+        which is CD-010/Healthchecks.io — already exempted for
+        on-demand cogs for the same cadence reason.
+
+Note the recurring obstacle: every option that infers liveness from
+*activity* breaks on cogs that are legitimately idle for weeks. The
+Railway-status option is the only one that observes the condition
+directly, which is probably the tell.
+
+---
+
 ## playbooks/ — bootstrap guides for new repos
 
 The python-project-template is retired. Its replacement is a set of
@@ -73,8 +173,12 @@ former notes-ingest-cog as its `wcs-transcripts` mode in May 2026) is
 compliant as of 2026-04. The following cogs need remediation:
 
 - [ ] **deejay-cog** — add `with concurrency("deejay-cog", occupy=1)` wrapping
-  the flow body in `flow.py`. Create `deejay-cog` concurrency limit in Prefect
-  Cloud (limit: 1).
+  the flow body. Create `deejay-cog` concurrency limit in Prefect Cloud
+  (limit: 1). Verified still open as of 2026-08-19 (no `concurrency(` call
+  anywhere in `src/`). Note there is no `flow.py` in this repo — the flow
+  bodies live in `process_new_files.py` and `ingest_live_history.py`, and
+  the router in `main.py`; wrap the two dispatched flows, not the router,
+  or the slot is held for the lifetime of the dispatch.
 - [ ] **evaluator-cog** — add `with concurrency("evaluator-cog", occupy=1)`
   wrapping the flow body in `flow.py`. Create `evaluator-cog` concurrency limit
   in Prefect Cloud (limit: 1).
@@ -112,9 +216,24 @@ actionable.
 - [ ] **Lockfile integrity (PY-016, XSTACK-006).** No rule currently
   requires lockfile-in-sync. A stale `uv.lock` or `pnpm-lock.yaml`
   is a repeated source of "works on my machine" failures. Proposed:
-  - PY-016: `uv lock --check` passes in CI.
+  - Python: `uv lock --check` passes in CI. (PY-016 was taken by the
+    external-interface error-class rule; use the next free PY id.)
   - XSTACK-006: `pnpm install --frozen-lockfile` passes in CI.
   Both are deterministic CI-workflow scans.
+
+  **Scope warning — this does not cover stale `rev = "main"` git
+  deps.** `uv lock --check` verifies the lock agrees with
+  `pyproject.toml`; it says nothing about whether a git dependency
+  pinned at `rev = "main"` still resolves to the current `main`. Those
+  are different failures. On 2026-08-19 deejay-cog deployed with a
+  `uv.lock` that was internally consistent and had been for months,
+  but pinned `common-python-utils` at a SHA from before
+  `serve_resilience` existed; `main.py` died at import on Railway and
+  the container crash-looped. `uv lock --check` would have passed.
+  If PY-016 lands, do not treat it as covering that case — the
+  remedy there is per-repo (relock as part of the change that needs
+  the new code, plus an import smoke test on the entry point so CI
+  catches it), not a catalog rule.
 
 - [ ] **HTTP timeouts required (PIPE-016 or TEST-014).** `PIPE-007`
   requires retry on external API calls but not timeouts. An `httpx`

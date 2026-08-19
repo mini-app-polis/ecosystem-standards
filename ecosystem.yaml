@@ -78,19 +78,17 @@ services:
           content are the only state.
         * mode="voicenotes-cleanup" — Cron-fired (daily) cleanup mode
           that prunes processed/ older than ARCHIVE_RETENTION_DAYS.
-      Self-reports findings under two distinct repo identifiers via
-      ``post_run_finding`` and ``post_findings`` (mini_app_polis.pipeline_status):
-      ``transcription-cog`` for the WCS-transcripts flow and
-      ``voicenotes-cog`` for the voicenotes flow, so the Pipeline Health
-      UI can keep the two pipelines visible separately even though they
-      ship in one repo and one deployment.
+      Both pipelines self-report under the unified ``transcription-cog``
+      repo identifier via ``post_run_finding`` / ``post_findings`` from
+      ``mini_app_polis.pipeline_status``; the Pipeline Health UI
+      distinguishes them by ``flow_name`` (``process-transcript`` vs.
+      ``voicenotes-ingest``).
       History: merged from the standalone ``notes-ingest-cog`` and
       ``voicenotes-cog`` repos in May 2026
-      (docs/decisions/ADR-004-voicenotes-merge.md). The old service
-      identifiers ``notes-ingest-cog`` and ``voicenotes-cog`` are
-      retired here and replaced by this single entry; the
-      ``voicenotes-cog`` repo-label on emitted findings is retained
-      intentionally as a self-report dimension, not a separate service.
+      (docs/decisions/ADR-004-voicenotes-merge.md). Those service
+      identifiers are fully retired; any historical findings labeled
+      ``notes-ingest-cog`` or ``voicenotes-cog`` predate the merge and
+      should not be expected to recur.
 
   # ── API services ──────────────────────────────────────────────
 

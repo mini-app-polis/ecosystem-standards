@@ -20,6 +20,8 @@ For the process of writing or superseding an ADR, see
 | ADR-003 | Accepted  | [Conformance Checker Architecture](ADR-003-conformance-checker-architecture.md) |
 | ADR-004 | Accepted  | [`applies_to` Has a Single Meaning; `evaluator-service` Removed](ADR-004-applies-to-single-meaning.md) |
 | ADR-005 | Accepted  | [Schema Clarity Audit — Document All Rule Fields, Formalize Traits, Specify Dispatch](ADR-005-schema-clarity-audit.md) |
+| ADR-006 | Accepted  | [Startup Registration Resilience for serve()-Based Cogs](ADR-006-serve-startup-resilience.md) |
+| ADR-007 | Accepted  | [External Provider Failure — Reporting and Recovery Contract](ADR-007-external-provider-failure-contract.md) |
 
 ---
 
@@ -67,6 +69,36 @@ for meta-rule interactions (MONO-001 / MONO-002). Adds a
 `dispatch:` section documenting precedence across scope, trait
 exemption, repo exemption, repo deferral, trait downgrade, rule
 modifier, and default.
+
+**ADR-006 — Startup Registration Resilience.**
+A transient Prefect Cloud 503 on 2026-07-22 crashed all four
+`serve()`-based cogs at once and silently — the crash happened during
+`serve()` deployment registration, before any flow run existed, so the
+flows' `on_crashed` hooks could not fire. Because CD-015 standardizes
+`serve()`-in-`main()`, the failure mode was standardized too. Adds two
+independent, multiplicative layers as rules: CD-016 (in-process retry
+via the shared `mini_app_polis.serve_resilience.serve_with_retry`) and
+CD-017 (version-controlled Railway `ON_FAILURE` restart policy). Adds
+`source="startup"` and narrowly admits `CRITICAL` as a self-report
+severity for the pre-flow process lifecycle. Amends CD-015's
+`check_notes` so adopting the wrapper does not read as a missing
+registration pattern.
+
+**ADR-007 — External Provider Failure Contract.**
+Generalizes ADR-006 from Prefect-at-startup to every external provider.
+Standardizes two things and deliberately declines a third. Reporting:
+provider-caused failures emit `source="external_dependency"` with a
+`provider=<id>` extra, so an outage is distinguishable from our own
+defect — today it is not, and Pipeline Health cannot tell vendor
+failure from a bug. Recovery: a service that stops because a provider
+is down exits non-zero and restarts under CD-017's bounded budget.
+**Degradation is explicitly out of scope** — whether a provider being
+down should skip a step, fail an item, or stop the process depends on
+that application's purpose, which the catalog cannot know. Adds an
+`external_providers:` registry to `ecosystem.yaml` so per-provider
+obligations are data rather than rule prose. Telemetry providers
+(Sentry, and the finding-posting path itself) are exempt and fail
+silently — a finding saying "we cannot post findings" cannot be posted.
 
 ---
 
