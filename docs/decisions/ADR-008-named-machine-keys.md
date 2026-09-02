@@ -127,8 +127,11 @@ routes to the machine-key verifier; nothing falls through between them.
   any internal write, and a Clerk outage no longer stops cog traffic.
 - Widening one cog's access is one role edit against one principal.
   Previously it widened every machine's access at once.
-- Enforcement went from 1 guarded endpoint to 51 scope-guarded routes,
-  3 authenticated-only, and 19 deliberately public.
+- Enforcement went from 1 guarded endpoint to 51 scope-guarded routes and
+  3 authenticated-only (`POST /v1/wcs/me`, `GET /v1/wcs/me`,
+  `GET /v1/identity/whoami` — each one a case where requiring a scope
+  would be circular). The remaining 22 are public: 19 application reads
+  plus `/health`, `/version` and `/`.
 - Key rotation is a Doppler value change plus a redeploy. No migration,
   no re-hashing, nothing to purge from the database.
 - The one-enforcement-point assumption is gone. A second service can
