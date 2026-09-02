@@ -947,3 +947,143 @@ standards:
       a release asset — this makes the majority convention the rule.
 
 # VER-007..VER-008 moved to standards/versioning.yaml.
+
+  - id: CD-021
+    title: Deployable services define their runtime image explicitly
+    status: gap
+    dimension: cd_readiness
+    severity: WARN
+    applies_to: [api-service, pipeline-cog, trigger-cog]
+    description: >
+      A deployable service ships an image definition in its repository,
+      so the runtime it executes in is reproducible from source rather
+      than inferred at build time.
+
+      Every service currently deploys via buildpack inference. That is a
+      defensible choice at this scale — it is less to maintain, and the
+      platform does it well — but it has a specific cost that is worth
+      naming rather than absorbing: the runtime is not derivable from
+      the repository. Base image, interpreter patch version, and system
+      packages are decided by the builder at build time and are not
+      recorded anywhere a reader or a checker can see them.
+
+      This is `status: gap` because that is exactly what it is: a known,
+      accepted, unclosed gap rather than a violation anyone is expected
+      to fix this quarter. The rule exists so the gap is measured and
+      visible instead of being an unstated assumption, and so that CD-022
+      through CD-024 have a documented subject when an image appears.
+
+      Promote to `convention` or `requirement` when the first service
+      carries a Dockerfile and the cost of maintaining one is known
+      rather than estimated.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Pass if a `Dockerfile` exists at the repo root and the platform
+      descriptor (`railway.json` / `railway.toml`) selects the dockerfile
+      builder rather than leaving the builder unset. A Dockerfile the
+      platform does not use is not a runtime definition.
+
+  - id: CD-022
+    title: Base images are pinned by digest, not by tag
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    applies_to: [api-service, pipeline-cog, trigger-cog]
+    description: >
+      Where a repository defines an image, every `FROM` line resolves a
+      base by content digest rather than by tag.
+
+      A tag is a moving pointer. `python:3.11-slim` is a different set of
+      bytes this month than last, which means two builds of an unchanged
+      commit can produce different runtimes and neither is wrong. Pinning
+      by digest is the same discipline CD-020 applies to the dependency
+      lock, one layer down: the declaration and the artifact must agree,
+      and a name that resolves differently over time is not a
+      declaration.
+
+      CONDITIONAL: this rule has a subject only where a Dockerfile
+      exists. A repo without one is not in violation here — the absence
+      of an image definition is CD-021's concern, and reporting it twice
+      would obscure which of the two is actually open.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) If no `Dockerfile` exists at the repo root, the rule has no
+          subject — skip without emitting a finding.
+      (2) Otherwise fail for every `FROM` line whose image reference does
+          not contain `@sha256:`.
+      (3) Report the offending line, not just the file — a multi-stage
+          build can pin one stage and not another, and that is the common
+          case.
+
+  - id: CD-023
+    title: The final image stage runs as a non-root user
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    applies_to: [api-service, pipeline-cog, trigger-cog]
+    description: >
+      Where a repository defines an image, its final stage declares a
+      `USER` that is neither `root` nor `0`.
+
+      A process that does not need to be root should not be, and none of
+      these services do. The cost of getting this right at image-build
+      time is one instruction; the cost of retrofitting it after a
+      container has been running as root long enough for file ownership
+      to depend on it is considerably more.
+
+      The final stage is what matters. Build stages routinely need root
+      to install packages, and constraining them buys nothing — only the
+      stage that actually runs in production is in scope.
+
+      CONDITIONAL on a Dockerfile existing, for the same reason as
+      CD-022.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) If no `Dockerfile` exists at the repo root, skip without
+          emitting a finding.
+      (2) Resolve the final build stage — the last `FROM`, accounting
+          for named stages.
+      (3) Fail if that stage contains no `USER` instruction, or if its
+          argument is `root` or `0`.
+      A `USER` set in an earlier stage does not carry forward; only an
+      instruction in the final stage satisfies this.
+
+  - id: CD-024
+    title: Deployable services declare memory and CPU limits
+    status: convention
+    dimension: cd_readiness
+    severity: WARN
+    applies_to: [api-service, pipeline-cog, trigger-cog]
+    description: >
+      A deployable service states its memory and CPU ceiling in its
+      platform descriptor rather than accepting whatever the platform
+      defaults to.
+
+      The value of this is not the enforcement, which the platform would
+      apply anyway. It is that a declared limit is a stated expectation
+      about the service's footprint, and a service that exceeds a limit
+      it declared is telling you something — where a service that
+      exhausts an unstated default is only telling you that a default
+      existed.
+
+      This pairs with OPS-003. The objective says what the service should
+      achieve; the limit says what it is allowed to consume achieving it.
+      Neither is capacity planning on its own, and together they are what
+      capacity planning looks like at a scale where the answer is one
+      instance.
+
+      A `convention` because the correct limit for most of these services
+      is not yet known, and a requirement to declare a number nobody has
+      measured produces confident fiction.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Read `railway.json` or `railway.toml` at the repo root. Absent
+          → fail.
+      (2) Fail if memory and CPU limit keys are absent or null.
+      Accept either the platform's native limit keys or a documented
+      equivalent — the check is that a ceiling is stated, not which
+      spelling states it.

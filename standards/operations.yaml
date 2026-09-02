@@ -1,0 +1,267 @@
+# ecosystem-standards / operations.yaml
+# Operational readiness standards for deployable services.
+#
+# The premise of this file is that operating a system is a different
+# capability from building one, and that the difference is evidence. A
+# service that has never been restored has an unknown recovery time; a
+# service with no declared objective cannot be failing one; a credential
+# that has never been rotated has an untested rotation procedure.
+#
+# Most of these rules therefore check a dated artifact rather than a
+# code property. Freshness is the control in those cases — a record of a
+# restore performed eighteen months ago asserts a capability nobody has
+# verified since, which is worse than no record at all.
+
+standards:
+
+  # ─────────────────────────────────────────────
+  # RECOVERY
+  # ─────────────────────────────────────────────
+
+  - id: OPS-001
+    title: Restore evidence is current and states a measured RPO and RTO
+    status: requirement
+    dimension: operational_readiness
+    severity: ERROR
+    applies_to: [api-service]
+    description: >
+      A service owning a database keeps a dated record of the last time a
+      backup was actually restored, naming the recovery point and
+      recovery time objectives it measured — not the ones it chose.
+
+      The distinction is the whole rule. An RPO selected from a menu is a
+      preference. An RPO observed by restoring a real dump into a scratch
+      database, verifying row counts and constraint integrity on the far
+      side, and timing it, is a property of the system. Only the second
+      survives being asked how it is known.
+
+      Freshness is enforced because the claim decays. A restore-evidence
+      document from eighteen months ago asserts a capability nobody has
+      verified since — schema has changed, dataset size has changed, the
+      provider's tooling has changed — and the staleness finding is the
+      signal this rule exists to produce.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Read `docs/operations/restore-evidence.md`. Absent → fail.
+      (2) Parse `restored_on:` from its front matter. Fail if absent, or
+          if more than 180 days before the evaluation date.
+      (3) Fail if `rpo:` or `rto:` is missing or null.
+      Do not validate the values themselves. A wrong number is a review
+      problem; an absent or stale one is a conformance problem, and only
+      the second is deterministically decidable.
+
+  - id: OPS-002
+    title: Migrations run under a database role without DDL on the runtime path
+    status: requirement
+    dimension: operational_readiness
+    severity: ERROR
+    applies_to: [api-service]
+    description: >
+      A service declares two database connections: the one its request
+      path uses, holding no DDL grant, and a separate one used only by
+      the migration step at deploy.
+
+      Today a single connection string does both, which means the running
+      application is permanently one bug away from altering or dropping
+      its own schema. Separating them is the standard separation-of-duties
+      control at the data layer, and at this scale it costs a settings
+      field and a deploy-step change.
+
+      SCOPE LIMIT: the grant itself lives in Postgres and cannot be read
+      from a repository. This rule checks the structure that makes a grant
+      split usable — two distinct declarations, the migration runner
+      referencing the privileged one, and no application module importing
+      it. Whether the privileged role's grants were actually narrowed is a
+      ceiling this catalog does not reach, and should be recorded as such
+      rather than assumed.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Locate the settings/config module. Fail if only one database
+          connection setting is declared.
+      (2) Confirm the migration entry point — alembic env, drizzle
+          config, or the release workflow's migrate step — references the
+          migration setting.
+      (3) Fail if any module under the application source imports or
+          reads the migration setting.
+      Step (3) is the load-bearing one: two settings that both reach the
+      request path are one setting with two names.
+
+  # ─────────────────────────────────────────────
+  # DECLARED EXPECTATIONS
+  # ─────────────────────────────────────────────
+
+  - id: OPS-003
+    title: Service declares a machine-readable service level objective
+    status: convention
+    dimension: operational_readiness
+    severity: WARN
+    applies_to: [api-service, pipeline-cog, trigger-cog]
+    description: >
+      A deployable service declares at least one objective — an
+      indicator, a target, and a measurement window — in a form the
+      pipeline can read.
+
+      The control is the act of declaring an expectation before the
+      failure rather than rationalising one afterwards. A service with no
+      declared objective cannot be failing one, which is comfortable and
+      useless.
+
+      Machine-readable deliberately, so the second stage stays open:
+      once objectives are declared, attainment can be computed from
+      `pipeline_evaluations` without new instrumentation. Prose would
+      close that door for no benefit.
+
+      Choose indicators the ecosystem already emits. An objective that
+      requires new telemetry to evaluate will not be evaluated.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Read `slo.yaml` at the repo root. Absent → fail.
+      (2) Fail unless it parses and contains at least one entry under
+          `objectives:` carrying all of `name`, `indicator`, `target`
+          and `window`.
+      Do not evaluate attainment here — this rule checks that an
+      objective exists and is well-formed, not whether it is being met.
+
+  - id: OPS-004
+    title: Data classification covers every table in the schema
+    status: requirement
+    dimension: operational_readiness
+    severity: WARN
+    applies_to: [api-service]
+    description: >
+      A service owning a database keeps a classification file naming
+      every table, its data class, and its retention, and that file is
+      complete against the live schema.
+
+      Completeness against the schema is what makes this a control rather
+      than a document. A classification file written once and never
+      revisited passes a presence check forever; one checked against the
+      migration history fails the moment a table is added that nobody
+      classified, which is exactly when the question needs asking.
+
+      This is also the prerequisite artifact for two things the ecosystem
+      cannot currently specify: a retention job, and an erasure path for a
+      product with real users. Both are unanswerable without knowing what
+      is stored and for how long, and both are asked from outside on
+      someone else's timetable.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Read `data-classification.yaml` at the repo root. Absent → fail.
+      (2) Collect table names from the schema — the migration directory
+          for raw-SQL repos, the schema module for ORM repos.
+      (3) Fail naming every table present in the schema and absent from
+          the classification file, and every entry missing `class` or
+          `retention`.
+      (4) An entry for a table that no longer exists is a WARN, not a
+          failure — stale entries are untidy, uncovered tables are the
+          risk.
+
+  - id: OPS-005
+    title: External egress surface is declared and covers every host in source
+    status: convention
+    dimension: operational_readiness
+    severity: INFO
+    applies_to: [api-service, pipeline-cog, trigger-cog]
+    description: >
+      A service declares the third parties it reaches — host, purpose,
+      and where its credential comes from — and the declaration covers
+      every external host that appears in its source.
+
+      This is the "known egress" control, expressed at a scale where it
+      is a file rather than a firewall. Managed platforms expose no
+      network topology to constrain, so the achievable form of the
+      objective is an accurate inventory: which outside systems can this
+      service reach, why, and with what credential.
+
+      It doubles as the dependency map for supply-chain questions, and as
+      the list that has to be reviewed when a provider is compromised.
+
+      INFO because the source scan cannot see dynamically constructed
+      hosts and should not block on a view it knows is partial. It still
+      catches the common case, which is a new third-party dependency
+      added without anyone recording it.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Read `egress.yaml` at the repo root. Absent → fail.
+      (2) Scan source for external hosts: http client base URLs, host
+          constants, and settings fields whose value is a URL.
+      (3) Report any host found in source and absent from the
+          declaration.
+      Ignore localhost, in-ecosystem hosts already named in
+      `ecosystem.yaml`, and hosts appearing only in test fixtures.
+
+  # ─────────────────────────────────────────────
+  # CREDENTIALS AND SHUTDOWN
+  # ─────────────────────────────────────────────
+
+  - id: OPS-006
+    title: Credential rotation has been exercised within the last year
+    status: requirement
+    dimension: operational_readiness
+    severity: WARN
+    applies_to: [api-service]
+    description: >
+      A service holding machine credentials keeps a dated log of the last
+      time one was rotated end to end, and that date is within 365 days.
+
+      Rotation is the credential control most often declared and least
+      often exercised, and an unexercised procedure is a hypothesis. The
+      log entry is created by performing the rotation, so unlike a policy
+      document it cannot be satisfied by writing it.
+
+      This matters more here than the generic case. ADR-008 accepted a
+      manual, two-sided rotation — a Doppler edit plus a redeploy of both
+      caller and receiver, with no window in which the old and new keys
+      are both valid. A procedure with a hard cutover and no overlap is
+      one nobody wants to run for the first time during an incident.
+
+      Record what broke. The failures found while rotating are the
+      reason to rotate before you have to.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Read `docs/operations/rotation-log.md`. Absent → fail.
+      (2) Parse `last_exercised:` from its front matter. Fail if absent
+          or more than 365 days before the evaluation date.
+      A service holding no machine credentials should carry a repo
+      exemption rather than an empty log — the same treatment
+      deejaytools-com-api takes for CD-019.
+
+  - id: OPS-007
+    title: Long-running workers drain in-flight work on SIGTERM
+    status: gap
+    dimension: operational_readiness
+    severity: ERROR
+    applies_to: [pipeline-cog, trigger-cog]
+    description: >
+      A worker that holds long-running work registers a SIGTERM handler
+      that stops accepting new work, finishes or releases what it holds,
+      and exits — rather than dying mid-write.
+
+      Railway sends SIGTERM on every redeploy. A cog with no handler is
+      terminated in whatever state it was in, which for a job that has
+      claimed a queue lease and not yet fenced its completion means the
+      work is neither done nor visibly failed until the lease expires.
+
+      This is `status: gap` deliberately, and the gap is in the shared
+      library rather than in the consuming repos. The rule should require
+      the shared drain helper the way CD-016 requires `serve_with_retry`
+      — one implementation the fleet inherits, rather than four hand-rolled
+      handlers that drift. That helper does not exist yet, so no repo can
+      satisfy this rule by any correct means, and stating that plainly is
+      better than a requirement nothing can meet or a weaker rule that
+      accepts four divergent implementations.
+
+      Promote to `requirement` when the helper ships, and set the check
+      to reject a hand-rolled `signal.signal(SIGTERM, ...)` registration
+      at the same time.
+    checkable: false
+    origin: >
+      No signal handling in any cog entry point as of 2026-09. Identified
+      during the operational-readiness audit as the highest-severity
+      correctness gap wearing a reliability label.

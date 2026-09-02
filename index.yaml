@@ -23,6 +23,7 @@ dimensions:
   standards_currency: "Is this repo being evaluated against the current version of the standards? Covers version resolution, staleness detection, and standards/evaluator drift."
   monorepo_coherence: "Do pnpm monorepo workspaces satisfy per-app and root-level rules? Covers workspace_deps, monorepo_path scoping, root CI, and deduplicated findings across sibling apps."
   security_posture: "Does the repo defend its supply chain and its secrets? Covers secret scanning, dependency and static analysis in CI, build provenance, and the declared response to a finding."
+  operational_readiness: "Can this service be run, recovered and reasoned about? Covers declared objectives and capacity, proven restore, data classification and retention, credential rotation, and the external surfaces it depends on."
 
 # Severities used across all standards files.
 # These map directly to the pipeline_evaluations table severity field.
@@ -559,3 +560,8 @@ files:
     domain: security
     description: Supply-chain and secret-handling standards for every repo. Secret scanning, dependency and static analysis in CI, build provenance, and the vulnerability response contract.
     rule_prefix: SEC
+
+  - file: standards/operations.yaml
+    domain: operations
+    description: Operational readiness standards for deployable services. Declared objectives, proven recovery, data classification and retention, credential rotation, and external dependency surface.
+    rule_prefix: OPS
