@@ -1,3 +1,10 @@
+## [6.0.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.0.0...v6.0.1) (2026-09-02)
+
+
+### Bug Fixes
+
+* correct the route counts in ADR-008 ([5128fda](https://github.com/mini-app-polis/ecosystem-standards/commit/5128fda42895c33601cb60c106c96dac604f839b))
+
 # [6.0.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v5.1.0...v6.0.0) (2026-09-02)
 
 
