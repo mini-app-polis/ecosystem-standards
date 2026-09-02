@@ -200,3 +200,111 @@ standards:
       (API URL, public keys) without the correct prefix for its runtime.
       Flag any VITE_ variable in an Astro repo or PUBLIC_ variable in a
       Vite repo.
+
+  - id: XSTACK-006
+    title: Every repo carrying an evaluator.yaml is registered in ecosystem.yaml
+    status: requirement
+    dimension: cross_repo_coherence
+    severity: ERROR
+    description: >
+      A repo that declares a `type:` in its own `evaluator.yaml` believes
+      it is governed. If `ecosystem.yaml` does not list it, the
+      conformance scanner never clones it, no rule ever runs against it,
+      and the belief is false — the repo accumulates commits with zero
+      coverage and nothing anywhere reports the absence.
+
+      EVAL-008 covers the opposite direction: a registered repo missing
+      its `evaluator.yaml`. That case fails loudly, because the scanner
+      reaches the repo and finds no config. This is the half that fails
+      silently, because nothing reaches the repo at all.
+
+      The asymmetry matters. A repo can join the fleet without the fleet
+      noticing, and the only signal is a human remembering to add it —
+      which is precisely the class of control this catalog exists to
+      replace.
+
+      Found on wiki-curator-cog, which reached 67 commits, declared
+      `type: pipeline-cog`, and held a live machine principal named in
+      ADR-008 while absent from the registry.
+
+      SCOPE LIMIT: registration is not membership. A repo may be
+      deliberately outside the ecosystem — a personal site, a scratch
+      repo — and the correct expression of that is to carry no
+      `evaluator.yaml`, not to be quietly unregistered while carrying
+      one. A repo with neither is invisible to this rule by design.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Enumerate repos in the `mini-app-polis` GitHub org.
+      (2) For each, test for an `evaluator.yaml` at the repo root.
+      (3) Fail for any repo where that file exists and the repo name is
+          absent from `ecosystem.yaml` `repos[].id`.
+      Read the registry from the standards repo at the version under
+      evaluation, not from a cached copy — a repo registered in the same
+      release that adds it must not be reported.
+      This rule has no `applies_to`: its read source is the org listing
+      and the registry, not any single repo's source tree.
+    origin: >
+      wiki-curator-cog, 2026-09. Present in the fleet with a declared
+      type and a machine identity, absent from ecosystem.yaml, and
+      unevaluated for the whole of its 67-commit history.
+
+  - id: XSTACK-007
+    title: Shared-library pins stay within one minor of the library's latest release
+    status: convention
+    dimension: cross_repo_coherence
+    severity: WARN
+    description: >
+      A consumer's pin to an ecosystem shared library is no more than one
+      minor version behind that library's latest release.
+
+      "Shared library" means a repo registered in `ecosystem.yaml` with
+      `type: shared-library` — currently common-python-utils,
+      common-typescript-utils and identity. The definition is deliberately
+      the registry rather than a hardcoded list, so a new shared library
+      is covered the day it is registered.
+
+      CD-020 makes a repo's own dependency declaration internally
+      consistent: pyproject.toml, the sources table and the lockfile all
+      agree, and the release re-locks. That is necessary and not
+      sufficient. A repo can be perfectly self-consistent and pinned to a
+      library release from three months ago, and nothing in the catalog
+      notices — the declaration is honest, it is simply old.
+
+      This is the rule that watches the other axis. Before the September
+      pinning work, four consumers ran three different commits of
+      common-python-utils behind `rev = "main"`, which was dishonest
+      pinning. Within a day of that being fixed, identity had released
+      v1.1.4 while its only consumer sat on v1.1.2 — honest pinning, and
+      still stale. Fixing the first problem does not address the second.
+
+      A `convention` rather than a `requirement`. Staleness is a signal
+      to act on, not a defect: there are legitimate reasons to hold a
+      version, and the right response to a real one is a dated deferral
+      rather than a rule that cannot be satisfied. The threshold is one
+      minor rather than exact parity for the same reason — a consumer
+      should not fail conformance in the window between a library
+      release and its own next deploy.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Read `ecosystem.yaml`; collect repos with
+          `type: shared-library` as the set of tracked libraries.
+      (2) For each tracked library, resolve its latest release tag.
+      (3) For each repo in the fleet, read its dependency declarations
+          (`[tool.uv.sources]` and `project.dependencies` for Python,
+          `dependencies` and `devDependencies` for TypeScript) and
+          extract the pinned version for any tracked library.
+      (4) Fail where the pinned minor is more than one behind the
+          library's latest minor. Compare minor versions only — a patch
+          release does not make a consumer stale.
+      (5) A pin to a branch or a bare commit SHA is CD-020's finding,
+          not this one; skip it here rather than double-reporting.
+      Version-skew comparison follows the precedent set by EVAL-002,
+      which measures a repo's pinned standards version against the
+      catalog's current release.
+    origin: >
+      identity v1.1.4 against a v1.1.2 pin in api-kaianolevine-com,
+      2026-09, one day after the exact-pin migration removed
+      `rev = "main"` from the fleet. Exact pins made the declarations
+      honest; nothing made them current.

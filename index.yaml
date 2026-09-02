@@ -154,7 +154,9 @@ schema:
         EVAL-003 (reads pipeline_evaluations for finding quality),
         MONO-003 (reads pipeline_evaluations for monorepo dedup),
         EVAL-007 (reads the standards catalog and evaluator-cog's
-        check registry for drift).
+        check registry for drift), XSTACK-006 (reads the org repo
+        listing and the registry), XSTACK-007 (reads the registry and
+        each repo's dependency declarations).
 
     modifies:
       required: false
