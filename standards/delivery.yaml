@@ -806,11 +806,19 @@ standards:
             resolves a per-machine key. Flag a repo that calls an
             ecosystem API without one: it authenticates as the unnamed
             fallback and its writes are unattributable.
-        (2) Flag any reference to `CLERK_SECRET_KEY`, `get_m2m_token`,
+        (2) Flag any reference to `get_m2m_token`,
             `m2m_tokens/verify`, `machine_secret`, or
             `X-Internal-API-Key` in `src/**`, `.env.example`, README, or
             CI config. Tests that mock the auth layer are exempt; stale
             docstrings are not.
+            `CLERK_SECRET_KEY` is flagged only where it is used to
+            obtain or verify a credential — a call to
+            `m2m_tokens/verify`, or a token acquisition passed into an
+            `Authorization` header the repo then sends to an ecosystem
+            API. A frontend using it with Clerk's server SDK for
+            session handling or to read user profiles from Clerk's
+            backend API is a different, legitimate use and is not a
+            violation of this rule.
         (3) Flag any construction of the `Authorization` header from a
             credential the repo minted itself — a locally signed JWT, or
             a token-exchange response. Callers present a configured key
