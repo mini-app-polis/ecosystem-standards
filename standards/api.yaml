@@ -187,18 +187,20 @@ standards:
             `c.html(...)` responses.
 
   - id: API-006
-    title: Tables authorization-scoped to a Clerk user
+    title: Tables authorization-scoped to a principal
     status: requirement
     dimension: structural_conformance
     severity: WARN
     applies_to: [api-service]
     description: >
-      Every data-bearing table is authorization-scoped to a Clerk user, so
-      queries can filter by the authenticated identity. Three patterns
-      satisfy this: (1) direct ownership via an owner_id column holding the
-      Clerk user ID; (2) identity tables whose primary key is the user_id
-      itself; (3) relationship tables whose user_id column carries a
-      ForeignKey to an identity table.
+      Every data-bearing table is authorization-scoped to a principal, so
+      queries can filter by the authenticated identity. The scoping value
+      is the principal's subject — a Clerk user ID for a human caller, a
+      machine name for a cog (CD-019) — not a Clerk user ID specifically.
+      Three patterns satisfy this: (1) direct ownership via an owner_id
+      column holding the principal subject; (2) identity tables whose
+      primary key is the user_id itself; (3) relationship tables whose
+      user_id column carries a ForeignKey to an identity table.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -217,22 +219,33 @@ standards:
       since it holds no columns of its own.
 
   - id: API-007
-    title: Clerk for authentication
+    title: Clerk is the only human identity provider
     status: requirement
     dimension: structural_conformance
     severity: WARN
     applies_to: [api-service]
     description: >
-      Authentication via Clerk across all services. Consistent across the ecosystem.
+      Human callers authenticate through Clerk and nowhere else. No
+      service runs its own password store, session table, magic-link
+      flow, or second identity provider for people. This rule is about
+      humans only: machine callers do not authenticate through Clerk at
+      all — they present named keys per CD-019 — so the absence of a
+      Clerk path on a machine-only surface is not a violation.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Python services: search source files for clerk or verify_token imports.
-      Check for a Depends(verify_token) pattern on protected route definitions.
-      TypeScript services: check package.json for @clerk/clerk-sdk-node or
-      equivalent. Search for verifyClerkToken from common-typescript-utils on
-      protected routes. Flag if no Clerk dependency is found and the service
-      has non-public endpoints.
+      Python services: verify a Clerk session-verification path exists
+      for human callers — an import from `identity.clerk`, or a direct
+      `clerk` / JWKS verification import — and that `CLERK_ISSUERS` (or
+      `CLERK_ISSUER` + `CLERK_JWKS_URL`) is configured. TypeScript
+      services: check package.json for @clerk/clerk-sdk-node or
+      equivalent, and for verifyClerkToken from common-typescript-utils
+      on human-facing routes.
+      Flag a service with human-facing authenticated endpoints and no
+      Clerk path. Flag any second human identity provider: a password
+      column, a local session or refresh-token table, an OAuth callback
+      route, or a magic-link issuer. Do not flag a service whose only
+      authenticated callers are machines.
 
   - id: API-008
     title: Public endpoints explicit and intentional

@@ -1,38 +1,15 @@
 # ecosystem-standards / auth.yaml
-# Authentication standards for API services — Clerk-issued credentials,
-# verification posture, and client-API parity. Split from api.yaml so each
-# file owns exactly one rule prefix (AUTH).
+# Authentication and authorization standards for API services — credential
+# verification posture, route coverage, and client-API parity. Split from
+# api.yaml so each file owns exactly one rule prefix (AUTH).
 #
-# For the concrete Clerk Bearer-token ecosystem convention covering both
-# caller and receiver contracts, see CD-012 in standards/delivery.yaml.
-# AUTH rules here govern the per-service posture and client-API
-# consistency invariants.
+# For the concrete Bearer-credential ecosystem convention covering both the
+# caller and receiver contracts, see CD-019 in standards/delivery.yaml, and
+# ADR-008 for why machines hold named keys rather than Clerk M2M tokens.
+# AUTH rules here govern the per-service posture — what a service must
+# enforce on its own routes, and the client-API consistency invariants.
 
 standards:
-
-  - id: AUTH-001
-    title: No unverified write endpoints reachable from the public internet
-    status: requirement
-    dimension: structural_conformance
-    severity: ERROR
-    applies_to: [api-service]
-    description: >
-      Any FastAPI service with write endpoints (POST, PATCH, DELETE) that depend on
-      an unverified header (X-Owner-Id or equivalent) must either be provably isolated
-      on a private network (Railway private networking, no public port), OR have
-      CLERK_AUTH_ENABLED=true and RS256 JWT verification active. A module-level
-      docstring in auth.py documenting the current posture and upgrade path is
-      required regardless of which condition is satisfied.
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      Verify: (1) service has no public port in Railway config, OR (2)
-      CLERK_AUTH_ENABLED=true is set and auth middleware applied to all write routes.
-      Check for auth.py module docstring.
-    origin: >
-      api-kaianolevine-com uses X-Owner-Id with no verification. Acceptable while all
-      write callers are internal Railway services. Standard formalizes the boundary
-      condition.
 
   - id: AUTH-002
     title: API auth scheme and HTTP client must match
@@ -41,17 +18,175 @@ standards:
     severity: ERROR
     applies_to: [api-service]
     description: >
-      When api-kaianolevine-com's auth scheme changes, CommonPythonApiClient._headers() in
-      common-python-utils must change in the same release. A mismatch causes all
-      pipeline writes to return 401. Auth mechanism used by the API and sent by its
-      client must be documented in the same location (auth.py cross-referencing
-      common-python-utils and vice versa).
+      When api-kaianolevine-com's accepted credential set changes,
+      KaianoApiClient in common-python-utils must change in the same
+      release — both the header it sets in `_headers()` and the way it
+      resolves the credential it puts there (`machine_key_env_var`,
+      `from_env(machine_name)`). A mismatch causes every pipeline write
+      in the ecosystem to return 401 at once. The mechanism the API
+      accepts and the mechanism its client sends must be documented in
+      the same place: auth.py cross-referencing common-python-utils and
+      vice versa.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Compare auth header set in CommonPythonApiClient._headers() against auth header
-      expected by api-kaianolevine-com routes. Flag if they differ. Check auth.py for
-      cross-reference comment to common-python-utils.
+      Compare the credential the API accepts against the credential
+      KaianoApiClient sends:
+        (1) Header name and scheme — the API's bearer extraction against
+            `_headers()`. Flag if they differ.
+        (2) Credential source — the env vars the API reads to build its
+            machine-key set against the env vars the client reads to
+            resolve its own key. The naming derivation must be the same
+            function on both sides (`<MACHINE_NAME>_API_KEY`). Flag a
+            client that reads a variable the API never populates, or a
+            client that hardcodes one machine's variable name.
+        (3) Check auth.py for a cross-reference comment naming
+            common-python-utils, and the client module for the reverse.
+      A release of either repo that changes one side without the other
+      is the violation, whether or not the current pair happens to
+      agree.
     origin: >
-      common-python-utils references KAIANO_API_CLERK_TOKEN in .env.example but
-      _headers() does not read it — a forward-reference that looks like a live feature.
+      common-python-utils referenced KAIANO_API_CLERK_TOKEN in
+      .env.example while `_headers()` never read it — a forward
+      reference that looked like a live feature. The failure mode
+      recurred at scale in 2026-09: the move to named machine keys
+      changed both the API's accepted credential and the client's key
+      resolution, and had the two halves shipped separately every cog
+      in the fleet would have 401'd.
+
+  - id: AUTH-003
+    title: Every non-public route names the scope it requires
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    applies_to: [api-service]
+    description: >
+      Route access is granted by a named scope, declared on the route
+      itself. Every route is in exactly one of three states, and which
+      one is visible from the route declaration without reading the
+      handler body:
+
+        - scope-guarded — carries a scope dependency naming a single
+          `<domain>.<resource>.<action>` scope;
+        - authenticated-only — requires a verified credential but no
+          scope, permitted only where requiring a principal would be
+          circular (the endpoint through which a person first becomes a
+          principal);
+        - public — deliberately unauthenticated (health, metrics, docs,
+          and any route the service intends to serve to anyone).
+
+      No route derives identity from an unverified request value. An
+      `X-Owner-Id` header, an owner query parameter, or a body field
+      naming the caller is not an identity claim; the principal comes
+      from the verified credential and nothing else.
+
+      No route decides authority from a boolean column or from the shape
+      of the credential. `is_admin`, "the caller is a machine, therefore
+      it may write", and "this token has no dots, therefore it is
+      trusted" are all authority carried by something other than a
+      grant, and widening one caller's access under them widens
+      everyone's.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Enumerate the service's registered routes from the application's
+      route table, not by regex over literal decorator paths — routes
+      registered through a factory or loop have a variable path and are
+      invisible to a path regex.
+        (1) For each route, classify it as scope-guarded (a dependency
+            that takes a scope string), authenticated-only, or public.
+            Flag any route in none of the three.
+        (2) Flag any authenticated-only route beyond the documented
+            bootstrap endpoint(s). The set should be small enough to
+            enumerate in the service's auth module docstring; flag if
+            the docstring does not enumerate it.
+        (3) Flag any handler or dependency reading an owner, caller, or
+            user identifier from a header, query parameter, or request
+            body and treating it as the caller's identity. Reading an
+            owner as a filter value on a scope-guarded route is not the
+            violation; deriving the principal from it is. Whether a
+            given public route should be public is API-008's question,
+            not this one's.
+        (4) Flag any route dependency that branches on a boolean
+            authority column (`is_admin`, `is_service`, `is_staff`) or
+            on the credential's type to decide access. Reading such a
+            column to mirror it into a role at provisioning time is
+            fine; reading it to make the decision is not.
+        (5) Verify each scope string has exactly three dot-separated
+            segments. Flag two-segment or four-segment scopes — the
+            grammar is `<domain>.<resource>.<action>`.
+    origin: >
+      api-kaianolevine-com enforced authorization on one endpoint. The
+      rest ran on `require_wcs_service` ("a machine, therefore allowed")
+      and `require_wcs_admin` (a boolean column), with owner identity
+      taken from an unverified `X-Owner-Id` header. Four routes
+      registered through a factory in wcs_wiki.py had no guard at all
+      and were invisible to every path-literal scan, including the one
+      used to plan their remediation — which is why this check reads the
+      route table.
+    supersedes: >
+      AUTH-001 (unverified X-Owner-Id write endpoints permitted behind
+      private networking, retired 2026-09 per ADR-008). That rule
+      described a posture where identity could come from an unverified
+      header as long as the service was not publicly reachable; identity
+      now comes only from a verified credential, on every route.
+
+  - id: AUTH-004
+    title: Authorization decisions come from the shared identity contract and are audited
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    applies_to: [api-service]
+    description: >
+      A service does not implement its own authorization logic. It binds
+      the four functions the `identity` library specifies — verify,
+      resolve, authorize, emit_audit — and runs them exactly once per
+      request. What stays in the service is configuration and the
+      framework adapter; the decision itself is the shared library's.
+
+      Every decision is audited, allow and deny alike. The audit record
+      names the enforcement point, the principal, the scope asked for,
+      the outcome, and the reason the decision function returned. A deny
+      that leaves no record is indistinguishable from a request that was
+      never made.
+
+      This is what makes "one specification, N conformant enforcement
+      points" true rather than aspirational: a second service becomes
+      conformant by consuming the library and passing its fixtures, not
+      by copying an existing service's auth module.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+        (1) Require an import of the shared decision function
+            (`identity.policy.authorize`) and of the store and audit
+            adapters (`identity.store`). Flag a service that imports the
+            types but reimplements the decision — any local function
+            that walks roles or scopes to return an allow/deny.
+        (2) Verify the guard emits an audit record on both branches.
+            Flag an emit that happens only after the allow check, or
+            only inside the deny branch.
+        (3) Verify the audit record carries enforcement point,
+            principal, scope, outcome, and reason. Flag a record missing
+            any of the five — an audit row that cannot say why is not an
+            audit row.
+        (4) Verify the four functions run once per request, not once per
+            dependency: flag a route declaring more than one scope
+            dependency, which would resolve and audit the same request
+            twice.
+        (5) Verify the service's own test suite exercises the guard on
+            both branches against a real route — at least one request
+            that is allowed and one that is denied for want of a scope,
+            through the application's dependency graph rather than by
+            calling the decision function directly. Flag a service whose
+            enforcement point is never exercised as a whole. The
+            library's `fixtures/authorize` cases cover the decision
+            function itself and are the library's own suite to run, not
+            the service's.
+    origin: >
+      auth.py in api-kaianolevine-com carried its own JWKS fetch, RS256
+      decode, and remote verification, and its docstring named the
+      condition for extraction: "if a second service ever needs to
+      verify Clerk tokens, upstream this logic rather than copying it."
+      A second enforcement point became real. Nothing recorded who was
+      denied what, so a permission problem in production could only be
+      diagnosed by reproducing it. See ADR-008.

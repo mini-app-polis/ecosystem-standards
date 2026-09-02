@@ -423,92 +423,6 @@ standards:
       .env files.       Flag any service manually setting Railway env vars
       that must be Doppler-managed.
 
-  - id: CD-012
-    title: Internal auth via Clerk Bearer tokens
-    status: requirement
-    dimension: structural_conformance
-    severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog, api-service]
-    description: >
-      All authenticated calls to ecosystem APIs use a single
-      `Authorization: Bearer <token>` header carrying a Clerk-issued
-      credential. The same header accepts two token types:
-
-        - Clerk session JWTs (human users) — RS256, verified locally
-          by the API against Clerk's JWKS document (cached for 5
-          minutes). Claims include `sub`, which the API extracts as
-          `owner_id`.
-
-        - Clerk M2M opaque tokens (cogs / services) — verified remotely
-          by the API via Clerk's BAPI endpoint
-          (`POST https://api.clerk.com/v1/m2m_tokens/verify`) using the
-          API's `CLERK_SECRET_KEY`. The response's `subject` (or `sub`)
-          is the machine identity and is also treated as `owner_id`.
-
-      Token format discrimination is by dot count: JWTs have exactly
-      two dots; opaque tokens have none. The API selects the
-      verification path accordingly.
-
-      Required env vars on any API enforcing this rule:
-        - CLERK_JWKS_URL      — JWKS document URL for the Clerk instance
-        - CLERK_ISSUER        — expected `iss` claim (e.g. https://clerk.kaianolevine.com)
-        - CLERK_SECRET_KEY    — Clerk secret key used to call the BAPI verify endpoint
-
-      Required env vars on any service or cog calling the API:
-        - CLERK_SECRET_KEY (or equivalent M2M credential) — configured
-          on the caller's environment. Callers do not touch this value
-          directly: `common_python_utils.auth.get_m2m_token` reads it
-          and returns a short-lived M2M opaque token, cached until expiry.
-          Calling code just receives the token and sets the
-          `Authorization: Bearer <token>` header.
-
-      The retired mechanism (`X-Internal-API-Key` header with
-      Doppler-managed per-caller keys) was superseded during Project
-      Keystone. No API in the ecosystem accepts `X-Internal-API-Key`.
-      Any remaining references in source, documentation, or tooling
-      are drift and must be removed.
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-
-      For service/cog repos (callers):
-        (1) Scan src/**/*.py for Clerk M2M token acquisition. Require
-            at least one call to `common_python_utils.auth.get_m2m_token`
-            OR an equivalent helper that returns a short-lived Clerk
-            token. Flag any pipeline-cog, trigger-cog, or api-service
-            repo that makes outbound HTTP calls to another ecosystem
-            API without first acquiring such a token.
-        (2) TypeScript services: equivalent scan for
-            `common-typescript-utils` auth helpers.
-        (3) Flag any reference to `X-Internal-API-Key` in any source,
-            config, or documentation file on main. Test fixtures under
-            `tests/**/*` that mock the auth layer are exempt. Stale
-            docstrings are not exempt — they must be updated.
-
-      For API repos (receivers):
-        (4) Verify `auth.py` (or equivalent) contains BOTH:
-              (a) JWKS-based RS256 verification — via `pyjwt[crypto]`
-                  (`import jwt` + `from jwt import PyJWK`) or an
-                  equivalent JWT library. Must use the `CLERK_JWKS_URL`
-                  env var and the `CLERK_ISSUER` env var for the
-                  issuer claim check.
-              (b) Opaque M2M verification — an HTTP call to
-                  `https://api.clerk.com/v1/m2m_tokens/verify` using
-                  `CLERK_SECRET_KEY` as a Bearer auth for that call.
-        (5) Flag any API that implements only one of the two paths
-            in step (4). Both must be present to support the full
-            ecosystem (humans + cogs).
-        (6) Flag any legacy API-key verification code path (any
-            handler reading an `X-Internal-API-Key` header, any
-            route dependency that checks a shared-secret header,
-            any middleware matching on non-Clerk headers). These
-            must be removed, not kept as fallbacks.
-        (7) Verify `sub` (JWT path) or `subject`/`sub` (opaque path)
-            is extracted and used as `owner_id`. Flag any path that
-            extracts a different claim or uses a non-Clerk identifier
-            as `owner_id`.
-    supersedes: "X-Internal-API-Key header with Doppler-managed per-caller keys (retired 2026-04, Project Keystone)"
-
   - id: CD-014
     title: Cloudflare Pages for all static site deployments
     status: requirement
@@ -765,8 +679,9 @@ standards:
 
       TELEMETRY CARVE-OUT. Providers whose only role is receiving our
       observability data are exempt and must fail silently: Sentry itself,
-      and the finding-posting path (api-kaianolevine-com plus the Clerk
-      M2M token exchange that authenticates it). A finding reporting that
+      and the finding-posting path (api-kaianolevine-com, and the
+      credential verification that authenticates the call to it). A
+      finding reporting that
       findings cannot be posted cannot be posted, and a Sentry capture of
       Sentry being unreachable has nowhere to go. Failures of these
       providers are logged and nothing more. post_run_finding is already
@@ -801,8 +716,9 @@ standards:
       (4) [deterministic] Confirm the telemetry carve-out is respected in
           the other direction: flag any sentry_sdk.capture_exception or
           post_run_finding call inside a handler wrapping a call to Sentry
-          itself, to KaianoApiClient's evaluations POST, or to the Clerk
-          M2M token exchange. That is the infinite-regress case.
+          itself, to KaianoApiClient's evaluations POST, or to the
+          credential verification on that path. That is the
+          infinite-regress case.
       (5) [LLM] Judge whether any remaining swallowed external failure
           exists — a caught provider error whose handler neither re-raises
           nor emits any of the three legs. Bare `pass`,
@@ -821,5 +737,125 @@ standards:
       CD-002 and CD-010 scope Sentry to unhandled exceptions. The result
       is that the ecosystem's most routine class of failure is its least
       observable. See ADR-007.
+
+  - id: CD-019
+    title: Bearer credential contract — Clerk sessions for humans, named keys for machines
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    applies_to: [pipeline-cog, trigger-cog, api-service]
+    description: >
+      All authenticated calls to ecosystem APIs use a single
+      `Authorization: Bearer <credential>` header. The header carries one
+      of exactly two credential types, determined by who the caller is:
+
+        - Clerk session JWTs (humans) — RS256, verified locally by the
+          receiving service against the issuer's JWKS document, cached in
+          process. Multi-issuer: `CLERK_ISSUERS` is a JSON array of
+          `{issuer, jwks_url}` objects, and `CLERK_ISSUER` /
+          `CLERK_JWKS_URL` are the single-tenant shorthand. The `sub`
+          claim is the principal subject.
+
+        - Named machine keys (cogs and services) — an opaque per-machine
+          string, verified locally by constant-time comparison against
+          the set the receiving service holds in its own environment. The
+          matched key names the caller: the key IS the identity claim, so
+          no machine name is ever asserted in the request. The matched
+          name is the principal subject under issuer `apikey`.
+
+      Discrimination is structural, by dot count: exactly two dots is a
+      JWT and routes to the issuer verifier, anything else routes to the
+      machine-key verifier. There is no fallback between the two paths —
+      a credential that fails the path it routed to is rejected, not
+      retried against the other.
+
+      Each machine holds its own key. Keys are Doppler-managed under
+      `<MACHINE_NAME>_API_KEY` (`deejay-cog` → `DEEJAY_COG_API_KEY`);
+      `KAIANO_API_KEY` is the unnamed fallback for a caller that declares
+      no machine name, and a caller relying on it is unattributable.
+      Key material never reaches a database — not plaintext, not hashed.
+      The principal store holds the machine's name and its grants; the
+      secret stays in configuration.
+
+      Required env vars on any API enforcing this rule:
+        - CLERK_ISSUERS, or CLERK_ISSUER + CLERK_JWKS_URL
+        - <MACHINE_NAME>_API_KEY for every machine the service declares
+
+      Required env vars on any cog or service calling an ecosystem API:
+        - its own <MACHINE_NAME>_API_KEY (or KAIANO_API_KEY)
+
+      Two mechanisms are retired and must not reappear. The
+      `X-Internal-API-Key` shared-secret header was superseded during
+      Project Keystone. Clerk M2M opaque tokens — `CLERK_SECRET_KEY`,
+      `POST https://api.clerk.com/v1/m2m_tokens/verify`, and
+      `common_python_utils.auth.get_m2m_token` — were superseded by this
+      rule: one secret shared across the whole fleet resolved every cog
+      to the same subject, so writes could not be attributed, and it put
+      a vendor round trip on the path of every internal write. Any
+      surviving reference to either in source, documentation, or tooling
+      is drift and must be removed. See ADR-008.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+
+      For service/cog repos (callers):
+        (1) If the repo makes outbound HTTP calls to an ecosystem API,
+            require that its client is constructed with a machine name —
+            `KaianoApiClient.from_env("<machine-name>")`,
+            `KaianoApiClient(machine_name=...)`, or an equivalent that
+            resolves a per-machine key. Flag a repo that calls an
+            ecosystem API without one: it authenticates as the unnamed
+            fallback and its writes are unattributable.
+        (2) Flag any reference to `CLERK_SECRET_KEY`, `get_m2m_token`,
+            `m2m_tokens/verify`, `machine_secret`, or
+            `X-Internal-API-Key` in `src/**`, `.env.example`, README, or
+            CI config. Tests that mock the auth layer are exempt; stale
+            docstrings are not.
+        (3) Flag any construction of the `Authorization` header from a
+            credential the repo minted itself — a locally signed JWT, or
+            a token-exchange response. Callers present a configured key
+            or a Clerk session they were handed; they do not mint
+            credentials.
+        (4) Verify `.env.example` documents the repo's own
+            `<MACHINE_NAME>_API_KEY`. Flag any repo that calls an
+            ecosystem API and declares no key variable.
+
+      For API repos (receivers):
+        (5) Verify the service consumes the shared `identity` library
+            rather than implementing verification locally: require an
+            import from `identity` (`identity.chain`, `identity.clerk`,
+            `identity.apikey`). Flag any in-repo JWKS fetch, RS256
+            decode, or constant-time credential comparison written
+            outside that library — see XSTACK-005.
+        (6) Verify both populations are configured: a Clerk issuer set
+            built from `CLERK_ISSUERS` or `CLERK_ISSUER` +
+            `CLERK_JWKS_URL`, and a machine-key set built from
+            per-machine environment variables. Flag a service that
+            configures only one.
+        (7) Flag any remote credential verification — an HTTP request to
+            `api.clerk.com`, or any outbound call at all, inside the
+            verification path. Verification is local.
+        (8) Flag any persistence of key material: a model column,
+            migration, or INSERT on a principal, machine, or issuer
+            table whose column name matches `key|secret|token|hash`.
+            (`jwks_url` is a URL, not key material, and is exempt.) The
+            store holds names and grants only.
+        (9) Flag any credential path that reads a machine name from the
+            request — a header, query parameter, or body field naming
+            the caller, machine, or service. The key names the caller.
+    origin: >
+      Every cog read the same `CLERK_SECRET_KEY` out of one shared
+      Doppler config, so every M2M token resolved to the same subject: a
+      catalog row written by deejay-cog and a pipeline row written by
+      transcription-cog carried an identical owner_id, and no log, table,
+      or column could say which cog wrote what. The same path put a
+      synchronous `POST api.clerk.com/v1/m2m_tokens/verify` on every
+      internal write, making Clerk an availability dependency of all
+      cog-to-API traffic.
+    supersedes: >
+      CD-012 (Clerk M2M opaque tokens for machine callers, retired
+      2026-09 per ADR-008), which itself superseded the
+      `X-Internal-API-Key` shared-secret header (retired 2026-04,
+      Project Keystone).
 
 # VER-007..VER-008 moved to standards/versioning.yaml.

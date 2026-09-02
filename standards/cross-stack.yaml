@@ -72,9 +72,10 @@ standards:
       Services that declare the shared library as a dependency
       (XSTACK-001) must actually use its helpers rather than
       reimplementing the same behavior locally. The behaviors
-      covered: logging setup, Clerk auth verification, API response
-      envelope construction, internal-auth header helpers, retry
-      wrappers around Google APIs.
+      covered: logging setup, credential verification and the
+      authorization decision, API response envelope construction, the
+      API client's credential resolution, retry wrappers around Google
+      APIs.
     checkable: true
     check_notes: >
       LLM CHECK.
@@ -87,9 +88,13 @@ standards:
             the service defines its own logger setup, flag unless
             the logger module imports from `common-python-utils`
             or `common-typescript-utils`.
-        (2) Clerk token verification implemented inline (manual JWT
-            decode + Clerk JWKS fetch) rather than via
-            `verify_token` from the shared library.
+        (2) Credential verification or the authorization decision
+            implemented inline — a manual JWT decode, a Clerk JWKS
+            fetch, a constant-time comparison against machine keys, or
+            a local function that walks roles and scopes to return
+            allow/deny — rather than via the `identity` library
+            (`identity.chain`, `identity.clerk`, `identity.apikey`,
+            `identity.policy`). See AUTH-004.
         (3) Ad-hoc response envelope construction — `return {"data":
             ..., "meta": ...}` literals rather than using
             `SuccessResponse` / `ErrorResponse` helpers. (This
@@ -97,9 +102,11 @@ standards:
             XSTACK-005 catches the same pattern on non-api-service
             repos that still construct responses — e.g. cogs that
             return structured data to internal callers.)
-        (4) Internal-API-Key header construction inline rather than
-            via `get_internal_headers()` from
-            `common-python-utils`.
+        (4) `Authorization` header construction inline — reading a
+            machine key out of the environment and formatting the
+            header by hand — rather than via `KaianoApiClient` from
+            `common-python-utils`, which derives the per-machine
+            variable name and sets the header (CD-019, AUTH-002).
         (5) Retry logic around Google Drive / Sheets / Anthropic
             API calls implemented locally rather than via
             `DriveFacade` / `LLMClient` from the shared library.
