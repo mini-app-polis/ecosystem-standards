@@ -1,3 +1,10 @@
+# [6.3.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.2.0...v6.3.0) (2026-09-02)
+
+
+### Features
+
+* add XSTACK-006 and XSTACK-007, the two ways a repo goes quiet ([cdf4e78](https://github.com/mini-app-polis/ecosystem-standards/commit/cdf4e78e4c27b2306280455d7a25f42a7ce79ca5))
+
 # [6.2.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.1.0...v6.2.0) (2026-09-02)
 
 
