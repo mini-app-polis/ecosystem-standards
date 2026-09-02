@@ -1,0 +1,254 @@
+# ecosystem-standards / security.yaml
+# Supply-chain and secret-handling standards for every repo.
+#
+# The premise of this file is that the delivery gate is already the
+# ecosystem's enforcement point — every repo runs lint, format, types and
+# tests on pull request — and that adding security checks to a gate that
+# already exists is cheaper and more reliable than adding a process.
+#
+# Doppler removes the *need* for a credential to appear in source. These
+# rules prove none did anyway, that what ships has no known-vulnerable
+# dependency, that its contents are recorded, and that a finding has a
+# declared deadline rather than a negotiated one.
+
+standards:
+
+  # ─────────────────────────────────────────────
+  # SECRETS
+  # ─────────────────────────────────────────────
+
+  - id: SEC-001
+    title: Pre-commit secret scanning hook configured
+    status: convention
+    dimension: security_posture
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog, api-service, shared-library]
+    description: >
+      Repos running pre-commit include a secret-scanning hook, so a
+      credential is caught before it reaches a commit rather than after
+      it reaches a branch.
+
+      This is deliberately a `convention` and deliberately not the
+      fleet-wide control. A pre-commit hook is bypassable with
+      `--no-verify`, and pre-commit is configured in the Python repos
+      only — the TypeScript and Astro repos have never adopted it. A rule
+      requiring it everywhere would be a rule about pre-commit rather
+      than a rule about secrets. SEC-002 is the contract; this is the
+      earlier, cheaper layer for the repos already positioned to run it.
+
+      Scoped to the same type set as PY-008, which is the existing
+      convention for "repos that run pre-commit".
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Read `.pre-commit-config.yaml` at the repo root. Absent → fail.
+      (2) Pass if any entry under `repos[].repo` matches one of
+          `gitleaks`, `detect-secrets`, or `trufflehog`.
+      Match on the repo URL rather than the hook id — the hook ids differ
+      between the three tools and change between their releases.
+    origin: >
+      BACKLOG Tier 1, drafted as SEC-001 and open across four major
+      versions. Recorded there as the largest material-risk gap in the
+      catalog, given Doppler-managed secrets, Clerk keys, Prefect API
+      keys, Anthropic keys and GitHub tokens present across the fleet.
+
+  - id: SEC-002
+    title: Secret scanning runs on pull-request diffs and can fail the build
+    status: requirement
+    dimension: security_posture
+    severity: ERROR
+    applies_to: [all]
+    description: >
+      Every repo scans the diff of every pull request for credentials, as
+      a step that can fail the build.
+
+      This is the fleet-wide control, in preference to the pre-commit
+      hook of SEC-001, for two reasons. It cannot be bypassed from a
+      developer machine, and every repo in the ecosystem already runs
+      GitHub Actions on pull requests — so unlike pre-commit it has a
+      subject in all sixteen.
+
+      Gating is part of the rule, not a refinement of it. A scanner whose
+      step cannot fail the build produces a report, and an unread report
+      is indistinguishable from no scanner at all. A repo that wants the
+      scan advisory during adoption should carry a dated deferral rather
+      than a permanently non-gating step.
+
+      The `pull_request` trigger is also part of the rule. A scan that
+      runs only on push to a branch gates nothing, because the credential
+      is already in the history by then — the point of scanning the diff
+      is to reject the change, not to discover it afterwards.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Parse every file under `.github/workflows/`. None → fail.
+      (2) Select workflows whose `on:` includes `pull_request` (either as
+          a mapping key or a sequence member).
+      (3) Within those, find a step whose `uses` matches
+          `gitleaks/gitleaks-action@*`, or whose `run` invokes
+          `gitleaks`, `trufflehog` or `detect-secrets`. None → fail.
+      (4) Fail if the matched step sets `continue-on-error: true`, or if
+          its job sets `continue-on-error: true`.
+      A reusable workflow invoked via `uses: <org>/<repo>/.github/workflows/
+      <name>.yml@<ref>` counts as satisfying (3) when its name contains
+      `security` or `secret` — the fleet is expected to converge on one
+      shared workflow rather than sixteen copies, and the check should not
+      punish that.
+    origin: >
+      BACKLOG Tier 1, drafted as SEC-002. Promoted ahead of SEC-001 as
+      the fleet-wide control during the v6.2 security-dimension audit:
+      pre-commit exists in six of sixteen repos, CI in all sixteen.
+
+  # ─────────────────────────────────────────────
+  # DEPENDENCIES AND CODE
+  # ─────────────────────────────────────────────
+
+  - id: SEC-003
+    title: Dependency vulnerability scan in CI, gated at the declared severity
+    status: requirement
+    dimension: security_posture
+    severity: ERROR
+    applies_to: [all]
+    description: >
+      Every repo scans its resolved dependency set for known
+      vulnerabilities in CI, and the step fails the build at or above the
+      severity threshold declared by SEC-006.
+
+      Python repos use `pip-audit`; TypeScript repos use `pnpm audit`.
+      Either satisfies the rule — the requirement is that the ecosystem's
+      installed dependency graph is checked against a vulnerability
+      database on every change, not that a particular tool does it.
+
+      The threshold lives in the catalog rather than in each workflow, so
+      that tightening it is one edit rather than sixteen. A repo hardcoding
+      its own threshold is not a violation of this rule but will drift
+      from SEC-006, and that drift is the thing SEC-006 exists to make
+      visible.
+
+      SCOPE LIMIT: this checks *declared and resolved* dependencies. It
+      says nothing about a vulnerable transitive dependency pulled in at
+      runtime by a git-referenced package whose lock is stale — that is
+      CD-020's territory, and the two rules together are what make the
+      answer trustworthy.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Parse `.github/workflows/`.
+      (2) Python repos (a `pyproject.toml` exists): find a step whose
+          `run` invokes `pip-audit`.
+      (3) TypeScript repos (a `package.json` exists): find a step whose
+          `run` invokes `pnpm audit` or `npm audit`.
+      (4) A repo containing both is satisfied by either.
+      (5) Fail if the matched step or its job sets
+          `continue-on-error: true`.
+      Do not attempt to parse the severity flag and compare it to
+      SEC-006 — flag spellings differ between the tools and change
+      between versions. Threshold agreement is a review concern; this
+      check answers only whether a gating scan runs.
+    origin: >
+      BACKLOG Tier 2, "Dependency vulnerability scanning". Promoted to
+      Tier 1 during the v6.2 audit on the grounds that it shares an
+      archetype with SEC-002 and therefore costs almost nothing once
+      that check exists.
+
+  - id: SEC-004
+    title: Static analysis workflow present
+    status: convention
+    dimension: security_posture
+    severity: WARN
+    applies_to: [all]
+    description: >
+      Every repo runs a static application security testing pass over its
+      own source, distinct from linting.
+
+      CodeQL is the ecosystem default: it is GitHub-native, free on
+      public repositories, needs no new vendor or infrastructure, and
+      supports both Python and TypeScript. Another SAST tool satisfies
+      the rule; the requirement is that source is analysed for security
+      defects rather than only for style and types.
+
+      A `convention` rather than a `requirement`, deliberately. SAST at
+      this scale produces a low true-positive rate against a codebase
+      one person writes and reviews, and a noisy gate teaches people to
+      ignore gates. It earns its place as a standing signal, not a
+      blocker — revisit the status if a finding here ever turns out to
+      be real.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Parse `.github/workflows/`.
+      (2) Pass if any step's `uses` matches
+          `github/codeql-action/analyze@*`, or if a step `run` invokes
+          `semgrep` or `bandit`.
+      Gating is not part of this rule — a non-blocking SAST step
+      satisfies it, unlike SEC-002 and SEC-003.
+
+  # ─────────────────────────────────────────────
+  # PROVENANCE AND RESPONSE
+  # ─────────────────────────────────────────────
+
+  - id: SEC-005
+    title: SBOM generated per build and retained as an artifact
+    status: convention
+    dimension: security_posture
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog, api-service]
+    description: >
+      Every deployable service emits a software bill of materials during
+      its release build and retains it as a workflow artifact.
+
+      Retention is the rule, not generation. An SBOM produced and
+      discarded answers no question afterwards — the value is being able
+      to ask "was this dependency in the thing we shipped in April" once
+      a vulnerability is disclosed, which requires the artifact to
+      outlive the run that made it.
+
+      Deliberately scoped to deployables. A shared library's contents are
+      recorded in the SBOM of every service that consumes it, and
+      generating one per library would produce documents nobody queries.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Parse `.github/workflows/`.
+      (2) Find a job containing both:
+            - a step whose `uses` matches `anchore/sbom-action@*`, or
+              whose `run` invokes `syft` or `cyclonedx`; and
+            - a step whose `uses` matches `actions/upload-artifact@*`.
+      (3) Both must be in the *same* job — an SBOM generated in one job
+          and an unrelated artifact uploaded in another does not satisfy
+          the rule, and the same-job requirement is what makes the check
+          meaningful rather than a keyword scan.
+
+  - id: SEC-006
+    title: Vulnerability response deadlines are declared in the catalog
+    status: requirement
+    dimension: security_posture
+    severity: INFO
+    applies_to: [standards-repo]
+    description: >
+      The catalog declares a mapping from vulnerability severity to a
+      remediation deadline, and that mapping is the single source the
+      scanning rules derive their thresholds from.
+
+      The control is not the number. It is that the number was declared
+      before a finding existed, rather than negotiated afterwards against
+      the inconvenience of the specific finding in front of you — which
+      is the failure mode this rule exists to prevent, and the one a
+      single operator is most exposed to.
+
+      A deadline that passes without remediation is not a violation of
+      this rule. It becomes a deferral, with an `until:` date, under the
+      ordinary deferral vocabulary — which is the correct way for an
+      accepted risk to stay visible.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Read `index.yaml`.
+      (2) Pass if a top-level `vulnerability_response:` mapping exists
+          with a `deadlines:` block naming at least CRITICAL and HIGH,
+          each mapping to an integer number of days.
+      (3) Fail if the block is absent, or if any named severity is not
+          one of the values in the top-level `severities:` block.
+      This rule reads the catalog rather than a repo's source tree,
+      which is why it is scoped to `standards-repo` in the same way as
+      the META rules.
