@@ -1,3 +1,38 @@
+# [6.0.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v5.1.0...v6.0.0) (2026-09-02)
+
+
+* feat!: replace CD-012 and AUTH-001 with the named-machine-key contract ([4bf81c5](https://github.com/mini-app-polis/ecosystem-standards/commit/4bf81c583390da0a0212031fd814f172553a02c9))
+
+
+### Bug Fixes
+
+* **auth-003:** specify a check the source scanner can actually run ([870523d](https://github.com/mini-app-polis/ecosystem-standards/commit/870523d1c2f353f9ddb174ddf2dca8c3707818d0))
+* **cd-019:** do not flag legitimate Clerk backend-API use ([43bf8bf](https://github.com/mini-app-polis/ecosystem-standards/commit/43bf8bf8bf3877a4e52232482b3a61c036b548a0))
+
+
+### Features
+
+* register identity and record the auth patterns in the ecosystem inventory ([f87f8b5](https://github.com/mini-app-polis/ecosystem-standards/commit/f87f8b5926ccc6149f84b5e9f3b7792a32252ba3))
+
+
+### BREAKING CHANGES
+
+* CD-012 and AUTH-001 are retired IDs. evaluator-cog
+registers deterministic checks under both — check_clerk_m2m_auth in
+engine/deterministic/auth.py and check_auth_py_docstring in
+engine/deterministic/docs.py, dispatched from runner.py — and those
+checks will emit findings against rule IDs the catalog no longer
+contains until they are removed. The CD-012 check also encodes the
+inverted requirement: it tells repos to acquire Clerk M2M JWTs and to
+replace static keys, which is now backwards. New checks are needed for
+CD-019, AUTH-003 and AUTH-004; the AUTH-003 check must enumerate the
+route table rather than scan decorator paths. Per-repo evaluator.yaml
+files referencing CD-012 or AUTH-001 need updating — evaluator-cog's own
+carries a stale CD-012 comment.
+
+Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01HJwgLbtFfS8bbgoZmzikCR
+
 # [5.1.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v5.0.1...v5.1.0) (2026-05-17)
 
 
