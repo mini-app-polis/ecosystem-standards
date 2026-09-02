@@ -1,3 +1,10 @@
+# [6.2.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.1.0...v6.2.0) (2026-09-02)
+
+
+### Features
+
+* add the security_posture dimension and SEC-001 through SEC-006 ([3d929d5](https://github.com/mini-app-polis/ecosystem-standards/commit/3d929d5130fd0792e36cac08d414cc7a0bda2185))
+
 # [6.1.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.0.1...v6.1.0) (2026-09-02)
 
 
