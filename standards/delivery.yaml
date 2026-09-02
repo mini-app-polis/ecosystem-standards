@@ -866,4 +866,84 @@ standards:
       `X-Internal-API-Key` shared-secret header (retired 2026-04,
       Project Keystone).
 
+  - id: CD-020
+    title: The lockfile is released with the version it locks
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    applies_to: [pipeline-cog, trigger-cog, api-service, shared-library]
+    description: >
+      What deploys is what `uv.lock` resolves. So the lock has to agree
+      with the declaration it was generated from, and has to keep
+      agreeing across releases. Three conditions, which fail as one:
+
+        - The release pipeline re-locks. semantic-release bumps the
+          version in pyproject.toml and does not touch uv.lock, so a
+          release that does not re-lock leaves the lock a version behind
+          the moment it succeeds — and the next release does it again.
+          `.releaserc.json` runs `uv lock` in its `@semantic-release/exec`
+          prepare step and lists `uv.lock` in the `@semantic-release/git`
+          assets.
+
+        - `uv.lock` is current: `uv lock --check` passes against the
+          committed pyproject.toml.
+
+        - The declaration does not contradict itself. Where a package
+          appears in both the dependency list and `[tool.uv.sources]`,
+          the version specifier in the dependency list must not name a
+          different version than the source's pin. uv resolves from
+          `[tool.uv.sources]` and ignores the specifier, so a
+          disagreement is silent: the file says one version and the
+          deploy installs another.
+
+      Git sources pin an immutable ref — a release tag, not `main`, not
+      a branch name, not a bare commit SHA. A floating ref means two
+      deploys of the same commit can install different code.
+
+      These are one requirement rather than three because each alone is
+      insufficient. A correct lock without a re-locking pipeline is
+      correct until the next release; a re-locking pipeline does not fix
+      a lock that is already stale; and both are worthless if the
+      declaration they encode disagrees with itself.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+        (1) Parse `.releaserc.json`. Require the `@semantic-release/exec`
+            `prepareCmd` to run `uv lock` alongside the version bump, and
+            the `@semantic-release/git` `assets` array to include
+            `uv.lock`. Flag a repo missing either — the two together are
+            what stops the drift recurring, and a repo with only one of
+            them re-drifts on its next release.
+        (2) Run `uv lock --check` against the checked-out tree. It exits
+            non-zero when the lock needs updating. Flag a non-zero
+            result, reporting the version in pyproject.toml alongside the
+            version recorded in uv.lock so the finding names the gap
+            rather than just asserting one.
+        (3) Parse `pyproject.toml`. For each key in `[tool.uv.sources]`,
+            find the matching requirement string in the project's
+            dependency list and in every optional-dependency group. Flag
+            when that requirement carries a version specifier (`==`,
+            `>=`, `~=`, `<`) naming a version different from the
+            source's `tag` or `rev`. A bare name with no specifier is
+            correct and is not flagged.
+        (4) Flag any `[tool.uv.sources]` git entry whose ref is not a
+            version tag: `main`, `master`, any branch name, or a
+            40-character hex SHA. A `rev` holding a tag string
+            (`rev = "v4.0.0"`) satisfies this.
+      Exempt any repo with no `uv.lock` — it is not uv-managed, and
+      PY-001 is the rule for that.
+    origin: >
+      2026-09. api-kaianolevine-com crash-looped in production — 12
+      restarts in 23 seconds on ModuleNotFoundError — because
+      pyproject.toml disagreed with itself: the dependency list named
+      common-python-utils v3.1.1 and identity v1.0.2 while
+      `[tool.uv.sources]` pinned v3.1.0 and v1.0.1, and uv resolves from
+      the sources table. Two further failures the same week traced to
+      the same class of disagreement. Separately, the two shared
+      libraries release without re-locking: identity and
+      common-python-utils each went stale again within an hour of the
+      release that was meant to fix them. Six of the eight uv-managed
+      repos already run `uv lock` in `prepareCmd` and ship `uv.lock` as
+      a release asset — this makes the majority convention the rule.
+
 # VER-007..VER-008 moved to standards/versioning.yaml.
