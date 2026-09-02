@@ -1,3 +1,10 @@
+# [6.4.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.3.0...v6.4.0) (2026-09-02)
+
+
+### Features
+
+* add the operational_readiness dimension and OPS-001 through OPS-007 ([a5ac6c1](https://github.com/mini-app-polis/ecosystem-standards/commit/a5ac6c1e85cc650a299c24555d0fd7e085c5caee))
+
 # [6.3.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.2.0...v6.3.0) (2026-09-02)
 
 
