@@ -106,6 +106,21 @@ services:
 
   # ── Shared libraries ──────────────────────────────────────────
 
+  - id: identity
+    type: shared-library
+    status: active
+    dod_type: null
+    language: python
+    description: >
+      The cross-ecosystem identity and authorization contract. Defines one
+      binding — verify, resolve, authorize, emit_audit — plus the principal
+      store schema, the scope vocabulary, the decision function, and
+      cross-language conformance fixtures. Consumed by each enforcement
+      point rather than run as a service: one specification, N conformant
+      enforcement points, deliberately not a central auth service on the
+      request path. Verifies Clerk session JWTs for humans and named
+      per-machine API keys for cogs. See ADR-008, CD-019, AUTH-004.
+
   - id: common-python-utils
     type: shared-library
     status: active
@@ -113,8 +128,11 @@ services:
     language: python
     description: >
       Shared Python utilities. Google API client (Drive, Sheets), LLM client
-      (Anthropic, OpenAI), structured logging, API client, metadata helpers.
-      All Python processors and cogs declare this as a dependency.
+      (Anthropic, OpenAI), structured logging, metadata helpers, and
+      KaianoApiClient — the ecosystem API client, which resolves the
+      caller's own named machine key from the environment and sets the
+      Authorization header (CD-019, AUTH-002). All Python processors and
+      cogs declare this as a dependency.
 
   - id: common-typescript-utils
     type: shared-library
@@ -268,6 +286,23 @@ patterns:
   api_services:
     description: Active API services
     current: api-kaianolevine-com (sole API for kaianolevine.com ecosystem)
+
+  auth:
+    description: How callers authenticate to ecosystem APIs
+    current: >
+      Single Authorization: Bearer header. Humans present Clerk session
+      JWTs, verified locally against JWKS. Machines present a named
+      per-machine API key held only in Doppler as <MACHINE_NAME>_API_KEY,
+      verified locally by constant-time comparison — the key is the
+      identity claim. Both paths run through the identity library.
+
+  authorization:
+    description: How access is granted once a caller is identified
+    current: >
+      Roles are named bundles of scopes; a scope is
+      <domain>.<resource>.<action>. Every non-public route names the one
+      scope it requires. Machine principals and their roles are declared
+      in code and reconciled into the principal store at boot.
 
 terminology:
 
