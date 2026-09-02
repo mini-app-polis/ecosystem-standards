@@ -22,6 +22,7 @@ For the process of writing or superseding an ADR, see
 | ADR-005 | Accepted  | [Schema Clarity Audit — Document All Rule Fields, Formalize Traits, Specify Dispatch](ADR-005-schema-clarity-audit.md) |
 | ADR-006 | Accepted  | [Startup Registration Resilience for serve()-Based Cogs](ADR-006-serve-startup-resilience.md) |
 | ADR-007 | Accepted  | [External Provider Failure — Reporting and Recovery Contract](ADR-007-external-provider-failure-contract.md) |
+| ADR-008 | Accepted  | [Named Machine Keys as the Machine Identity](ADR-008-named-machine-keys.md) |
 
 ---
 
@@ -99,6 +100,25 @@ that application's purpose, which the catalog cannot know. Adds an
 obligations are data rather than rule prose. Telemetry providers
 (Sentry, and the finding-posting path itself) are exempt and fail
 silently — a finding saying "we cannot post findings" cannot be posted.
+
+**ADR-008 — Named Machine Keys as the Machine Identity.**
+Machines authenticated with Clerk M2M opaque tokens minted from a
+`CLERK_SECRET_KEY` shared across the whole fleet, so every cog resolved
+to the same subject — `owner_id` could not distinguish a `deejay-cog`
+write from a `transcription-cog` write — and every machine request paid
+a synchronous `POST /v1/m2m_tokens/verify` to Clerk. Replaces that with
+one named API key per machine, held only in Doppler as
+`<MACHINE_NAME>_API_KEY` and compared in constant time against
+configuration: possession of the key *is* the identity claim, so there
+is no name left to self-assert. No key material reaches the database.
+Humans keep Clerk session JWTs, verified locally against JWKS. The rules
+both populations share move into a new `identity` library defining one
+binding contract — verify, resolve, authorize, emit_audit — consumed by
+each enforcement point rather than run as a central auth service.
+Authority becomes roles and scopes (`<domain>.<resource>.<action>`),
+with the machine roster declared in code and reconciled at boot. The
+Clerk M2M path was removed outright, with no fallback. Retires CD-012
+and AUTH-001; derives CD-019, AUTH-003, and AUTH-004.
 
 ---
 
