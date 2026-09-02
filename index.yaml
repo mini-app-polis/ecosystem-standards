@@ -475,7 +475,7 @@ files:
 
   - file: standards/auth.yaml
     domain: auth
-    description: Authentication standards for API services — Clerk verification posture, per-service invariants, and client-API parity.
+    description: Authentication and authorization standards for API services — credential verification posture, per-route scope coverage, the shared identity contract, and client-API parity.
     rule_prefix: AUTH
 
   - file: standards/pipeline.yaml

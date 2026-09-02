@@ -46,7 +46,7 @@ ecosystem-standards/
 │   ├── testing.yaml                ← TEST — critical path coverage, FastAPI testing
 │   ├── documentation.yaml          ← DOC — README, docstrings, OpenAPI
 │   ├── api.yaml                    ← API — service structure, response envelopes
-│   ├── auth.yaml                   ← AUTH — Clerk verification, client-API parity
+│   ├── auth.yaml                   ← AUTH — credential verification, route coverage, parity
 │   ├── pipeline.yaml               ← PIPE — orchestration, idempotency, data safety
 │   ├── frontend.yaml               ← FE — Astro sites, React apps
 │   ├── delivery.yaml               ← CD — CI/CD, observability, Sentry, logging
