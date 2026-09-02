@@ -89,10 +89,17 @@ standards:
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Enumerate the service's registered routes from the application's
-      route table, not by regex over literal decorator paths — routes
-      registered through a factory or loop have a variable path and are
-      invisible to a path regex.
+      Enumerate routes by their registration call, never by matching
+      literal path strings. AST-scan for every route-registering
+      decorator (`@router.get`, `@app.post`, ...) and every
+      `add_api_route(...)` call, and take the decorated or referenced
+      function as the route regardless of whether its path argument is a
+      literal. A route registered inside a factory that is called at
+      module level has a variable path and no literal to match, but its
+      decorator is still there to find.
+      Flag — do not silently pass — any registration whose guard cannot
+      be resolved statically. An unresolvable route is an unknown, and
+      an unknown route is the case this rule exists to catch.
         (1) For each route, classify it as scope-guarded (a dependency
             that takes a scope string), authenticated-only, or public.
             Flag any route in none of the three.
@@ -122,8 +129,8 @@ standards:
       taken from an unverified `X-Owner-Id` header. Four routes
       registered through a factory in wcs_wiki.py had no guard at all
       and were invisible to every path-literal scan, including the one
-      used to plan their remediation — which is why this check reads the
-      route table.
+      used to plan their remediation — which is why this check keys on
+      the registration call rather than the path.
     supersedes: >
       AUTH-001 (unverified X-Owner-Id write endpoints permitted behind
       private networking, retired 2026-09 per ADR-008). That rule
