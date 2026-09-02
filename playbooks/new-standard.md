@@ -64,13 +64,16 @@ declared `rule_prefix`.
 | Prefix        | File                            | Scope                                             |
 |---------------|---------------------------------|---------------------------------------------------|
 | `PRIN`        | `standards/principles.yaml`     | Immutable core philosophy                         |
-| `PY`, `CFG`   | `standards/python.yaml`         | Python tooling, structure, configuration          |
+| `PY`          | `standards/python.yaml`         | Python tooling, structure, error handling         |
 | `TEST`        | `standards/testing.yaml`        | Test structure, critical path, FastAPI testing    |
 | `DOC`         | `standards/documentation.yaml`  | README, docstrings, OpenAPI, ADR presence         |
-| `API`, `AUTH` | `standards/api.yaml`            | Service structure, routing, authentication        |
+| `API`         | `standards/api.yaml`            | Service structure, routing, response envelopes    |
+| `AUTH`        | `standards/auth.yaml`           | Credential verification, route coverage, parity   |
+| `CFG`         | `standards/config.yaml`         | pydantic-settings and .env.example contracts      |
 | `PIPE`        | `standards/pipeline.yaml`       | Prefect patterns, idempotency, data safety        |
 | `FE`          | `standards/frontend.yaml`       | Astro sites, React apps                           |
-| `CD`, `VER`   | `standards/delivery.yaml`       | CI/CD, observability, versioning                  |
+| `CD`          | `standards/delivery.yaml`       | CI/CD, observability, secrets, auth conventions   |
+| `VER`         | `standards/versioning.yaml`     | Conventional Commits, semantic-release            |
 | `META`        | `standards/meta.yaml`           | Rules governing the standards repo itself         |
 | `EVAL`        | `standards/evaluation.yaml`     | How AI evaluation is performed                    |
 | `MONO`        | `standards/monorepo.yaml`       | pnpm workspace rules                              |
