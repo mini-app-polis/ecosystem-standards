@@ -1,3 +1,10 @@
+# [6.1.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.0.1...v6.1.0) (2026-09-02)
+
+
+### Features
+
+* add CD-020, the lockfile is released with the version it locks ([7a8d2e4](https://github.com/mini-app-polis/ecosystem-standards/commit/7a8d2e4ca8ba2be3bfa287cfaba0088c28110c17))
+
 ## [6.0.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.0.0...v6.0.1) (2026-09-02)
 
 
