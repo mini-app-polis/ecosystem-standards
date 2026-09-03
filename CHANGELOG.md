@@ -1,3 +1,10 @@
+## [6.4.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.4.1...v6.4.2) (2026-09-03)
+
+
+### Bug Fixes
+
+* **operations:** retire the five rules that only produced paperwork ([56234dc](https://github.com/mini-app-polis/ecosystem-standards/commit/56234dcf14a3d154f7792e1ebe2df550762a5236))
+
 ## [6.4.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.4.0...v6.4.1) (2026-09-03)
 
 
