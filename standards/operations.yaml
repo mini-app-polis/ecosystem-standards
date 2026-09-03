@@ -40,16 +40,22 @@ standards:
       verified since — schema has changed, dataset size has changed, the
       provider's tooling has changed — and the staleness finding is the
       signal this rule exists to produce.
-    checkable: true
+    checkable: false
     check_notes: >
-      DETERMINISTIC CHECK.
-      (1) Read `docs/operations/restore-evidence.md`. Absent → fail.
-      (2) Parse `restored_on:` from its front matter. Fail if absent, or
-          if more than 180 days before the evaluation date.
-      (3) Fail if `rpo:` or `rto:` is missing or null.
-      Do not validate the values themselves. A wrong number is a review
-      problem; an absent or stale one is a conformance problem, and only
-      the second is deterministically decidable.
+      NOT CHECKABLE. The control is the restore drill; the artifact this
+      rule used to read — `docs/operations/restore-evidence.md` with a
+      hand-typed `restored_on:` — is not the control. A date a human
+      writes is satisfied by editing the date, so the cheapest way to
+      clear the finding was to falsify it, and the check fired on the
+      calendar rather than on anything in the repo.
+
+      Becomes checkable when the drill is automated: a scheduled job
+      that restores into a scratch database, measures RPO and RTO
+      rather than accepting asserted ones, and records its own run.
+      Check the recency of the last successful run against that record
+      — not against a file in the repo — and additionally check that
+      the job is defined and scheduled, which is deterministic and
+      lives in source.
 
   - id: OPS-002
     title: Migrations run under a database role without DDL on the runtime path
@@ -115,15 +121,16 @@ standards:
 
       Choose indicators the ecosystem already emits. An objective that
       requires new telemetry to evaluate will not be evaluated.
-    checkable: true
+    checkable: false
     check_notes: >
-      DETERMINISTIC CHECK.
-      (1) Read `slo.yaml` at the repo root. Absent → fail.
-      (2) Fail unless it parses and contains at least one entry under
-          `objectives:` carrying all of `name`, `indicator`, `target`
-          and `window`.
-      Do not evaluate attainment here — this rule checks that an
-      objective exists and is well-formed, not whether it is being met.
+      NOT CHECKABLE. `slo.yaml` had no reader. There is no error budget
+      policy bound to it, no alerting derived from it, and no rotation
+      to page, so writing the file made the check pass and changed
+      nothing else.
+
+      Becomes checkable when something consumes the objective — an
+      alert, a budget policy, or a released-to-users commitment. Check
+      the consumer, and let the declaration follow from it.
 
   - id: OPS-004
     title: Data classification covers every table in the schema
@@ -147,18 +154,20 @@ standards:
       product with real users. Both are unanswerable without knowing what
       is stored and for how long, and both are asked from outside on
       someone else's timetable.
-    checkable: true
+    checkable: false
     check_notes: >
-      DETERMINISTIC CHECK.
-      (1) Read `data-classification.yaml` at the repo root. Absent → fail.
-      (2) Collect table names from the schema — the migration directory
-          for raw-SQL repos, the schema module for ORM repos.
-      (3) Fail naming every table present in the schema and absent from
-          the classification file, and every entry missing `class` or
-          `retention`.
-      (4) An entry for a table that no longer exists is a WARN, not a
-          failure — stale entries are untidy, uncovered tables are the
-          risk.
+      NOT CHECKABLE YET. This is the one whose artifact encodes
+      something real: a table's sensitivity is not derivable from the
+      schema. But today the only reader of `data-classification.yaml`
+      is this check, and full coverage of every table means updating it
+      on every migration — maintenance proportional to schema churn,
+      for no consumer.
+
+      Becomes checkable when a data-erasure path exists that reads the
+      classification to decide what to delete. Scope it then to tables
+      holding user data rather than to every table: the risk is
+      personal data with no erasure route, not an unlabelled join
+      table.
 
   - id: OPS-005
     title: External egress surface is declared and covers every host in source
@@ -184,20 +193,20 @@ standards:
       hosts and should not block on a view it knows is partial. It still
       catches the common case, which is a new third-party dependency
       added without anyone recording it.
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      (1) Read `egress.yaml` at the repo root. Absent → fail.
-      (2) Scan source for external hosts: http client base URLs, host
-          constants, and settings fields whose value is a URL.
-      (3) Report any host found in source and absent from the
-          declaration.
-      Ignore localhost, in-ecosystem hosts already named in
-      `ecosystem.yaml`, and hosts appearing only in test fixtures.
-
   # ─────────────────────────────────────────────
   # CREDENTIALS AND SHUTDOWN
   # ─────────────────────────────────────────────
+    checkable: false
+    check_notes: >
+      NOT CHECKABLE. The check scanned source for external hosts and
+      then compared what it found against a hand-written `egress.yaml`.
+      It had already derived the answer; the declaration was a manual
+      copy of it, and drifted the moment a host was added — at which
+      point the rule reported on bookkeeping rather than on egress.
+
+      If the egress surface is worth knowing, report the derived list
+      rather than requiring a copy to diff against. A declaration earns
+      its place only where it says something the source cannot.
 
   - id: OPS-006
     title: Credential rotation has been exercised within the last year
@@ -222,15 +231,17 @@ standards:
 
       Record what broke. The failures found while rotating are the
       reason to rotate before you have to.
-    checkable: true
+    checkable: false
     check_notes: >
-      DETERMINISTIC CHECK.
-      (1) Read `docs/operations/rotation-log.md`. Absent → fail.
-      (2) Parse `last_exercised:` from its front matter. Fail if absent
-          or more than 365 days before the evaluation date.
-      A service holding no machine credentials should carry a repo
-      exemption rather than an empty log — the same treatment
-      deejaytools-com-api takes for CD-019.
+      NOT CHECKABLE. Same shape as OPS-001: the control is exercising
+      rotation, and `docs/operations/rotation-log.md` with a hand-typed
+      `last_exercised:` is not that. That the rule needed a per-repo
+      exemption for services holding no machine credentials was the
+      further sign it was measuring paperwork.
+
+      Becomes checkable when rotation is exercised by a job that
+      records its own run, at which point check the recency of that
+      record and the existence of the job.
 
   - id: OPS-007
     title: Long-running workers drain in-flight work on SIGTERM
