@@ -1,3 +1,10 @@
+# [6.5.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.4.2...v6.5.0) (2026-09-03)
+
+
+### Features
+
+* **security:** accept a shared workflow in place of an inline step ([1a38a5d](https://github.com/mini-app-polis/ecosystem-standards/commit/1a38a5d1d24711c9d0b796772de7242582163904))
+
 ## [6.4.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.4.1...v6.4.2) (2026-09-03)
 
 
