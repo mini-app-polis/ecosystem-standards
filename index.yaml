@@ -44,6 +44,24 @@ severities:
 
 # Statuses used across all standards files.
 # `status` controls how the evaluator treats findings for the rule.
+# Severity vocabulary for VULNERABILITIES, as the scanners report them.
+#
+# Deliberately separate from `severities:` above, which grades conformance
+# findings. The two are different scales measuring different things and
+# neither is a superset of the other: CVSS has no ERROR, and a conformance
+# finding is never HIGH. Validating one against the other is a category
+# error — it was the reason SEC-006 could not pass, since its own
+# `deadlines:` block necessarily names CVSS ratings that `severities:`
+# does not contain.
+#
+# Values follow the CVSS v3.1 qualitative rating scale, which is what
+# pip-audit, npm/pnpm audit and GitHub advisories all report.
+vulnerability_severities:
+  CRITICAL: "CVSS 9.0-10.0. Remote code execution, authentication bypass, or equivalent."
+  HIGH: "CVSS 7.0-8.9. Significant impact, or lower impact with a public exploit."
+  MEDIUM: "CVSS 4.0-6.9. Limited impact, or requires conditions not usually present."
+  LOW: "CVSS 0.1-3.9. Minimal impact. No deadline is declared; remediate opportunistically."
+
 # Remediation deadlines for vulnerabilities surfaced by the security_posture
 # scanning rules (SEC-003, and image scanning when it lands). Declared here
 # rather than in each workflow so that tightening the policy is one edit
@@ -56,7 +74,7 @@ vulnerability_response:
   deadlines:
     CRITICAL: 7
     HIGH: 30
-    WARN: 90
+    MEDIUM: 90
   measured_from: >
     The date the scan first reported the finding, not the date the
     advisory was published — the ecosystem cannot act on what it has not

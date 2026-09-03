@@ -247,8 +247,11 @@ standards:
       (2) Pass if a top-level `vulnerability_response:` mapping exists
           with a `deadlines:` block naming at least CRITICAL and HIGH,
           each mapping to an integer number of days.
-      (3) Fail if the block is absent, or if any named severity is not
-          one of the values in the top-level `severities:` block.
+      (3) Fail if the block is absent, or if any severity it names is
+          not a key of the top-level `vulnerability_severities:` block.
+          Validate against that block and never against `severities:` —
+          the latter grades conformance findings and is a different
+          scale, so a CVSS rating is correctly absent from it.
       This rule reads the catalog rather than a repo's source tree,
       which is why it is scoped to `standards-repo` in the same way as
       the META rules.
