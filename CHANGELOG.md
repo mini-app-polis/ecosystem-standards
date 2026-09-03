@@ -1,3 +1,10 @@
+## [6.4.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.4.0...v6.4.1) (2026-09-03)
+
+
+### Bug Fixes
+
+* **sec-006:** separate the vulnerability severity vocabulary ([6c8b3ab](https://github.com/mini-app-polis/ecosystem-standards/commit/6c8b3ab7cb2bb3dd3c5f9fb0f190b58c56ad7aa7))
+
 # [6.4.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.3.0...v6.4.0) (2026-09-02)
 
 
