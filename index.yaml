@@ -286,6 +286,14 @@ schema:
     standards-repo: >
       YAML-only definition and tooling repository. Not a deployed service.
       Examples: ecosystem-standards.
+    shared-workflows: >
+      Reusable GitHub Actions workflow definitions consumed by other
+      repos via `uses:`. No source, no runtime, no deployment, no
+      published package — the workflow YAML is the whole artifact.
+      Deliberately absent from every rule's `applies_to`, so only the
+      `[all]` rules reach it: runtime, packaging and release rules are
+      out of scope here by taxonomy rather than by exemption.
+      Examples: .github.
 
   # Trait definitions. Each trait has a human-readable `description`
   # and optionally carries structured exemption data:

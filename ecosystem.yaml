@@ -160,6 +160,23 @@ services:
       YAML files consumed by evaluator-cog at runtime. Semantic-release
       owns versioning via index.yaml.
 
+  - id: .github
+    type: shared-workflows
+    status: active
+    dod_type: null
+    language: yaml
+    host: github
+    description: >
+      The org-wide GitHub configuration repo. Holds the fleet's shared
+      security workflow (.github/workflows/security.yml), a reusable
+      workflow that runs secret scanning, a dependency audit, static
+      analysis and SBOM generation. SEC-002 through SEC-005 accept a job
+      delegating to it in place of inline steps; registering it here is
+      what makes that honest, because the steps are then evaluated once
+      rather than being invisible in every consumer. Consumers pin the
+      moving `v1` tag; a breaking change gets `v2` instead. No release
+      automation — CHANGELOG.md is maintained by hand.
+
   # ── Web applications ──────────────────────────────────────────
 
   - id: deejaytools-com-api
