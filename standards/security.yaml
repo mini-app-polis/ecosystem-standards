@@ -94,6 +94,9 @@ standards:
       `security` or `secret` — the fleet is expected to converge on one
       shared workflow rather than sixteen copies, and the check should not
       punish that.
+      A delegating job must not set `continue-on-error: true`; the
+      gating requirement in (4) applies to the call as it does to a
+      step.
     origin: >
       BACKLOG Tier 1, drafted as SEC-002. Promoted ahead of SEC-001 as
       the fleet-wide control during the v6.2 security-dimension audit:
@@ -145,6 +148,19 @@ standards:
       SEC-006 — flag spellings differ between the tools and change
       between versions. Threshold agreement is a review concern; this
       check answers only whether a gating scan runs.
+
+      A job that delegates to a shared workflow — `uses:
+      <org>/<repo>/.github/workflows/<name>.yml@<ref>` where the name
+      contains `security` or `secret` — satisfies this the same way an
+      inline step does, exactly as it already does for SEC-002. Either
+      shape is conformant and neither is required: a repo may carry the
+      step itself or call the fleet's shared workflow.
+      The check reads a reference rather than steps in that case, which
+      is why the repo hosting a shared workflow is itself registered and
+      evaluated — the steps are still checked, once rather than once per
+      consumer.
+      A delegating job must not set `continue-on-error: true`; the
+      gating requirement applies to the call as it does to a step.
     origin: >
       BACKLOG Tier 2, "Dependency vulnerability scanning". Promoted to
       Tier 1 during the v6.2 audit on the grounds that it shares an
@@ -183,6 +199,17 @@ standards:
       Gating is not part of this rule — a non-blocking SAST step
       satisfies it, unlike SEC-002 and SEC-003.
 
+      A job that delegates to a shared workflow — `uses:
+      <org>/<repo>/.github/workflows/<name>.yml@<ref>` where the name
+      contains `security` or `secret` — satisfies this the same way an
+      inline step does, exactly as it already does for SEC-002. Either
+      shape is conformant and neither is required: a repo may carry the
+      step itself or call the fleet's shared workflow.
+      The check reads a reference rather than steps in that case, which
+      is why the repo hosting a shared workflow is itself registered and
+      evaluated — the steps are still checked, once rather than once per
+      consumer.
+
   # ─────────────────────────────────────────────
   # PROVENANCE AND RESPONSE
   # ─────────────────────────────────────────────
@@ -218,6 +245,17 @@ standards:
           and an unrelated artifact uploaded in another does not satisfy
           the rule, and the same-job requirement is what makes the check
           meaningful rather than a keyword scan.
+
+      A job that delegates to a shared workflow — `uses:
+      <org>/<repo>/.github/workflows/<name>.yml@<ref>` where the name
+      contains `security` or `secret` — satisfies this the same way an
+      inline step does, exactly as it already does for SEC-002. Either
+      shape is conformant and neither is required: a repo may carry the
+      step itself or call the fleet's shared workflow.
+      The check reads a reference rather than steps in that case, which
+      is why the repo hosting a shared workflow is itself registered and
+      evaluated — the steps are still checked, once rather than once per
+      consumer.
 
   - id: SEC-006
     title: Vulnerability response deadlines are declared in the catalog
