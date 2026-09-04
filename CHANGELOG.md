@@ -1,3 +1,16 @@
+# [6.6.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.5.0...v6.6.0) (2026-09-04)
+
+
+### Bug Fixes
+
+* **delivery:** CD-019 (2) names what the check flags, and exempts retirement records ([fae621b](https://github.com/mini-app-polis/ecosystem-standards/commit/fae621b748ac54e697b4f03add85ff9cf3c07e41))
+
+
+### Features
+
+* **ecosystem:** register the shared-workflows repo type and .github ([c1430e7](https://github.com/mini-app-polis/ecosystem-standards/commit/c1430e73f07512004362ef45e97983d57a48fc7f))
+* **ecosystem:** register wiki-curator-cog ([589ac99](https://github.com/mini-app-polis/ecosystem-standards/commit/589ac9907f6f08ff4111c60151e69bb0aff07359))
+
 # [6.5.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.4.2...v6.5.0) (2026-09-03)
 
 
