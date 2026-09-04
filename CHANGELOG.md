@@ -1,3 +1,10 @@
+# [6.9.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.8.0...v6.9.0) (2026-09-04)
+
+
+### Features
+
+* **ecosystem:** declare deejaytools-com's branch as dev ([f3db103](https://github.com/mini-app-polis/ecosystem-standards/commit/f3db1031adca0a1683b0ba335d4549607b0e34f1))
+
 # [6.8.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.7.0...v6.8.0) (2026-09-04)
 
 
