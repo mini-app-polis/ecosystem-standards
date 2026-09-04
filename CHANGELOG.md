@@ -1,3 +1,10 @@
+# [6.8.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.7.0...v6.8.0) (2026-09-04)
+
+
+### Features
+
+* **security:** call the shared security workflow ([f3d2f74](https://github.com/mini-app-polis/ecosystem-standards/commit/f3d2f740bd07ad260549c9e18ba831dd0990d943))
+
 # [6.7.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.6.0...v6.7.0) (2026-09-04)
 
 
