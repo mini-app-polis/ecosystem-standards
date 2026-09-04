@@ -284,6 +284,10 @@ monorepos:
 
   - id: deejaytools-com
     repo: deejaytools-com
+    # Development happens on `dev`; `main` lags it. The conformance flow
+    # reads `main` unless a registry entry says otherwise, and was
+    # reporting this repo for security workflows it already had on `dev`.
+    branch: dev
     package_manager: pnpm
     workspace_config: pnpm-workspace.yaml
     description: >
