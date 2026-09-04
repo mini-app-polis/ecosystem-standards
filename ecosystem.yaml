@@ -90,6 +90,21 @@ services:
       ``notes-ingest-cog`` or ``voicenotes-cog`` predate the merge and
       should not be expected to recur.
 
+  - id: wiki-curator-cog
+    type: pipeline-cog
+    status: active
+    dod_type: new_cog
+    language: python
+    cog_subtype: pipeline
+    host: railway
+    description: >
+      Prefect pipeline cog. Reads structured WCS notes from
+      api-kaianolevine-com and maintains the wcs-wiki markdown knowledge
+      base. Registered here because it already carries an evaluator.yaml
+      declaring itself conformance-managed (type: pipeline-cog) — until
+      now the fleet-wide run never enumerated it, so it declared itself
+      graded and was graded by nothing.
+
   # ── API services ──────────────────────────────────────────────
 
   - id: api-kaianolevine-com
