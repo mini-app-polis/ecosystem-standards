@@ -1,3 +1,10 @@
+# [6.7.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.6.0...v6.7.0) (2026-09-04)
+
+
+### Features
+
+* **ecosystem:** park wiki-curator-cog as development, not active ([c33d864](https://github.com/mini-app-polis/ecosystem-standards/commit/c33d864f2ebf772c42eea21278d09e44c7faa6ef))
+
 # [6.6.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.5.0...v6.6.0) (2026-09-04)
 
 
