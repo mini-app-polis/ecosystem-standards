@@ -1,3 +1,10 @@
+## [6.9.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.9.0...v6.9.1) (2026-09-04)
+
+
+### Bug Fixes
+
+* **ecosystem:** declare transcription-cog's real repository name ([6bf27f8](https://github.com/mini-app-polis/ecosystem-standards/commit/6bf27f8b183e8b3f8e60fcc581d105d4a9208567))
+
 # [6.9.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.8.0...v6.9.0) (2026-09-04)
 
 
