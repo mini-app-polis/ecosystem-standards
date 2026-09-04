@@ -293,3 +293,68 @@ standards:
       This rule reads the catalog rather than a repo's source tree,
       which is why it is scoped to `standards-repo` in the same way as
       the META rules.
+
+  - id: SEC-007
+    title: Dependency updates arrive automatically, not by hand
+    status: convention
+    dimension: security_posture
+    severity: WARN
+    applies_to: [all]
+    description: >
+      Every repo configures an automated dependency-update service, and
+      it covers each package ecosystem the repo actually uses.
+
+      SEC-003 finds what has gone vulnerable. It never fixes anything,
+      and by the time it fires the exposure already exists. This rule is
+      the other half of that pair: keeping dependencies current is what
+      makes the audit boring, and an audit that is boring is one that
+      still gets read.
+
+      The failure mode this addresses is specific and observed. A single
+      operator clears advisories in batches, under time pressure, when a
+      gate finally blocks something — one repo in this fleet needed 45
+      closed in one sitting, twenty-two of them high and one critical,
+      none of which were in code anyone had touched. Batch remediation
+      is worse than continuous remediation for the same reason deferred
+      migrations are: the cost is superlinear in how long you wait, and
+      the work lands at the least convenient moment rather than the
+      cheapest one.
+
+      Coverage is the substance of the rule, not the presence of a file.
+      A config that updates GitHub Actions in a repo whose real risk is
+      its transitive npm tree is not automation, it is the appearance of
+      it — and it is the shape a half-finished config naturally takes,
+      because Actions is the easiest ecosystem to declare.
+
+      This is `convention` rather than `requirement`: a repo may
+      reasonably decline for a stated reason — a frozen archive, a repo
+      with no third-party dependencies at all — and the deferral
+      vocabulary is where that reason belongs.
+
+      One consequence worth writing down. On a fleet that releases
+      through semantic-release, an update service must be configured to
+      write Conventional Commit subjects. The default subject shape
+      ("Bump x from y to z") both trips VER-001 and cuts no release, so
+      the update lands on the default branch and never reaches the
+      registry — the change looks applied and is not. Checking that is
+      out of this rule's scope, but getting it wrong makes the
+      automation silently useless.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Locate `.github/dependabot.yml` or `.github/dependabot.yaml`.
+          Fail if neither exists.
+      (2) Fail if it does not parse as YAML, or if `version` is not 2,
+          or if `updates` is not a non-empty list.
+      (3) Determine which ecosystems the repo demonstrably uses from
+          files present, not from configuration: a `uv.lock` or
+          `pyproject.toml` means Python; a `package.json` means
+          JavaScript; a `.github/workflows/` directory means GitHub
+          Actions.
+      (4) Fail naming each ecosystem the repo uses that no `updates`
+          entry declares. Python is satisfied by `uv` or `pip`,
+          JavaScript by `npm`, `pnpm` or `yarn`, Actions by
+          `github-actions`.
+      Step (4) is the load-bearing one: the file existing proves
+      nothing, and a config covering only the ecosystem that was easiest
+      to add is the common way this rule is passed without being met.
