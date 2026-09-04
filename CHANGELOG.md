@@ -1,3 +1,10 @@
+# [6.10.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.9.1...v6.10.0) (2026-09-04)
+
+
+### Features
+
+* **SEC-007:** require automated dependency updates covering every ecosystem used ([7627e02](https://github.com/mini-app-polis/ecosystem-standards/commit/7627e0260c7025fe29601549e8b66d502c24f0e6))
+
 ## [6.9.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.9.0...v6.9.1) (2026-09-04)
 
 
