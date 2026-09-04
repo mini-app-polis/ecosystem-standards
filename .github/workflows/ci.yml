@@ -7,6 +7,22 @@ on:
     branches: [main]
 
 jobs:
+  # Delegates to the fleet's shared security workflow: gitleaks over full
+  # history, an osv-scanner dependency audit, and semgrep. Pinned at @v2
+  # rather than @v1 because this repo carries a package.json (for
+  # semantic-release) with no committed lockfile — v1's `npm ci` fails on
+  # that, and v2's osv-scanner path treats it as "no Node dependencies
+  # declared" and skips, which is the truthful answer.
+  #
+  # sbom: false and no gitleaks pre-commit hook — SEC-005 and SEC-001 do
+  # not list standards-repo in their applies_to.
+  security:
+    uses: mini-app-polis/.github/.github/workflows/security.yml@v2
+    with:
+      language: typescript
+      package-manager: npm
+      sbom: false
+
   validate:
     name: Validate YAML
     runs-on: ubuntu-latest
@@ -218,7 +234,7 @@ jobs:
 
   release:
     name: Release
-    needs: validate
+    needs: [validate, security]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
