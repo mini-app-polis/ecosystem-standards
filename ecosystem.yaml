@@ -66,6 +66,11 @@ services:
   - id: transcription-cog
     type: pipeline-cog
     status: active
+    # The service was renamed; the GitHub repository was not. Without this
+    # the conformance run builds a URL for mini-app-polis/transcription-cog,
+    # which does not exist, 404s on every run, and drops the service from
+    # the report entirely — no finding, no success row, just absent.
+    repo: notes-ingest-cog
     dod_type: new_cog
     language: python
     cog_subtype: pipeline
