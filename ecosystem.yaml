@@ -8,6 +8,19 @@
 # When a rename or retirement happens, update this file first — then the
 # standards files will reference it correctly.
 #
+# `status:` governs whether the conformance flow enumerates a service.
+#   active       graded on every run. The normal state.
+#   development  registered but not graded — a repo whose shape is still
+#                moving, where findings would measure a decision that has
+#                not been made yet. Still listed here, so it is not
+#                forgotten and so XSTACK-006 does not report it as a repo
+#                declaring itself managed while nothing grades it.
+#   archived     no longer part of the fleet.
+# Only `active` is evaluated. A service parked in `development` produces
+# no findings at all, which is the point and also the risk: nothing
+# reminds you it is parked. Move it back to `active` when its shape
+# settles.
+#
 
 services:
 
@@ -92,7 +105,7 @@ services:
 
   - id: wiki-curator-cog
     type: pipeline-cog
-    status: active
+    status: development
     dod_type: new_cog
     language: python
     cog_subtype: pipeline
