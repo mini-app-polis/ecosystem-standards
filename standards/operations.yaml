@@ -87,12 +87,22 @@ standards:
       (1) Locate the settings/config module. Fail if only one database
           connection setting is declared.
       (2) Confirm the migration entry point — alembic env, drizzle
-          config, or the release workflow's migrate step — references the
-          migration setting.
+          config, the release workflow's migrate step, or a script named
+          by the platform descriptor's deploy start command — references
+          the migration setting.
       (3) Fail if any module under the application source imports or
           reads the migration setting.
       Step (3) is the load-bearing one: two settings that both reach the
       request path are one setting with two names.
+
+      Where the entry point names both settings — a runner that prefers
+      the schema-owning role and falls back to the runtime one mentions
+      both — the migration setting is the one whose name marks it as
+      such (`<runtime>_migrations` is the convention this rule suggests).
+      Naming both does not make both privileged. Deciding instead by
+      which setting the application does not read gets the case that
+      matters backwards, so it is decided by name and, when no name is
+      marked, every referenced setting is treated as privileged.
 
   # ─────────────────────────────────────────────
   # DECLARED EXPECTATIONS
