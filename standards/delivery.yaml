@@ -807,10 +807,19 @@ standards:
             ecosystem API without one: it authenticates as the unnamed
             fallback and its writes are unattributable.
         (2) Flag any reference to `get_m2m_token`,
-            `m2m_tokens/verify`, `machine_secret`, or
-            `X-Internal-API-Key` in `src/**`, `.env.example`, README, or
-            CI config. Tests that mock the auth layer are exempt; stale
-            docstrings are not.
+            `m2m_tokens/verify`, `machine_secret`,
+            `X-Internal-API-Key`, `X-Owner-Id`, `resolve_or_provision`,
+            or the FastAPI dependencies the scope model replaced
+            (`get_current_caller`, `require_wcs_admin`,
+            `require_wcs_service`) in `src/**`, `.env.example`, README,
+            or CI config. Tests that mock the auth layer are exempt.
+            A stale docstring still telling a reader to reach for one of
+            these is not exempt. A docstring that *records the
+            retirement* — naming the symbol in the same sentence that
+            says it is gone, removed, retired or replaced — is the
+            opposite of stale and is not a violation: it is the sentence
+            explaining why the module looks as it does, and demanding
+            its deletion would trade documentation for a green check.
             `CLERK_SECRET_KEY` is flagged only where it is used to
             obtain or verify a credential — a call to
             `m2m_tokens/verify`, or a token acquisition passed into an
