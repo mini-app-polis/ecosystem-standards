@@ -1,3 +1,10 @@
+# [6.11.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.10.0...v6.11.0) (2026-09-05)
+
+
+### Features
+
+* **registry:** record each shared library's distribution name ([9afd546](https://github.com/mini-app-polis/ecosystem-standards/commit/9afd546be667711684ec90104382816cd6be37bb))
+
 # [6.10.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.9.1...v6.10.0) (2026-09-04)
 
 
