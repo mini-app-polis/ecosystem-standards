@@ -193,12 +193,28 @@ standards:
       Flag any module file using CamelCase or kebab-case naming.
 
       SPLIT IDENTITY CARVE-OUT: Some repos intentionally use different
-      distribution names and import package names (e.g. the package is
-      published as common-python-utils but imported as mini_app_polis).
-      This is a legitimate pattern when DOC-009 is satisfied — both names
-      are documented in __init__.py and README.md. Do not flag PY-011 for
-      a name mismatch if DOC-009 passes for that repo. Only flag if the
-      mismatch is undocumented.
+      distribution names and import package names — common-python-utils
+      publishes as miniapppolis-common-utils and imports as mini_app_polis;
+      identity publishes as miniapppolis-identity because PyPI `identity`
+      belongs to an unrelated library. This is legitimate when DOC-009 is
+      satisfied: both names documented in __init__.py and README.md. Do not
+      flag the distribution-vs-import mismatch if DOC-009 passes for that
+      repo. Only flag it when the split is undocumented.
+
+      WHICH NAME THE CONVENTION IS ABOUT. On a documented split, compare the
+      IMPORT PACKAGE against the repo name, not the distribution name. A
+      distribution name is a registry identifier chosen against a public
+      namespace, and is sometimes forced by what is already taken there; the
+      import package is what people write in source, and matching it to the
+      repository is what makes a repo navigable. Judging the convention on
+      the distribution name reports a mismatch the repo cannot fix without
+      breaking every consumer — which is DOC-009's business to document, not
+      this rule's to flag.
+
+      Recorded 2026-09: the carve-out above was written when the rule was
+      authored and left unimplemented. identity satisfies DOC-009 and its
+      import package already matches its repo name, and it was still flagged
+      twice on every run for a split this catalog explicitly sanctions.
 
   # ─────────────────────────────────────────────
   # ERROR HANDLING
