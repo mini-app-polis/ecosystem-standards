@@ -144,6 +144,11 @@ services:
     status: active
     dod_type: null
     language: python
+    # The distribution consumers declare, which is not the repo name: PyPI
+    # `identity` is held by an unrelated Microsoft library. Checks that look
+    # for a shared library in a dependency table resolve this field, not the
+    # id — see common-python-utils/docs/pypi-package-publishing.md §6.
+    package: miniapppolis-identity
     description: >
       The cross-ecosystem identity and authorization contract. Defines one
       binding — verify, resolve, authorize, emit_audit — plus the principal
@@ -159,6 +164,7 @@ services:
     status: active
     dod_type: null
     language: python
+    package: miniapppolis-common-utils
     description: >
       Shared Python utilities. Google API client (Drive, Sheets), LLM client
       (Anthropic, OpenAI), structured logging, metadata helpers, and
@@ -173,6 +179,7 @@ services:
     dod_type: null
     language: typescript
     repo: common-typescript-utils
+    package: common-typescript-utils
     description: >
       Shared TypeScript utilities. Clerk auth middleware (verifyClerkToken),
       response envelope helpers (success, successList, error, CommonErrors),
