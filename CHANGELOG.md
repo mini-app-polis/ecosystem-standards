@@ -1,3 +1,10 @@
+# [6.12.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.11.0...v6.12.0) (2026-09-06)
+
+
+### Features
+
+* **py-017:** require the released version to come from a committed file ([eea6966](https://github.com/mini-app-polis/ecosystem-standards/commit/eea6966a4a6241b18d6b67e248767958f36acdd2))
+
 # [6.11.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.10.0...v6.11.0) (2026-09-05)
 
 
