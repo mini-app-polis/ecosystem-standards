@@ -415,4 +415,64 @@ standards:
       API was unreachable or had rejected it — which is a precondition for
       CD-018 and for the provider attribution in ADR-007.
 
+  - id: PY-017
+    title: The released version is sourced from a committed version file
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog, api-service, shared-library]
+    description: >
+      A Python repo that releases with semantic-release declares
+      `dynamic = ["version"]` in `[project]` and sources the version from a
+      one-line committed file via `[tool.hatch.version] path`. The release
+      writes that file. `pyproject.toml` and `uv.lock` do not appear in the
+      release commit.
+
+      The reason is mechanical, not aesthetic. `uv.lock` records the
+      project's OWN version, so bumping `[project] version` dirties the
+      lockfile, so the release has to re-lock and commit `uv.lock` back to
+      main. CD-006's `.gitattributes` rule forbids three-way merging a
+      lockfile — correctly, because a clean text merge of two lockfiles once
+      produced a duplicate `[[package]]` block that uv refused to parse,
+      failing CI fleet-wide with no automatic repair. The result was that
+      every release left every open branch one pull away from a manual
+      conflict on a generated file. Making the version dynamic removes it
+      from the lockfile, and the release commit becomes CHANGELOG.md plus a
+      one-line Python file, both of which merge.
+
+      NOT git tags. `hatch-vcs` was evaluated and rejected: Railway unpacks a
+      source archive rather than cloning, so there is no `.git` in the build
+      context and no tag to read, and setuptools_scm does not fail in that
+      case — it silently emits `0.1.devN+g<sha>`. A committed file behaves
+      identically in Actions, on Railway, and in a tarball with no git.
+
+      This rule is Python-only by construction. npm requires `version` in
+      `package.json`, and neither `pnpm-lock.yaml` nor the ecosystem's Node
+      repos record the root version, so the problem does not exist there.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK. Applies only to repos with a `.releaserc.json`.
+        (1) pyproject.toml `[project]` contains `dynamic = ["version"]` and
+            does NOT contain a `version = "..."` key. Flag either half.
+        (2) `[tool.hatch.version]` declares `path`, and that path exists.
+        (3) The file at that path matches `^__version__ = "[^"]+"$` on some
+            line. A file that does not is one hatchling cannot read.
+        (4) The `@semantic-release/git` plugin's `assets` array contains that
+            path, and contains NEITHER `pyproject.toml` NOR `uv.lock`. The
+            assets list is the actual subject of this rule — (1)-(3) can all
+            pass while the release still commits the lockfile.
+        (5) The `@semantic-release/exec` `prepareCmd` does not invoke
+            `uv version` or `uv lock`. Their presence means the old
+            mechanism is still live regardless of what pyproject says.
+      Do not flag a repo with no `.releaserc.json` — it does not release, so
+      it has no release commit to keep clean.
+    origin: >
+      2026-09-06. Four repos hit rebase conflicts on uv.lock in one
+      afternoon, each one a release commit colliding with local work on a
+      file .gitattributes forbids merging. The fix was applied across all
+      eight Python repos the same day; this rule keeps a new repo from
+      reintroducing the pattern. See
+      common-python-utils/docs/pypi-package-publishing.md and
+      SPEC-file-sourced-version.md for the applied change.
+
 # CFG-* rules moved to standards/config.yaml.
