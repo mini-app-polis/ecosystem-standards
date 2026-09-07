@@ -1,3 +1,10 @@
+## [6.12.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.12.1...v6.12.2) (2026-09-07)
+
+
+### Bug Fixes
+
+* disable CD-020 (conflicts with PY-017) ([295e004](https://github.com/mini-app-polis/ecosystem-standards/commit/295e0041843a6d5d9b7cc544d1dd38a297c7878d))
+
 ## [6.12.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.12.0...v6.12.1) (2026-09-07)
 
 
