@@ -207,7 +207,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog, api-service]
+    applies_to: []
     description: >
       GitHub Actions handles lint, tests, deploys, and semantic-release.
       It does not trigger pipeline flows. Drive-event triggers go through
@@ -569,7 +569,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog, api-service]
+    applies_to: []
     description: >
       Every Railway-hosted service declares its restart policy in a
       version-controlled railway.json at the repo root, with
@@ -618,7 +618,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog, api-service]
+    applies_to: []
     description: >
       Every failure in either class defined by PY-016 — COMMUNICATION
       FAILURE and RESPONSE ERROR — reaches all three observability layers,
@@ -743,7 +743,7 @@ standards:
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog, api-service]
+    applies_to: []
     description: >
       All authenticated calls to ecosystem APIs use a single
       `Authorization: Bearer <credential>` header. The header carries one
@@ -880,7 +880,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog, api-service]
+    applies_to: []
     description: >
       What deploys is what `uv.lock` resolves. So the lock has to agree
       with the declaration it was generated from, and has to keep

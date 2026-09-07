@@ -90,7 +90,7 @@ services:
 
     '
 - id: identity
-  type: published-library
+  type: shared-library
   status: active
   dod_type: null
   language: python
@@ -103,7 +103,7 @@ services:
     \ not a central auth service on the request path. Verifies Clerk session JWTs\
     \ for humans and named per-machine API keys for cogs. See ADR-008, CD-019, AUTH-004.\n"
 - id: common-python-utils
-  type: published-library
+  type: shared-library
   status: active
   dod_type: null
   language: python
