@@ -880,7 +880,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog, api-service, shared-library]
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
       What deploys is what `uv.lock` resolves. So the lock has to agree
       with the declaration it was generated from, and has to keep

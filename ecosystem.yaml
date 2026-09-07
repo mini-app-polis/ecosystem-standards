@@ -1,399 +1,281 @@
-# ecosystem-standards / ecosystem.yaml
-# Authoritative inventory of all services, libraries, and canonical patterns
-# in the MiniAppPolis ecosystem. Updated whenever a service is added, renamed,
-# archived, or changes role.
-#
-# This file is the single source of truth for service names. Standards rules
-# reference concepts documented here rather than hardcoding service names.
-# When a rename or retirement happens, update this file first — then the
-# standards files will reference it correctly.
-#
-# `status:` governs whether the conformance flow enumerates a service.
-#   active       graded on every run. The normal state.
-#   development  registered but not graded — a repo whose shape is still
-#                moving, where findings would measure a decision that has
-#                not been made yet. Still listed here, so it is not
-#                forgotten and so XSTACK-006 does not report it as a repo
-#                declaring itself managed while nothing grades it.
-#   archived     no longer part of the fleet.
-# Only `active` is evaluated. A service parked in `development` produces
-# no findings at all, which is the point and also the risk: nothing
-# reminds you it is parked. Move it back to `active` when its shape
-# settles.
-#
-
 services:
+- id: watcher-cog
+  type: trigger-cog
+  status: active
+  dod_type: new_cog
+  language: python
+  cog_subtype: trigger
+  host: railway
+  description: 'Config-driven Google Drive folder watcher. Polls Drive API on a 1-minute
+    interval, fires Prefect flow runs when new files are detected.
 
-  # ── Always-on workers (cogs) ──────────────────────────────────
+    '
+- id: deejay-cog
+  type: pipeline-cog
+  status: active
+  dod_type: new_cog
+  language: python
+  cog_subtype: pipeline
+  host: railway
+  description: 'DJ set CSV processor. Normalizes, validates, and ingests DJ set data
+    into PostgreSQL via api-kaianolevine-com.
 
-  - id: watcher-cog
-    type: trigger-cog
-    status: active
-    dod_type: new_cog
-    language: python
-    cog_subtype: trigger
-    host: railway
-    description: >
-      Config-driven Google Drive folder watcher. Polls Drive API on a
-      1-minute interval, fires Prefect flow runs when new files are detected.
+    '
+- id: evaluator-cog
+  type: pipeline-cog
+  status: active
+  dod_type: new_cog
+  language: python
+  cog_subtype: pipeline
+  host: railway
+  description: 'Multi-mode AI evaluation cog. Runs post-pipeline behavioral evaluation
+    (pipeline_eval flow) and daily structural conformance checking against ecosystem
+    standards (conformance flow). Fetches live ecosystem inventory and standards rules
+    at runtime. All findings written to pipeline_evaluations table via api-kaianolevine-com
+    with source field distinguishing evaluation type.
 
-  - id: deejay-cog
-    type: pipeline-cog
-    status: active
-    dod_type: new_cog
-    language: python
-    cog_subtype: pipeline
-    host: railway
-    description: >
-      DJ set CSV processor. Normalizes, validates, and ingests DJ set data
-      into PostgreSQL via api-kaianolevine-com.
+    '
+- id: transcription-cog
+  type: pipeline-cog
+  status: active
+  repo: notes-ingest-cog
+  dod_type: new_cog
+  language: python
+  cog_subtype: pipeline
+  host: railway
+  description: "Two pipelines under one Prefect deployment (transcription-cog) and\
+    \ one Railway service, dispatched by mode via a router flow:\n  * mode=\"wcs-transcripts\"\
+    \ \u2014 WCS lesson transcript ingestion.\n    Triggered by watcher-cog when new\
+    \ transcript files land in\n    the configured Google Drive input folder. Reads\
+    \ transcripts,\n    calls LLM to produce structured notes JSON, stores raw\n \
+    \   transcripts and notes in Postgres via api-kaianolevine-com,\n    and archives\
+    \ processed files. Outputs to wcs_transcripts and\n    wcs_notes tables. Consumed\
+    \ by wcs.kaianolevine.com.\n  * mode=\"voicenotes\" \u2014 Voice sticky-note pipeline.\
+    \ Triggered by\n    watcher-cog when audio files land in the voice-inbox/ Drive\n\
+    \    folder. Per-file pipeline: Whisper transcribes, Claude\n    Sonnet extracts\
+    \ a structured task\n    ({title, summary, due_date, needs_review}), post_task\
+    \ creates\n    the matching task in Todoist with a drive_file_id marker for\n\
+    \    idempotency, then the audio is archived to processed/YYYY-MM/.\n    No database\
+    \ \u2014 the Drive folder location and the Todoist task\n    content are the only\
+    \ state.\n  * mode=\"voicenotes-cleanup\" \u2014 Cron-fired (daily) cleanup mode\n\
+    \    that prunes processed/ older than ARCHIVE_RETENTION_DAYS.\nBoth pipelines\
+    \ self-report under the unified ``transcription-cog`` repo identifier via ``post_run_finding``\
+    \ / ``post_findings`` from ``mini_app_polis.pipeline_status``; the Pipeline Health\
+    \ UI distinguishes them by ``flow_name`` (``process-transcript`` vs. ``voicenotes-ingest``).\
+    \ History: merged from the standalone ``notes-ingest-cog`` and ``voicenotes-cog``\
+    \ repos in May 2026 (docs/decisions/ADR-004-voicenotes-merge.md). Those service\
+    \ identifiers are fully retired; any historical findings labeled ``notes-ingest-cog``\
+    \ or ``voicenotes-cog`` predate the merge and should not be expected to recur.\n"
+- id: wiki-curator-cog
+  type: pipeline-cog
+  status: development
+  dod_type: new_cog
+  language: python
+  cog_subtype: pipeline
+  host: railway
+  description: "Prefect pipeline cog. Reads structured WCS notes from api-kaianolevine-com\
+    \ and maintains the wcs-wiki markdown knowledge base. Registered here because\
+    \ it already carries an evaluator.yaml declaring itself conformance-managed (type:\
+    \ pipeline-cog) \u2014 until now the fleet-wide run never enumerated it, so it\
+    \ declared itself graded and was graded by nothing.\n"
+- id: api-kaianolevine-com
+  type: api-service
+  status: active
+  dod_type: new_fastapi_service
+  language: python
+  framework: fastapi
+  host: railway
+  description: 'Primary ecosystem API. DJ sets, tracks, catalog, evaluations, feature
+    flags, contact form, resume endpoints. Sole API for the kaianolevine.com ecosystem.
 
-  - id: evaluator-cog
-    type: pipeline-cog
-    status: active
-    dod_type: new_cog
-    language: python
-    cog_subtype: pipeline
-    host: railway
-    description: >
-      Multi-mode AI evaluation cog. Runs post-pipeline behavioral evaluation
-      (pipeline_eval flow) and daily structural conformance checking against
-      ecosystem standards (conformance flow). Fetches live ecosystem inventory
-      and standards rules at runtime. All findings written to
-      pipeline_evaluations table via api-kaianolevine-com with source field
-      distinguishing evaluation type.
+    '
+- id: identity
+  type: published-library
+  status: active
+  dod_type: null
+  language: python
+  package: miniapppolis-identity
+  description: "The cross-ecosystem identity and authorization contract. Defines one\
+    \ binding \u2014 verify, resolve, authorize, emit_audit \u2014 plus the principal\
+    \ store schema, the scope vocabulary, the decision function, and cross-language\
+    \ conformance fixtures. Consumed by each enforcement point rather than run as\
+    \ a service: one specification, N conformant enforcement points, deliberately\
+    \ not a central auth service on the request path. Verifies Clerk session JWTs\
+    \ for humans and named per-machine API keys for cogs. See ADR-008, CD-019, AUTH-004.\n"
+- id: common-python-utils
+  type: published-library
+  status: active
+  dod_type: null
+  language: python
+  package: miniapppolis-common-utils
+  description: "Shared Python utilities. Google API client (Drive, Sheets), LLM client\
+    \ (Anthropic, OpenAI), structured logging, metadata helpers, and KaianoApiClient\
+    \ \u2014 the ecosystem API client, which resolves the caller's own named machine\
+    \ key from the environment and sets the Authorization header (CD-019, AUTH-002).\
+    \ All Python processors and cogs declare this as a dependency.\n"
+- id: common-typescript-utils
+  type: shared-library
+  status: active
+  dod_type: null
+  language: typescript
+  repo: common-typescript-utils
+  package: common-typescript-utils
+  description: 'Shared TypeScript utilities. Clerk auth middleware (verifyClerkToken),
+    response envelope helpers (success, successList, error, CommonErrors), structured
+    logger (createLogger) emitting standard log shape, and shared Zod schemas. Published
+    to npm as common-typescript-utils.
 
-  - id: transcription-cog
-    type: pipeline-cog
-    status: active
-    # The service was renamed; the GitHub repository was not. Without this
-    # the conformance run builds a URL for mini-app-polis/transcription-cog,
-    # which does not exist, 404s on every run, and drops the service from
-    # the report entirely — no finding, no success row, just absent.
-    repo: notes-ingest-cog
-    dod_type: new_cog
-    language: python
-    cog_subtype: pipeline
-    host: railway
-    description: >
-      Two pipelines under one Prefect deployment (transcription-cog) and
-      one Railway service, dispatched by mode via a router flow:
-        * mode="wcs-transcripts" — WCS lesson transcript ingestion.
-          Triggered by watcher-cog when new transcript files land in
-          the configured Google Drive input folder. Reads transcripts,
-          calls LLM to produce structured notes JSON, stores raw
-          transcripts and notes in Postgres via api-kaianolevine-com,
-          and archives processed files. Outputs to wcs_transcripts and
-          wcs_notes tables. Consumed by wcs.kaianolevine.com.
-        * mode="voicenotes" — Voice sticky-note pipeline. Triggered by
-          watcher-cog when audio files land in the voice-inbox/ Drive
-          folder. Per-file pipeline: Whisper transcribes, Claude
-          Sonnet extracts a structured task
-          ({title, summary, due_date, needs_review}), post_task creates
-          the matching task in Todoist with a drive_file_id marker for
-          idempotency, then the audio is archived to processed/YYYY-MM/.
-          No database — the Drive folder location and the Todoist task
-          content are the only state.
-        * mode="voicenotes-cleanup" — Cron-fired (daily) cleanup mode
-          that prunes processed/ older than ARCHIVE_RETENTION_DAYS.
-      Both pipelines self-report under the unified ``transcription-cog``
-      repo identifier via ``post_run_finding`` / ``post_findings`` from
-      ``mini_app_polis.pipeline_status``; the Pipeline Health UI
-      distinguishes them by ``flow_name`` (``process-transcript`` vs.
-      ``voicenotes-ingest``).
-      History: merged from the standalone ``notes-ingest-cog`` and
-      ``voicenotes-cog`` repos in May 2026
-      (docs/decisions/ADR-004-voicenotes-merge.md). Those service
-      identifiers are fully retired; any historical findings labeled
-      ``notes-ingest-cog`` or ``voicenotes-cog`` predate the merge and
-      should not be expected to recur.
+    '
+- id: ecosystem-standards
+  type: standards-repo
+  status: active
+  dod_type: null
+  language: yaml
+  host: github
+  description: 'Machine-readable ecosystem standards. Single source of truth for all
+    architectural decisions, patterns, and conventions. Versioned YAML files consumed
+    by evaluator-cog at runtime. Semantic-release owns versioning via index.yaml.
 
-  - id: wiki-curator-cog
-    type: pipeline-cog
-    status: development
-    dod_type: new_cog
-    language: python
-    cog_subtype: pipeline
-    host: railway
-    description: >
-      Prefect pipeline cog. Reads structured WCS notes from
-      api-kaianolevine-com and maintains the wcs-wiki markdown knowledge
-      base. Registered here because it already carries an evaluator.yaml
-      declaring itself conformance-managed (type: pipeline-cog) — until
-      now the fleet-wide run never enumerated it, so it declared itself
-      graded and was graded by nothing.
+    '
+- id: .github
+  type: shared-workflows
+  status: active
+  dod_type: null
+  language: yaml
+  host: github
+  description: "The org-wide GitHub configuration repo. Holds the fleet's shared security\
+    \ workflow (.github/workflows/security.yml), a reusable workflow that runs secret\
+    \ scanning, a dependency audit, static analysis and SBOM generation. SEC-002 through\
+    \ SEC-005 accept a job delegating to it in place of inline steps; registering\
+    \ it here is what makes that honest, because the steps are then evaluated once\
+    \ rather than being invisible in every consumer. Consumers pin the moving `v1`\
+    \ tag; a breaking change gets `v2` instead. No release automation \u2014 CHANGELOG.md\
+    \ is maintained by hand.\n"
+- id: deejaytools-com-api
+  type: api-service
+  status: active
+  dod_type: new_hono_service
+  language: typescript
+  framework: hono
+  host: railway
+  repo: deejaytools-com
+  monorepo: deejaytools-com
+  monorepo_path: apps/api
+  description: 'Hono on Node API for deejaytools.com. Manages WCS routine registration,
+    floor trial sessions, check-ins, slot assignment, partners, and songs. PostgreSQL
+    on Railway. Clerk auth. Part of the deejaytools-com monorepo.
 
-  # ── API services ──────────────────────────────────────────────
-
-  - id: api-kaianolevine-com
-    type: api-service
-    status: active
-    dod_type: new_fastapi_service
-    language: python
-    framework: fastapi
-    host: railway
-    description: >
-      Primary ecosystem API. DJ sets, tracks, catalog, evaluations, feature
-      flags, contact form, resume endpoints. Sole API for the kaianolevine.com
-      ecosystem.
-
-  # ── Shared libraries ──────────────────────────────────────────
-
-  - id: identity
-    type: shared-library
-    status: active
-    dod_type: null
-    language: python
-    # The distribution consumers declare, which is not the repo name: PyPI
-    # `identity` is held by an unrelated Microsoft library. Checks that look
-    # for a shared library in a dependency table resolve this field, not the
-    # id — see common-python-utils/docs/pypi-package-publishing.md §6.
-    package: miniapppolis-identity
-    description: >
-      The cross-ecosystem identity and authorization contract. Defines one
-      binding — verify, resolve, authorize, emit_audit — plus the principal
-      store schema, the scope vocabulary, the decision function, and
-      cross-language conformance fixtures. Consumed by each enforcement
-      point rather than run as a service: one specification, N conformant
-      enforcement points, deliberately not a central auth service on the
-      request path. Verifies Clerk session JWTs for humans and named
-      per-machine API keys for cogs. See ADR-008, CD-019, AUTH-004.
-
-  - id: common-python-utils
-    type: shared-library
-    status: active
-    dod_type: null
-    language: python
-    package: miniapppolis-common-utils
-    description: >
-      Shared Python utilities. Google API client (Drive, Sheets), LLM client
-      (Anthropic, OpenAI), structured logging, metadata helpers, and
-      KaianoApiClient — the ecosystem API client, which resolves the
-      caller's own named machine key from the environment and sets the
-      Authorization header (CD-019, AUTH-002). All Python processors and
-      cogs declare this as a dependency.
-
-  - id: common-typescript-utils
-    type: shared-library
-    status: active
-    dod_type: null
-    language: typescript
-    repo: common-typescript-utils
-    package: common-typescript-utils
-    description: >
-      Shared TypeScript utilities. Clerk auth middleware (verifyClerkToken),
-      response envelope helpers (success, successList, error, CommonErrors),
-      structured logger (createLogger) emitting standard log shape, and shared
-      Zod schemas. Published to npm as common-typescript-utils.
-
-  # ── Standards & tooling ──────────────────────────────────────
-
-  - id: ecosystem-standards
-    type: standards-repo
-    status: active
-    dod_type: null
-    language: yaml
-    host: github
-    description: >
-      Machine-readable ecosystem standards. Single source of truth for
-      all architectural decisions, patterns, and conventions. Versioned
-      YAML files consumed by evaluator-cog at runtime. Semantic-release
-      owns versioning via index.yaml.
-
-  - id: .github
-    type: shared-workflows
-    status: active
-    dod_type: null
-    language: yaml
-    host: github
-    description: >
-      The org-wide GitHub configuration repo. Holds the fleet's shared
-      security workflow (.github/workflows/security.yml), a reusable
-      workflow that runs secret scanning, a dependency audit, static
-      analysis and SBOM generation. SEC-002 through SEC-005 accept a job
-      delegating to it in place of inline steps; registering it here is
-      what makes that honest, because the steps are then evaluated once
-      rather than being invisible in every consumer. Consumers pin the
-      moving `v1` tag; a breaking change gets `v2` instead. No release
-      automation — CHANGELOG.md is maintained by hand.
-
-  # ── Web applications ──────────────────────────────────────────
-
-  - id: deejaytools-com-api
-    type: api-service
-    status: active
-    dod_type: new_hono_service
-    language: typescript
-    framework: hono
-    host: railway
-    repo: deejaytools-com
-    monorepo: deejaytools-com
-    monorepo_path: apps/api
-    description: >
-      Hono on Node API for deejaytools.com. Manages WCS routine registration,
-      floor trial sessions, check-ins, slot assignment, partners, and songs.
-      PostgreSQL on Railway. Clerk auth. Part of the deejaytools-com monorepo.
-
-  - id: deejaytools-com-app
-    type: react-app
-    status: active
-    dod_type: new_react_app
-    language: typescript
-    framework: react
-    host: cloudflare-pages
-    repo: deejaytools-com
-    monorepo: deejaytools-com
-    monorepo_path: apps/app
-    description: >
-      React web application for deejaytools.com. WCS routine management
-      platform — events, sessions, floor trials, check-in queue, partner
-      and song management. Vite + React + Tailwind + shadcn/ui.
-      Part of the deejaytools-com monorepo.
-
-  # ── Static sites ──────────────────────────────────────────────
-
-  - id: website-astro-software
-    type: static-site
-    status: active
-    dod_type: new_frontend_site
-    language: astro
-    host: cloudflare-pages
-    description: >
-      Software portfolio site. Queries api-kaianolevine-com live for DJ sets,
-      catalog, stats, and evaluation findings. Hosts the feature flag
-      admin panel at /admin (Clerk-authenticated, admin role required) —
-      the canonical management surface for toggling flags across the
-      ecosystem.
-
-  - id: website-astro-wcs
-    type: static-site
-    status: active
-    dod_type: new_frontend_site
-    language: astro
-    host: cloudflare-pages
-    description: West Coast Swing personal site. wcs.kaianolevine.com.
-
-
-# ── Monorepos ─────────────────────────────────────────────────
-#
-# Monorepos are repos that contain multiple evaluatable services under a
-# single git repository. The evaluator-cog uses this section to:
-#
-#   1. Clone the full repo once and evaluate each app at its monorepo_path.
-#   2. Pass workspace-level context to Claude when evaluating each app
-#      (workspace deps, package manager, sibling apps) so rules like
-#      XSTACK-001 are checked at the workspace root, not per-app.
-#   3. Deduplicate findings that share the same root cause across sibling
-#      apps — emitting one finding tagged with both apps rather than
-#      two identical findings.
-#
-# Rule: any service entry with a `monorepo` field must have a corresponding
-# entry here. The `apps` list here is the authoritative membership list;
-# the `monorepo` + `monorepo_path` fields on service entries are the
-# per-service pointers back to this record.
-
+    '
+- id: deejaytools-com-app
+  type: react-app
+  status: active
+  dod_type: new_react_app
+  language: typescript
+  framework: react
+  host: cloudflare-pages
+  repo: deejaytools-com
+  monorepo: deejaytools-com
+  monorepo_path: apps/app
+  description: "React web application for deejaytools.com. WCS routine management\
+    \ platform \u2014 events, sessions, floor trials, check-in queue, partner and\
+    \ song management. Vite + React + Tailwind + shadcn/ui. Part of the deejaytools-com\
+    \ monorepo.\n"
+- id: website-astro-software
+  type: static-site
+  status: active
+  dod_type: new_frontend_site
+  language: astro
+  host: cloudflare-pages
+  description: "Software portfolio site. Queries api-kaianolevine-com live for DJ\
+    \ sets, catalog, stats, and evaluation findings. Hosts the feature flag admin\
+    \ panel at /admin (Clerk-authenticated, admin role required) \u2014 the canonical\
+    \ management surface for toggling flags across the ecosystem.\n"
+- id: website-astro-wcs
+  type: static-site
+  status: active
+  dod_type: new_frontend_site
+  language: astro
+  host: cloudflare-pages
+  description: West Coast Swing personal site. wcs.kaianolevine.com.
 monorepos:
+- id: deejaytools-com
+  repo: deejaytools-com
+  branch: dev
+  package_manager: pnpm
+  workspace_config: pnpm-workspace.yaml
+  description: 'pnpm monorepo containing the deejaytools.com API and web application.
+    Workspace-level deps satisfy per-app shared library requirements (XSTACK-001,
+    XSTACK-003). CI is evaluated at the repo root.
 
-  - id: deejaytools-com
-    repo: deejaytools-com
-    # Development happens on `dev`; `main` lags it. The conformance flow
-    # reads `main` unless a registry entry says otherwise, and was
-    # reporting this repo for security workflows it already had on `dev`.
-    branch: dev
-    package_manager: pnpm
-    workspace_config: pnpm-workspace.yaml
-    description: >
-      pnpm monorepo containing the deejaytools.com API and web application.
-      Workspace-level deps satisfy per-app shared library requirements
-      (XSTACK-001, XSTACK-003). CI is evaluated at the repo root.
-    apps:
-      - service_id: deejaytools-com-api
-        path: apps/api
-      - service_id: deejaytools-com-app
-        path: apps/app
-    workspace_deps: []
-      # common-typescript-utils is declared per-app, not at the workspace root.
-      # XSTACK-001 is therefore assessed against each app's own package.json.
-    evaluator:
-      strategy: per_app
-      # Evaluate each app independently for findings granularity, but pass
-      # the full monorepo context block to Claude with every app eval.
-      workspace_context: true
-      # If two sibling apps produce a finding with the same rule_id and the
-      # same root cause, emit one finding tagged with both service_ids rather
-      # than two identical findings.
-      deduplicate_sibling_findings: true
-
-# ── Canonical patterns ────────────────────────────────────────
-
+    '
+  apps:
+  - service_id: deejaytools-com-api
+    path: apps/api
+  - service_id: deejaytools-com-app
+    path: apps/app
+  workspace_deps: []
+  evaluator:
+    strategy: per_app
+    workspace_context: true
+    deduplicate_sibling_findings: true
 patterns:
-
   drive_trigger:
     description: How Drive file drops trigger processor flows
-    current: watcher-cog polls Drive API → fires Prefect create_flow_run
-
+    current: "watcher-cog polls Drive API \u2192 fires Prefect create_flow_run"
   orchestration:
     description: How pipelines are scheduled and executed
-    current: Prefect Cloud deployments — watcher-cog fires triggers, Prefect executes flows
-
+    current: "Prefect Cloud deployments \u2014 watcher-cog fires triggers, Prefect\
+      \ executes flows"
   python_shared_library:
     description: Shared Python utility library name
     current: common-python-utils
-
   typescript_shared_library:
     description: Shared TypeScript utility library name
     current: common-typescript-utils
-
   api_services:
     description: Active API services
     current: api-kaianolevine-com (sole API for kaianolevine.com ecosystem)
-
   auth:
     description: How callers authenticate to ecosystem APIs
-    current: >
-      Single Authorization: Bearer header. Humans present Clerk session
-      JWTs, verified locally against JWKS. Machines present a named
-      per-machine API key held only in Doppler as <MACHINE_NAME>_API_KEY,
-      verified locally by constant-time comparison — the key is the
-      identity claim. Both paths run through the identity library.
-
+    current: "Single Authorization: Bearer header. Humans present Clerk session JWTs,\
+      \ verified locally against JWKS. Machines present a named per-machine API key\
+      \ held only in Doppler as <MACHINE_NAME>_API_KEY, verified locally by constant-time\
+      \ comparison \u2014 the key is the identity claim. Both paths run through the\
+      \ identity library.\n"
   authorization:
     description: How access is granted once a caller is identified
-    current: >
-      Roles are named bundles of scopes; a scope is
-      <domain>.<resource>.<action>. Every non-public route names the one
-      scope it requires. Machine principals and their roles are declared
-      in code and reconciled into the principal store at boot.
+    current: 'Roles are named bundles of scopes; a scope is <domain>.<resource>.<action>.
+      Every non-public route names the one scope it requires. Machine principals and
+      their roles are declared in code and reconciled into the principal store at
+      boot.
 
+      '
 terminology:
-
   cog:
-    definition: >
-      An always-on Python worker service deployed on Railway. Runs a
-      continuous loop or event-driven task. No HTTP server, no port binding.
-      The canonical service type for all automation, processing, and
-      evaluation work in the ecosystem.
+    definition: 'An always-on Python worker service deployed on Railway. Runs a continuous
+      loop or event-driven task. No HTTP server, no port binding. The canonical service
+      type for all automation, processing, and evaluation work in the ecosystem.
+
+      '
     examples:
-      - watcher-cog — Drive folder watcher, fires Prefect flow runs
-      - deejay-cog — DJ set CSV processor and ingestion
-      - evaluator-cog — post-pipeline AI evaluation
+    - "watcher-cog \u2014 Drive folder watcher, fires Prefect flow runs"
+    - "deejay-cog \u2014 DJ set CSV processor and ingestion"
+    - "evaluator-cog \u2014 post-pipeline AI evaluation"
     subtypes:
-      pipeline_cog: >
-        Runs a Prefect @flow to process data. Examples: deejay-cog,
-        evaluator-cog.
-      trigger_cog: >
-        Detects events and fires Prefect flow runs via API. No @flow
-        decorator. Examples: watcher-cog.
+      pipeline_cog: 'Runs a Prefect @flow to process data. Examples: deejay-cog, evaluator-cog.
 
+        '
+      trigger_cog: 'Detects events and fires Prefect flow runs via API. No @flow decorator.
+        Examples: watcher-cog.
+
+        '
   pipeline:
-    definition: >
-      The Prefect flow and task logic inside a cog. A cog runs a pipeline.
-      The terms are related but distinct — the cog is the service,
-      the pipeline is the execution logic within it.
-
+    definition: "The Prefect flow and task logic inside a cog. A cog runs a pipeline.\
+      \ The terms are related but distinct \u2014 the cog is the service, the pipeline\
+      \ is the execution logic within it.\n"
   trigger:
-    definition: >
-      The mechanism that causes a Prefect flow run to be created.
-      Triggers are fired by watcher-cog (Drive events), Prefect schedules
-      (time-based), or the Prefect UI/API (manual). GitHub Actions is
-      not a trigger mechanism.
+    definition: 'The mechanism that causes a Prefect flow run to be created. Triggers
+      are fired by watcher-cog (Drive events), Prefect schedules (time-based), or
+      the Prefect UI/API (manual). GitHub Actions is not a trigger mechanism.
+
+      '
