@@ -962,7 +962,7 @@ standards:
     status: gap
     dimension: cd_readiness
     severity: WARN
-    applies_to: [api-service, pipeline-cog, trigger-cog]
+    applies_to: []
     description: >
       A deployable service ships an image definition in its repository,
       so the runtime it executes in is reproducible from source rather
@@ -998,7 +998,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [api-service, pipeline-cog, trigger-cog]
+    applies_to: []
     description: >
       Where a repository defines an image, every `FROM` line resolves a
       base by content digest rather than by tag.
@@ -1031,7 +1031,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [api-service, pipeline-cog, trigger-cog]
+    applies_to: []
     description: >
       Where a repository defines an image, its final stage declares a
       `USER` that is neither `root` nor `0`.
@@ -1065,7 +1065,7 @@ standards:
     status: convention
     dimension: cd_readiness
     severity: WARN
-    applies_to: [api-service, pipeline-cog, trigger-cog]
+    applies_to: []
     description: >
       A deployable service states its memory and CPU ceiling in its
       platform descriptor rather than accepting whatever the platform
