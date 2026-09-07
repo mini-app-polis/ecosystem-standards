@@ -1,3 +1,10 @@
+## [6.12.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.12.0...v6.12.1) (2026-09-07)
+
+
+### Bug Fixes
+
+* distinguish published libraries from deployed services ([1041988](https://github.com/mini-app-polis/ecosystem-standards/commit/1041988c5b298628ccdf6073af35162062002b73))
+
 # [6.12.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.11.0...v6.12.0) (2026-09-06)
 
 
