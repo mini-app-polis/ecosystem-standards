@@ -196,6 +196,15 @@ services:
   language: astro
   host: cloudflare-pages
   description: West Coast Swing personal site. wcs.kaianolevine.com.
+- id: website-astro-wcsmn
+  type: static-site
+  status: active
+  dod_type: new_frontend_site
+  language: astro
+  host: cloudflare-pages
+  description: "West Coast Swing community resource for Minnesota \u2014 events and\
+    \ organizations. wcsmn.com. Read-only: the site never authenticates or writes,\
+    \ and the homepage calendar reads the Google Calendar API from the browser.\n"
 - id: kwalla-dance
   type: static-site
   status: active
