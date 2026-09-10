@@ -462,6 +462,18 @@ schema:
         is misfiring against this repo's actual behavior.
 
   service_fields:
+    org: >
+      GitHub organisation the repo lives under. Optional — omit it and the
+      repo resolves under `mini-app-polis`, which is where nearly all of
+      them are. Declare it only for a repo that lives elsewhere. Without
+      this field the org was hardcoded in the download URL, so a repo in
+      a personal org returned 404 on every run: registered, carrying an
+      evaluator.yaml, and never once evaluated.
+    repo: >
+      GitHub repository name, when it differs from `id`. Optional —
+      omit it and the repo name is taken from `id`. Used where the
+      service identity and the repository name have diverged, such as a
+      service renamed after a merge whose GitHub repo kept the old name.
     dod_type: >
       The definitions-of-done checklist type that applies to this service.
       Must match a key in definitions-of-done.yaml. Null for libraries and

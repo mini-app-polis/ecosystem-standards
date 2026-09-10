@@ -1096,3 +1096,65 @@ standards:
       Accept either the platform's native limit keys or a documented
       equivalent — the check is that a ceiling is stated, not which
       spelling states it.
+
+
+  - id: CD-025
+    title: Release job depends on the security job
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app, shared-library, standards-repo]
+    description: >
+      Where a ci.yml carries both a `security` job and a `release` job, the
+      release job names `security` in its `needs:`. A release job that lists
+      only the test job runs whether or not the scan passed — gitleaks, the
+      dependency audit and semgrep all report, and none of them gate.
+
+      This fails invisibly. The security job's own status goes red exactly
+      as it should, so the pipeline looks like it is working; the release
+      simply proceeds beside it. Nothing in either job's output says the
+      one was supposed to hold the other back.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Parse `.github/workflows/ci.yml`. Skip if absent, or if it has no
+          job named `security`, or no job named `release`.
+      (2) Read the `release` job's `needs:`. Accept either a bare string or
+          a list of strings.
+      (3) Flag if `security` is not among them.
+    origin: >
+      website-astro-software, 2026-09: `needs: build` with a security job
+      sitting beside it that gated nothing. Found by normalising job names
+      across the fleet, not by any check.
+
+  - id: CD-026
+    title: Canonical ci.yml job set
+    status: convention
+    dimension: structural_conformance
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app, shared-library, standards-repo]
+    description: >
+      A repo's ci.yml names its jobs `security`, `test` and `release`. The
+      work job is `test` whatever it happens to run — a build, a typecheck,
+      a lint, a schema validation. The name records the job's place in the
+      pipeline, not its contents.
+
+      Not every repo needs all three: a repo with no release path has no
+      `release` job. The rule is that a job present is named canonically,
+      not that every job is present.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Parse `.github/workflows/ci.yml`. Skip if absent.
+      (2) Skip reusable workflows — a file whose `on:` declares
+          `workflow_call` is called by others and names its jobs for its
+          own reasons.
+      (3) Collect the top-level keys under `jobs:`.
+      (4) Flag any job name outside the set {security, test, release},
+          naming the offending job.
+      Only `.github/workflows/ci.yml` is in scope. Scheduled and
+      dispatch-triggered workflows are not pipelines and are not checked.
+    origin: >
+      Five names for the same job across thirteen repos in 2026-09 —
+      `test`, `build`, `ci`, `verify`, `validate` — which made cross-repo
+      checks reason about job identity by position rather than by name.

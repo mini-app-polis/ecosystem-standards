@@ -193,10 +193,23 @@ services:
 - id: website-astro-wcs
   type: static-site
   status: active
+  org: kaianolevine
   dod_type: new_frontend_site
   language: astro
   host: cloudflare-pages
-  description: West Coast Swing personal site. wcs.kaianolevine.com.
+  description: "West Coast Swing personal site. wcs.kaianolevine.com. The only repo\
+    \ outside the mini-app-polis org — the conformance download 404'd on it every\
+    \ run until `org:` existed, so it was registered and never evaluated.\n"
+- id: kwalla-dance
+  type: static-site
+  status: active
+  dod_type: new_frontend_site
+  language: astro
+  host: cloudflare-pages
+  description: "Personal site for Kristen Wallace (WCS instructor), kristenwallace.com.\
+    \ Freelance build. Events are baked in at build time from a public iCloud feed,\
+    \ so a scheduled workflow pings the Cloudflare Pages deploy hook twice daily to\
+    \ pick up new events without her touching anything.\n"
 monorepos:
 - id: deejaytools-com
   repo: deejaytools-com

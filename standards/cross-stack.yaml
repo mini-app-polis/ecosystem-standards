@@ -308,3 +308,43 @@ standards:
       2026-09, one day after the exact-pin migration removed
       `rev = "main"` from the fleet. Exact pins made the declarations
       honest; nothing made them current.
+
+
+  - id: XSTACK-008
+    title: Every registered repo resolves at its declared location
+    status: requirement
+    dimension: cross_repo_coherence
+    severity: ERROR
+    description: >
+      Every entry in `ecosystem.yaml` resolves to a repository the
+      conformance run can actually download, at the org, repo name and
+      branch that entry declares.
+
+      An entry that does not resolve is worse than an unregistered repo.
+      It is counted as governed, it carries an evaluator.yaml saying so,
+      and no rule has ever run against it — the belief is not merely
+      absent, it is false, and the registry is what makes it false.
+
+      XSTACK-006 asks whether a repo declaring itself governed appears in
+      the registry. This rule asks the other half: whether a repo the
+      registry lists exists where the listing says it does.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK. Not a per-repo source check, so it omits
+      `applies_to` — its read source is the registry and the run's own
+      download results, not any one repo's files.
+
+      This adds no GitHub API calls. The conformance run already downloads
+      every registered repo; the check reports the downloads that came
+      back 404.
+      (1) During the run, record each registry entry whose download
+          returned 404, with the org, repo name and branch attempted.
+      (2) Emit one ERROR finding per recorded entry at the end of the run.
+      (3) A download that failed for any other reason — 403, 429, 5xx,
+          timeout, connection error — is not a finding. "I could not
+          tell" must never be collapsed into "it is not there".
+    origin: >
+      website-astro-wcs, registered and carrying an evaluator.yaml, lived
+      in a personal org while the download URL hardcoded the fleet org.
+      It 404'd on every run for as long as it had been registered and was
+      never once evaluated.

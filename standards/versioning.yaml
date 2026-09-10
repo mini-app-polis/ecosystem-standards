@@ -164,3 +164,33 @@ standards:
       index.yaml, package.json, etc). Find the @semantic-release/git plugin and
       extract its assets array. Flag any file written by prepareCmd that is not
       present in assets. Also flag if CHANGELOG.md is absent from assets.
+
+
+  - id: VER-009
+    title: Release commit carries [skip ci] and the release notes
+    status: convention
+    dimension: cd_readiness
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app, shared-library, standards-repo]
+    description: >
+      The `@semantic-release/git` plugin's `message` includes `[skip ci]`
+      and `${nextRelease.notes}`.
+
+      Without `[skip ci]`, the release commit semantic-release pushes to
+      main re-triggers the whole pipeline, which then finds no releasable
+      commits and exits. That is a full run of build and scan minutes per
+      release, on every repo, producing nothing. Without
+      `${nextRelease.notes}` the commit body is a bare version number and
+      `git log` on main stops being a record of what shipped.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Read `.releaserc.json`. Skip if absent — VER-003 covers that.
+      (2) Find the `@semantic-release/git` plugin entry and read its
+          `message`. Skip if the plugin is not configured: a repo that
+          does not commit back has no release commit to annotate.
+      (3) Flag if the message does not contain `[skip ci]`.
+      (4) Flag separately if it does not contain `${nextRelease.notes}`.
+    origin: >
+      2026-09: five distinct message formats across fourteen repos, with
+      `[skip ci]` missing from five and the notes missing from six.
