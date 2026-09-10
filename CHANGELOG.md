@@ -1,3 +1,10 @@
+# [6.14.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.13.0...v6.14.0) (2026-09-10)
+
+
+### Features
+
+* **registry:** register website-astro-wcsmn in ecosystem.yaml ([01dab2a](https://github.com/mini-app-polis/ecosystem-standards/commit/01dab2a89640e310efcddd0fbd9e59dd31ede49e))
+
 # [6.13.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.12.2...v6.13.0) (2026-09-10)
 
 
