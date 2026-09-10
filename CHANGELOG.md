@@ -1,3 +1,10 @@
+# [6.13.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.12.2...v6.13.0) (2026-09-10)
+
+
+### Features
+
+* add CD-025, CD-026, VER-009 and XSTACK-008; document org and repo fields ([cd2f6a3](https://github.com/mini-app-polis/ecosystem-standards/commit/cd2f6a36b6105b76c406e2aa2e2b0f8b213637e3))
+
 ## [6.12.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.12.1...v6.12.2) (2026-09-07)
 
 
