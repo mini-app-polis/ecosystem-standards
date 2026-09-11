@@ -1,3 +1,10 @@
+## [6.15.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.15.0...v6.15.1) (2026-09-11)
+
+
+### Bug Fixes
+
+* identify the publisher to Cloudflare's browser integrity check ([299154a](https://github.com/mini-app-polis/ecosystem-standards/commit/299154a821aa130af2825a395c74c1f46ea26079))
+
 # [6.15.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.14.0...v6.15.0) (2026-09-11)
 
 
