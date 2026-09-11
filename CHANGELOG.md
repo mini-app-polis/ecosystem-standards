@@ -1,3 +1,15 @@
+# [6.15.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.14.0...v6.15.0) (2026-09-11)
+
+
+### Bug Fixes
+
+* **catalog:** replace empty applies_to on nine CD rules ([da81904](https://github.com/mini-app-polis/ecosystem-standards/commit/da81904f7efaa9776e0580acf9db13145a681b56))
+
+
+### Features
+
+* publish the compiled catalog on release ([3cbe2c0](https://github.com/mini-app-polis/ecosystem-standards/commit/3cbe2c0e281263ff5f0cf47cdb614aaa8134bef6))
+
 # [6.14.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.13.0...v6.14.0) (2026-09-10)
 
 
