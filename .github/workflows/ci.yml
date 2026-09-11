@@ -48,6 +48,19 @@ jobs:
       - name: Validate standards catalog and META rules
         run: python3 scripts/validate_catalog.py
 
+      # A commit type that cuts no release can still change what the catalog
+      # says — check_notes and the statuses block are compiled fields, not
+      # commentary. The publish would then be refused as an immutable-version
+      # conflict, after semantic-release had already tagged. Said here instead.
+      #
+      # Needs full history for the tag comparison, which the checkout above
+      # does not fetch by default.
+      - name: Fetch tags for the release-type check
+        run: git fetch --tags --force --prune --unshallow || git fetch --tags --force
+
+      - name: Catalog changes must cut a version
+        run: python3 scripts/check_release_type.py
+
       # Proves the catalog compiles on every push. The artifact is not
       # committed and not published here — only the release job on main
       # publishes, because package.json has no meaningful version until
