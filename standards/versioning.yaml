@@ -7,11 +7,12 @@
 standards:
 
   - id: VER-001
+
     title: Conventional Commits format
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app, shared-library, standards-repo]
+    applies_to: [all]
     description: >
       All commit messages follow: type: description.
       Types: feat, fix, docs, refactor, chore, test, ci.
@@ -34,11 +35,12 @@ standards:
               default revert format).
 
   - id: VER-002
+
     title: BREAKING CHANGE footer for major bumps
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app, shared-library, standards-repo]
+    applies_to: [all]
     description: >
       Use explicit BREAKING CHANGE in commit body for major version bumps.
       The feat!: shorthand is unreliable. Correct pattern using two -m flags:
@@ -63,6 +65,7 @@ standards:
               prefers the explicit footer form).
 
   - id: VER-003
+
     title: semantic-release on all repos
     status: requirement
     dimension: cd_readiness
@@ -79,6 +82,7 @@ standards:
       .github/workflows/ci.yml. Flag if either is absent.
 
   - id: VER-004
+
     title: Never manually edit version files or CHANGELOG
     status: requirement
     dimension: cd_readiness
@@ -98,6 +102,7 @@ standards:
       does not match the latest CHANGELOG.md version, flag as manually edited.
 
   - id: VER-005
+
     title: "fetch-depth: 0 on CI checkout"
     status: requirement
     dimension: cd_readiness
@@ -114,6 +119,7 @@ standards:
       Flag if fetch-depth: 0 is absent.
 
   - id: VER-006
+
     title: Plugins installed explicitly before semantic-release
     status: requirement
     dimension: cd_readiness
@@ -130,6 +136,7 @@ standards:
       semantic-release. Flag if absent.
 
   - id: VER-007
+
     title: Pull before branching
     status: convention
     dimension: cd_readiness
@@ -142,6 +149,7 @@ standards:
     checkable: false
 
   - id: VER-008
+
     title: .releaserc.json assets must include all version-managed files
     status: requirement
     dimension: structural_conformance
@@ -167,6 +175,7 @@ standards:
 
 
   - id: VER-009
+
     title: Release commit carries [skip ci] and the release notes
     status: convention
     dimension: cd_readiness

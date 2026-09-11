@@ -40,6 +40,7 @@ import argparse
 import json
 import os
 import sys
+import subprocess
 import urllib.error
 import urllib.request
 
@@ -75,6 +76,75 @@ _EDGE_BLOCK_MARKERS = (
 )
 
 
+def latest_tag() -> str | None:
+    """The highest version tag in the repository, without its `v` prefix.
+
+    Deliberately the newest tag in the repo rather than the newest tag
+    *reachable from HEAD*. Reachability is useless here: on a development
+    branch, and on a re-run that checked out the pre-release SHA, the
+    reachable tag and `package.json` are both the previous release and
+    agree with each other — so a reachability check would pass in exactly
+    the two cases this guard exists to catch.
+
+    None when there are no tags or git is unavailable — treated as "cannot
+    tell" rather than "does not match", since refusing to publish because
+    git was unreadable would be its own outage.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "tag", "--sort=-v:refname"],
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+    except Exception:  # noqa: BLE001 — git absent or unrunnable
+        return None
+    if result.returncode != 0:
+        return None
+    for line in result.stdout.splitlines():
+        tag = line.strip().lstrip("v")
+        if tag:
+            return tag
+    return None
+
+
+def check_version_matches_tag(version: str) -> str | None:
+    """Return an error message when the compiled version is not the released one.
+
+    A published version is immutable, so publishing the wrong content under
+    a version is not a mistake that can be corrected afterwards — the 409
+    that protects the store also locks the error in. The two ways to make
+    that mistake are both mismatches between the working tree and the
+    release:
+
+      - Running this from a development branch. `package.json` there still
+        carries the last released version while the rule files have moved
+        on, so it would store post-release rules under a released version.
+      - Re-running a failed workflow. GitHub checks out the SHA that
+        triggered the run, not the release commit semantic-release pushed
+        afterwards, so the tree carries the *previous* version's
+        package.json.
+
+    Both look like ordinary runs. Comparing the compiled version against
+    the latest tag catches them, because in a correct release the release
+    commit is the tagged one.
+    """
+    tag = latest_tag()
+    if tag is None:
+        return None
+    if tag != version:
+        return (
+            f"compiled version {version} does not match the latest tag "
+            f"{tag}. This usually means the working tree is not the release "
+            f"commit — a development branch, or a re-run that checked out "
+            f"the pre-release SHA. Publishing would store the wrong content "
+            f"under a released version, and a published version cannot be "
+            f"corrected. Pass --allow-version-mismatch if this is "
+            f"deliberate."
+        )
+    return None
+
+
 def publish(base_url: str, api_key: str, catalog: dict) -> tuple[int, dict]:
     """POST the catalog. Returns (status, parsed body)."""
     body = json.dumps(catalog).encode("utf-8")
@@ -106,6 +176,14 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Compile and report what would be published, without posting.",
     )
+    parser.add_argument(
+        "--allow-version-mismatch",
+        action="store_true",
+        help=(
+            "Publish even when the compiled version is not the latest tag. "
+            "Only for a deliberate backfill."
+        ),
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -118,8 +196,18 @@ def main(argv: list[str] | None = None) -> int:
     rule_count = catalog["rule_count"]
 
     if args.dry_run:
-        print(f"DRY RUN - would publish catalog v{version} ({rule_count} rules)")
+        mismatch = check_version_matches_tag(version)
+        if mismatch:
+            print(f"DRY RUN - would REFUSE: {mismatch}")
+        else:
+            print(f"DRY RUN - would publish catalog v{version} ({rule_count} rules)")
         return 0
+
+    if not args.allow_version_mismatch:
+        mismatch = check_version_matches_tag(version)
+        if mismatch:
+            print(f"FATAL: {mismatch}", file=sys.stderr)
+            return 2
 
     base_url = os.environ.get("KAIANO_API_BASE_URL", "").strip()
     api_key = os.environ.get("ECOSYSTEM_STANDARDS_API_KEY", "").strip()
