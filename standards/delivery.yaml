@@ -8,6 +8,7 @@ standards:
   # ─────────────────────────────────────────────
 
   - id: CD-001
+
     title: Feature flags for major functionality toggles
     status: convention
     dimension: cd_readiness
@@ -69,6 +70,7 @@ standards:
     checkable: false
 
   - id: CD-002
+
     title: Sentry for error tracking — all production services
     status: requirement
     dimension: cd_readiness
@@ -93,6 +95,7 @@ standards:
       Flag any production service missing any of these three.
 
   - id: CD-003
+
     title: Structured logging via shared library
     status: requirement
     dimension: cd_readiness
@@ -153,6 +156,7 @@ standards:
   # ─────────────────────────────────────────────
 
   - id: CD-004
+
     title: Pinned GitHub Action versions should resolve
     status: convention
     dimension: cd_readiness
@@ -174,6 +178,7 @@ standards:
 # VER-001..VER-006 moved to standards/versioning.yaml.
 
   - id: CD-005
+
     title: Prefect Cloud for pipeline observability
     status: requirement
     dimension: cd_readiness
@@ -203,11 +208,12 @@ standards:
                 invoke application code directly (vs. CI/CD tasks).
 
   - id: CD-006
+
     title: GitHub Actions is CI/CD only — not a trigger relay
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: []
+    applies_to: [all]
     description: >
       GitHub Actions handles lint, tests, deploys, and semantic-release.
       It does not trigger pipeline flows. Drive-event triggers go through
@@ -237,6 +243,7 @@ standards:
             deployments, not via an API relay.
 
   - id: CD-007
+
     title: Healthchecks.io for trigger cogs
     status: requirement
     dimension: cd_readiness
@@ -267,6 +274,7 @@ standards:
       — they are exempt by design.
 
   - id: CD-008
+
     title: Log levels used consistently and intentionally
     status: requirement
     dimension: cd_readiness
@@ -302,6 +310,7 @@ standards:
       in production code paths without a DEBUG guard.
 
   - id: CD-009
+
     title: Structured log event shape — all services
     status: requirement
     dimension: cd_readiness
@@ -339,6 +348,7 @@ standards:
       configuring their own handler/formatter without using the shared library.
 
   - id: CD-010
+
     title: Three-layer observability stack — all production services
     status: requirement
     dimension: cd_readiness
@@ -379,6 +389,7 @@ standards:
       for structural issues not captured by the composite check.
 
   - id: CD-011
+
     title: Doppler as canonical secret store
     status: requirement
     dimension: cd_readiness
@@ -424,6 +435,7 @@ standards:
       that must be Doppler-managed.
 
   - id: CD-014
+
     title: Cloudflare Pages for all static site deployments
     status: requirement
     dimension: cd_readiness
@@ -445,6 +457,7 @@ standards:
       If no deployment target is detectable, flag as unverified.
 
   - id: CD-015
+
     title: Prefect serve() — no work pool
     status: requirement
     dimension: structural_conformance
@@ -481,6 +494,7 @@ standards:
       and satisfies this rule.
 
   - id: CD-016
+
     title: serve() startup registration wrapped in serve_with_retry
     status: requirement
     dimension: cd_readiness
@@ -565,11 +579,12 @@ standards:
       down silently. See deejay-cog ADR-005 and ecosystem-standards ADR-006.
 
   - id: CD-017
+
     title: Version-controlled Railway restart policy — ON_FAILURE
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: []
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
       Every Railway-hosted service declares its restart policy in a
       version-controlled railway.json at the repo root, with
@@ -614,11 +629,12 @@ standards:
       or enforced it. See deejay-cog ADR-005 and ecosystem-standards ADR-006.
 
   - id: CD-018
+
     title: External-service failures are logged, reported, and captured in Sentry
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: []
+    applies_to: [all]
     description: >
       Every failure in either class defined by PY-016 — COMMUNICATION
       FAILURE and RESPONSE ERROR — reaches all three observability layers,
@@ -728,6 +744,10 @@ standards:
       A handler that re-raises is not flagged: the failure is still
       travelling and will be caught, reported, or captured as an unhandled
       exception further up.
+      Exempt any repo with no Python runtime — no pyproject.toml means no
+      sentry_sdk to declare and no handler to inspect. PY-016's failure
+      classes are Python-side, so a repo shipping none has no subject here
+      and must not be flagged.
     origin: >
       2026-08. Provider outages are currently indistinguishable from our
       own defects in Pipeline Health — a Spotify outage during
@@ -739,11 +759,12 @@ standards:
       observable. See ADR-007.
 
   - id: CD-019
+
     title: Bearer credential contract — Clerk sessions for humans, named keys for machines
     status: requirement
     dimension: structural_conformance
     severity: ERROR
-    applies_to: []
+    applies_to: [all]
     description: >
       All authenticated calls to ecosystem APIs use a single
       `Authorization: Bearer <credential>` header. The header carries one
@@ -876,11 +897,12 @@ standards:
       Project Keystone).
 
   - id: CD-020
+
     title: The lockfile is released with the version it locks
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: []
+    applies_to: [all]
     description: >
       What deploys is what `uv.lock` resolves. So the lock has to agree
       with the declaration it was generated from, and has to keep
@@ -958,11 +980,12 @@ standards:
 # VER-007..VER-008 moved to standards/versioning.yaml.
 
   - id: CD-021
+
     title: Deployable services define their runtime image explicitly
     status: gap
     dimension: cd_readiness
     severity: WARN
-    applies_to: []
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
       A deployable service ships an image definition in its repository,
       so the runtime it executes in is reproducible from source rather
@@ -994,11 +1017,12 @@ standards:
       platform does not use is not a runtime definition.
 
   - id: CD-022
+
     title: Base images are pinned by digest, not by tag
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: []
+    applies_to: [all]
     description: >
       Where a repository defines an image, every `FROM` line resolves a
       base by content digest rather than by tag.
@@ -1027,11 +1051,12 @@ standards:
           case.
 
   - id: CD-023
+
     title: The final image stage runs as a non-root user
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: []
+    applies_to: [all]
     description: >
       Where a repository defines an image, its final stage declares a
       `USER` that is neither `root` nor `0`.
@@ -1061,11 +1086,12 @@ standards:
       instruction in the final stage satisfies this.
 
   - id: CD-024
+
     title: Deployable services declare memory and CPU limits
     status: convention
     dimension: cd_readiness
     severity: WARN
-    applies_to: []
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
       A deployable service states its memory and CPU ceiling in its
       platform descriptor rather than accepting whatever the platform
@@ -1099,6 +1125,7 @@ standards:
 
 
   - id: CD-025
+
     title: Release job depends on the security job
     status: requirement
     dimension: cd_readiness
@@ -1128,6 +1155,7 @@ standards:
       across the fleet, not by any check.
 
   - id: CD-026
+
     title: Canonical ci.yml job set
     status: convention
     dimension: structural_conformance
