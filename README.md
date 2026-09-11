@@ -12,17 +12,49 @@ Standards live as versioned YAML files — human-readable enough to edit directl
 
 **For humans:** edit the YAML files directly when a real issue drives a new rule. Commit with a conventional-commit message explaining why — semantic-release owns version bumps and CHANGELOG entries.
 
-**For agents:** fetch `index.yaml` first to discover available files, fetch `package.json` for the current release value, then fetch the relevant domain file(s).
+**For consumers:** do not walk this repo. On release, CI compiles every rule
+file plus `index.yaml` into one normalized catalog and publishes it to the API.
+Fetch that instead — one request, already resolved.
 
 ```
-GET index.yaml                        → manifest, dimensions, severities, statuses, schema
-GET package.json                      → version of the standards repo
-GET standards/<domain>.yaml           → rules for that domain
-GET ecosystem.yaml                    → inventory of services, libraries, patterns
-GET definitions-of-done.yaml          → per-artifact DoD checklists
+GET https://api.kaianolevine.com/v1/standards/catalog              → the latest catalog
+GET https://api.kaianolevine.com/v1/standards/catalog?version=X    → one exact version
+GET https://api.kaianolevine.com/v1/standards/versions             → what has been published
 ```
 
-Every evaluation output pins the `version` from `package.json` so findings are traceable to a specific standards state (see EVAL-002).
+Reads are public and unauthenticated — this is rule text, and it is public here
+already. A published version is immutable: re-publishing a version with
+different content is refused, so a finding pinned to a version can always be
+read back against the rules it was actually graded on (EVAL-002).
+
+**The catalog address is always production.** Catalogs are published only from
+the release job on `main`, so the development API's store is empty. This is the
+one address that must not resolve through the `KAIANO_API_BASE_URL` /
+`KAIANO_API_BASE_URL_DEV` pair: rule text is not environment-specific, and a dev
+service pointed at the dev API would get `no_catalog_published` and read it as
+the catalog being broken.
+
+What the catalog carries, in one document:
+
+```
+version, compiled_at, rule_count
+dimensions, severities, statuses, vulnerability_severities, vulnerability_response
+schema: repo_types, traits, dispatch, evaluator_yaml
+rules: every rule, each with its domain, applies_to, modifies, status,
+       dimension, severity, checkable, check_notes, and a resolved
+       check_mode of "deterministic" | "llm" | null
+```
+
+Rules with `checkable: false` are included, carrying the flag, rather than
+filtered out — a rule the evaluator cannot check should be visibly unverified,
+not invisible.
+
+Two files are not in the catalog and stay repo-reads: `definitions-of-done.yaml`
+(human-facing checklists, not evaluated) and `evaluator.yaml` (this repo's own
+per-repo config, read from each repo by the evaluator).
+
+**For humans reading the rules:** the YAML files here are the source. The
+catalog is generated from them and is never edited by hand.
 
 ---
 
@@ -55,6 +87,11 @@ ecosystem-standards/
 │   ├── evaluation.yaml             ← EVAL — how AI evaluation is performed
 │   ├── monorepo.yaml               ← MONO — pnpm workspace rules
 │   └── cross-stack.yaml            ← XSTACK — Python/TypeScript parity rules
+├── scripts/                        ← catalog tooling (PyYAML only; stdlib otherwise)
+│   ├── catalog_sources.py          ← shared loading, so validator and compiler agree
+│   ├── validate_catalog.py         ← every CI check; runnable by hand before pushing
+│   ├── compile_catalog.py          ← emits the catalog (build artifact, never committed)
+│   └── publish_catalog.py          ← posts it, from the release job only
 ├── docs/
 │   └── decisions/                  ← ADRs (ADR-NNN-slug.md)
 │       └── README.md               ← ADR index

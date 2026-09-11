@@ -882,6 +882,25 @@ standards:
             `identity.apikey`). Flag any in-repo JWKS fetch, RS256
             decode, or constant-time credential comparison written
             outside that library — see XSTACK-005.
+            "Credential" here is what this rule defines above: a Clerk
+            session JWT or a named machine key, presented in the
+            `Authorization` header. A constant-time comparison of
+            anything else is out of scope — a webhook shared secret in
+            its own header, or an HMAC taken over the request body — and
+            must not be flagged. Those callers cannot present either
+            credential type, so the remedy this clause prescribes
+            (`identity.clerk` for sessions, `identity.apikey` for
+            machine keys) does not exist for them, and a finding whose
+            only available fix is to stop comparing in constant time
+            argues for weaker code.
+            Scope the check the way the other two primitives here are
+            already scoped — a JWKS fetch has to look like an HTTP call
+            to a JWKS URL, a decode has to name an asymmetric algorithm.
+            A comparison counts when the Bearer path is visible around
+            it (an `Authorization` header, a machine-key or Clerk
+            lookup, or the token/JWT vocabulary of a local verifier) and
+            does not count when the compared value is computed by
+            HMAC-ing a payload.
         (6) Verify both populations are configured: a Clerk issuer set
             built from `CLERK_ISSUERS` or `CLERK_ISSUER` +
             `CLERK_JWKS_URL`, and a machine-key set built from

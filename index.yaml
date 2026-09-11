@@ -99,9 +99,20 @@ statuses:
   gap:
     description: >
       Known deficiency. The rule is tracked but the check is not yet
-      implemented or not yet reliable. The evaluator emits an INFO
-      finding on every run noting the gap. `checkable` may be `true`
-      (partial check shipped, imperfect) or `false` (no check yet).
+      implemented or not yet reliable. `checkable` may be `true`
+      (a partial check is shipped and imperfect), in which case the
+      rule runs and emits findings like any other; or `false` (no
+      check yet), in which case the evaluator does not evaluate it and
+      emits nothing for it.
+
+      No INFO finding is emitted for an unchecked gap rule. This block
+      claimed one for some time and nothing ever implemented it, which
+      left the retired rules looking evaluated-and-clean rather than
+      not evaluated. A `checkable: false` rule is still carried in the
+      published catalog, so it stays readable and joinable to the
+      findings of versions that did check it — it is simply not
+      graded.
+
       Gap rules are the roadmap — promote to `requirement` when the
       check is ready.
 
