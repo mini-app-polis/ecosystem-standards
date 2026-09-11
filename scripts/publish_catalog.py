@@ -52,6 +52,28 @@ _ENDPOINT = "/v1/standards/catalog"
 #: a spurious timeout here is a released version with no catalog.
 _TIMEOUT_SECONDS = 60
 
+#: Identifies this client to the API's edge.
+#:
+#: Not cosmetic. The API sits behind Cloudflare, whose Browser Integrity
+#: Check blocks requests whose User-Agent reads as unidentified automation —
+#: urllib's default is one of those, and a publish with it is refused at the
+#: edge with a 1010 that never reaches the API. A named product agent is
+#: what the check is asking for, and it makes the caller legible in access
+#: logs besides.
+_USER_AGENT = (
+    "ecosystem-standards-publisher/{version} "
+    "(+https://github.com/mini-app-polis/ecosystem-standards)"
+)
+
+#: Markers that identify a response as the edge rejecting the request rather
+#: than the API answering it.
+_EDGE_BLOCK_MARKERS = (
+    "error code: 10",
+    "cloudflare",
+    "just a moment",
+    "<!doctype html",
+)
+
 
 def publish(base_url: str, api_key: str, catalog: dict) -> tuple[int, dict]:
     """POST the catalog. Returns (status, parsed body)."""
@@ -63,6 +85,7 @@ def publish(base_url: str, api_key: str, catalog: dict) -> tuple[int, dict]:
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
+            "User-Agent": _USER_AGENT.format(version=catalog.get("version", "0")),
         },
     )
     try:
@@ -142,6 +165,23 @@ def main(argv: list[str] | None = None) -> int:
             f"FATAL: standards v{version} is already published with different "
             f"content. A published version is immutable; cut a new version "
             f"rather than changing this one.",
+            file=sys.stderr,
+        )
+        return 1
+
+    raw = str(payload.get("raw", "")) if isinstance(payload, dict) else ""
+    if raw and any(marker in raw.lower() for marker in _EDGE_BLOCK_MARKERS):
+        # An HTML body means the API never saw this request. Saying so is
+        # the whole value of the branch: a 403 from the edge and a 403 from
+        # authorization are the same status code and entirely different
+        # problems, and dumping the challenge page leaves whoever reads the
+        # log to work that out themselves.
+        print(
+            f"FATAL: publishing v{version} was blocked at the edge with "
+            f"{status} before reaching the API — an HTML challenge or block "
+            f"page came back, not a JSON response. This is not an "
+            f"authentication failure. Check the User-Agent this client sends "
+            f"and the WAF rules on the API hostname.",
             file=sys.stderr,
         )
         return 1
