@@ -1,0 +1,159 @@
+#!/usr/bin/env python3
+"""Publish the compiled catalog to the API. Run from the release job.
+
+Compiles in-process rather than reading a `catalog.json` left by an earlier
+step. The artifact and the version have to agree, and the version only
+exists after semantic-release has bumped `package.json` — a file compiled
+before that carries the previous version, and publishing it would silently
+attribute a release's rules to the release before it.
+
+**Runs after semantic-release, and only on `main`.** By then the working
+tree holds the bumped `package.json`, so compiling reads the version just
+cut.
+
+**A no-release run is a no-op, not a special case.** When there were no
+releasable commits, `package.json` is unchanged and the catalog it compiles
+to is already published — the API answers 200 with `created: false` and
+stores nothing. That falls out of publishes being immutable rather than
+needing a branch here.
+
+**A failed publish fails the job.** semantic-release has already tagged and
+pushed by this point, so a silent failure leaves a released version that
+nothing can be evaluated against — the catalog would simply be one release
+behind, and every finding would pin the wrong rubric without anything
+saying so. Re-running the job republishes safely.
+
+Stdlib only. This repo declares no Python dependencies beyond PyYAML for
+the catalog scripts, and a publisher is not a reason to grow that.
+
+Environment:
+    KAIANO_API_BASE_URL           e.g. https://api.kaianolevine.com
+    ECOSYSTEM_STANDARDS_API_KEY   repository-level secret, this repo only
+
+Usage:
+    python3 scripts/publish_catalog.py [--dry-run]
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+import urllib.error
+import urllib.request
+
+from compile_catalog import compile_catalog
+
+#: Path the API serves the catalog store at.
+_ENDPOINT = "/v1/standards/catalog"
+
+#: Generous, because the payload is a few hundred kilobytes and the cost of
+#: a spurious timeout here is a released version with no catalog.
+_TIMEOUT_SECONDS = 60
+
+
+def publish(base_url: str, api_key: str, catalog: dict) -> tuple[int, dict]:
+    """POST the catalog. Returns (status, parsed body)."""
+    body = json.dumps(catalog).encode("utf-8")
+    request = urllib.request.Request(
+        base_url.rstrip("/") + _ENDPOINT,
+        data=body,
+        method="POST",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=_TIMEOUT_SECONDS) as response:
+            return response.status, json.loads(response.read() or b"{}")
+    except urllib.error.HTTPError as exc:
+        raw = exc.read() or b"{}"
+        try:
+            return exc.code, json.loads(raw)
+        except json.JSONDecodeError:
+            return exc.code, {"raw": raw.decode("utf-8", "replace")[:500]}
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Compile and report what would be published, without posting.",
+    )
+    args = parser.parse_args(argv)
+
+    try:
+        catalog = compile_catalog()
+    except Exception as exc:  # noqa: BLE001 — nothing publishable, stop here
+        print(f"FATAL: could not compile catalog: {exc}", file=sys.stderr)
+        return 2
+
+    version = catalog["version"]
+    rule_count = catalog["rule_count"]
+
+    if args.dry_run:
+        print(f"DRY RUN - would publish catalog v{version} ({rule_count} rules)")
+        return 0
+
+    base_url = os.environ.get("KAIANO_API_BASE_URL", "").strip()
+    api_key = os.environ.get("ECOSYSTEM_STANDARDS_API_KEY", "").strip()
+    missing = [
+        name
+        for name, value in (
+            ("KAIANO_API_BASE_URL", base_url),
+            ("ECOSYSTEM_STANDARDS_API_KEY", api_key),
+        )
+        if not value
+    ]
+    if missing:
+        # Named explicitly rather than left to a 401. An absent credential
+        # and a rejected one are different problems and the message should
+        # say which this is.
+        print(f"FATAL: missing environment: {', '.join(missing)}", file=sys.stderr)
+        return 2
+
+    try:
+        status, payload = publish(base_url, api_key, catalog)
+    except Exception as exc:  # noqa: BLE001 — transport failure
+        print(f"FATAL: publishing v{version} failed: {exc}", file=sys.stderr)
+        return 1
+
+    if status == 200:
+        data = payload.get("data") or {}
+        if data.get("created"):
+            print(f"OK - published catalog v{version} ({rule_count} rules)")
+        else:
+            print(
+                f"OK - catalog v{version} was already published with identical "
+                f"content ({rule_count} rules); nothing stored"
+            )
+        return 0
+
+    if status == 409:
+        # The released version exists with different rules. Either a rule
+        # file changed without a version bump, or someone republished by
+        # hand. Neither is fixable by retrying, and neither should be
+        # resolved by overwriting — the published version is what existing
+        # findings are pinned to.
+        print(
+            f"FATAL: standards v{version} is already published with different "
+            f"content. A published version is immutable; cut a new version "
+            f"rather than changing this one.",
+            file=sys.stderr,
+        )
+        return 1
+
+    error = (payload.get("error") or {}) if isinstance(payload, dict) else {}
+    print(
+        f"FATAL: publishing v{version} returned {status}: "
+        f"{error.get('code', '?')} {error.get('message', payload)}",
+        file=sys.stderr,
+    )
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

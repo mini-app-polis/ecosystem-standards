@@ -28,7 +28,7 @@ jobs:
       sbom: false
 
   test:
-    name: Validate YAML
+    name: Validate and compile catalog
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -41,200 +41,19 @@ jobs:
       - name: Install PyYAML
         run: pip install pyyaml
 
+      # Enforces the META rules, the canonical enums read from index.yaml
+      # and definitions-of-done.yaml, and the structural integrity of the
+      # rule catalog. Previously an inline heredoc here; now a script, so
+      # it can be run by hand before pushing.
       - name: Validate standards catalog and META rules
-        run: |
-          python3 << 'EOF'
-          # Enforces:
-          #   - YAML parse + required rule fields
-          #   - Canonical enums (status, severity, dimension, applies_to,
-          #     dod_type) read from index.yaml and definitions-of-done.yaml
-          #     — no hardcoded allowlists
-          #   - META-002: no `added:` on rules, no `# Version:` headers,
-          #     no top-level `updated:` / `maintainer:` fields
-          #   - META-005: checkable rules open check_notes with
-          #     DETERMINISTIC CHECK. or LLM CHECK.
-          #   - META-006: rule ID prefix matches file's declared
-          #     rule_prefix in index.yaml
-          #   - META-007 (lightweight): no duplicate IDs across the
-          #     catalog. META-007 is a convention — the full append-only
-          #     history walk is not enforced anywhere. Author discipline
-          #     per playbooks/new-standard.md Step 4 is the primary
-          #     control.
-          import yaml, glob, sys, json, re
-          from pathlib import Path
+        run: python3 scripts/validate_catalog.py
 
-          errors = []
-
-          def err(msg):
-              errors.append(msg)
-
-          # --- Load canonical sources ---
-          try:
-              index_data = yaml.safe_load(open('index.yaml'))
-              dod_data = yaml.safe_load(open('definitions-of-done.yaml'))
-              eco_data = yaml.safe_load(open('ecosystem.yaml'))
-              pkg = json.load(open('package.json'))
-          except Exception as e:
-              print(f"FATAL: could not load canonical sources: {e}")
-              sys.exit(2)
-
-          if 'files' not in index_data:
-              err("index.yaml missing 'files'")
-          if 'services' not in eco_data:
-              err("ecosystem.yaml missing 'services'")
-          if 'definitions_of_done' not in dod_data:
-              err("definitions-of-done.yaml missing 'definitions_of_done'")
-          if 'version' not in pkg or 'name' not in pkg:
-              err("package.json missing version or name")
-
-          # --- Canonical enums (read, not hardcoded) ---
-          valid_repo_types = set(
-              (index_data.get('schema', {}).get('repo_types') or {}).keys()
-          ) | {'all'}
-          valid_dod = set(
-              (dod_data.get('definitions_of_done') or {}).keys()
-          ) | {None}
-          valid_dimensions = set((index_data.get('dimensions') or {}).keys())
-          valid_statuses = set((index_data.get('statuses') or {}).keys())
-          valid_rule_severities = {'ERROR', 'WARN', 'INFO'}
-          # Required fields — derived from schema.rule_fields in
-          # index.yaml. A field is required if its `required:`
-          # value is the boolean True. `required: false` and
-          # conditional values (e.g. "when checkable is true")
-          # are not enforced here — conditional requirements
-          # have their own dedicated checks below (e.g. the
-          # check_notes META-005 block for checkable rules).
-          required_fields = [
-              name for name, spec in (
-                  index_data.get('schema', {})
-                  .get('rule_fields', {}) or {}
-              ).items()
-              if spec.get('required') is True
-          ]
-
-          # --- Prefix -> file map from index.yaml (META-006 source) ---
-          file_to_prefixes = {}
-          for f in index_data.get('files', []):
-              path = f.get('file')
-              p = f.get('rule_prefix')
-              if path and p is not None:
-                  file_to_prefixes[path] = (
-                      set(p) if isinstance(p, list) else {p}
-                  )
-
-          # --- Walk standards/*.yaml ---
-          all_ids = []
-          std_files = sorted(glob.glob('standards/*.yaml'))
-          for path in std_files:
-              try:
-                  data = yaml.safe_load(open(path))
-              except Exception as e:
-                  err(f"{path}: parse error: {e}")
-                  continue
-              if not data or 'standards' not in data:
-                  err(f"{path}: missing 'standards' key")
-                  continue
-
-              declared = file_to_prefixes.get(path, set())
-              if not declared:
-                  err(f"{path}: no rule_prefix entry in index.yaml files:")
-
-              for r in data['standards']:
-                  rid = r.get('id')
-                  if not rid:
-                      err(f"{path}: rule missing id")
-                      continue
-                  all_ids.append(rid)
-
-                  for field in required_fields:
-                      if field == 'id':
-                          continue  # already checked above
-                      if field not in r:
-                          err(f"{rid}: missing '{field}'")
-
-                  # META-006
-                  m = re.match(r'^([A-Z]+)-(?:GAP-)?\d{3}$', rid)
-                  if not m:
-                      err(f"META-006: {rid} does not match "
-                          f"PREFIX-NNN or PREFIX-GAP-NNN shape")
-                  elif declared and m.group(1) not in declared:
-                      err(f"META-006: {rid} prefix '{m.group(1)}' "
-                          f"not in {sorted(declared)} declared for {path}")
-
-                  # Enum validity (reads from canonical sources)
-                  s = r.get('status')
-                  if s and s not in valid_statuses:
-                      err(f"{rid}: invalid status '{s}' "
-                          f"(allowed: {sorted(valid_statuses)})")
-                  sev = r.get('severity')
-                  if sev and sev not in valid_rule_severities:
-                      err(f"{rid}: invalid rule-level severity '{sev}' "
-                          f"(allowed: {sorted(valid_rule_severities)})")
-                  dim = r.get('dimension')
-                  if dim and dim not in valid_dimensions:
-                      err(f"{rid}: invalid dimension '{dim}' "
-                          f"(allowed: {sorted(valid_dimensions)})")
-                  for a in (r.get('applies_to') or []):
-                      if a not in valid_repo_types:
-                          err(f"{rid}: applies_to has invalid value "
-                              f"'{a}' (allowed: {sorted(valid_repo_types)})")
-
-                  # META-005
-                  if r.get('checkable') is True:
-                      notes = r.get('check_notes') or ''
-                      if not notes:
-                          err(f"{rid}: checkable: true but missing check_notes")
-                      else:
-                          first = next(
-                              (ln for ln in notes.splitlines() if ln.strip()),
-                              '',
-                          ).strip()
-                          if not (first.startswith('DETERMINISTIC CHECK.')
-                                  or first.startswith('LLM CHECK.')):
-                              err(f"META-005: {rid} check_notes does not start "
-                                  f"with 'DETERMINISTIC CHECK.' or 'LLM CHECK.' "
-                                  f"(got: {first[:60]!r})")
-
-                  # META-002 (per-rule): no `added:` field
-                  if 'added' in r:
-                      err(f"META-002: {rid} has forbidden 'added' field")
-
-          # META-007 lightweight: duplicate IDs
-          dupes = sorted({i for i in all_ids if all_ids.count(i) > 1})
-          if dupes:
-              err(f"Duplicate rule IDs: {dupes}")
-
-          # META-002 (file-level): forbidden headers and top-level fields
-          scan_targets = (
-              std_files
-              + ['index.yaml', 'ecosystem.yaml', 'definitions-of-done.yaml']
-          )
-          for target in scan_targets:
-              text = Path(target).read_text()
-              for i, line in enumerate(text.splitlines(), 1):
-                  if re.match(r'^# Version:', line):
-                      err(f"META-002: {target}:{i} has '# Version:' header")
-                  if re.match(r'^(updated|maintainer):', line):
-                      key = line.split(':', 1)[0]
-                      err(f"META-002: {target}:{i} has top-level '{key}:' field")
-
-          # Services: dod_type validity
-          for svc in eco_data.get('services', []):
-              if svc.get('status') == 'active':
-                  if 'dod_type' not in svc:
-                      err(f"{svc.get('id')}: missing dod_type")
-                  elif svc['dod_type'] not in valid_dod:
-                      err(f"{svc.get('id')}: invalid dod_type "
-                          f"'{svc['dod_type']}' (allowed: {sorted(v for v in valid_dod if v is not None)} or null)")
-
-          # --- Output ---
-          if errors:
-              print(f"\nFAIL - {len(errors)} problem(s):")
-              for e in errors:
-                  print(f"  - {e}")
-              sys.exit(1)
-          print(f"\nOK - {len(all_ids)} rules across {len(std_files)} files, no issues.")
-          EOF
+      # Proves the catalog compiles on every push. The artifact is not
+      # committed and not published here — only the release job on main
+      # publishes, because package.json has no meaningful version until
+      # semantic-release cuts one.
+      - name: Compile standards catalog
+        run: python3 scripts/compile_catalog.py
 
   release:
     name: Release
@@ -270,3 +89,27 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      # After semantic-release, so the working tree holds the package.json it
+      # just bumped and the catalog compiles with the version being released.
+      # A run with no releasable commits publishes the version that is already
+      # stored, which the API accepts as a no-op — immutability makes the
+      # redundant post harmless rather than needing a condition here.
+      #
+      # The URL is a variable rather than a secret: it is the public address
+      # of a public API, and a secret would only make it harder to see which
+      # environment a run published to. Production only — dev reads the
+      # catalog from production, since rule text is not environment-specific.
+      - name: Publish standards catalog
+        env:
+          KAIANO_API_BASE_URL: ${{ vars.KAIANO_API_BASE_URL }}
+          ECOSYSTEM_STANDARDS_API_KEY: ${{ secrets.ECOSYSTEM_STANDARDS_API_KEY }}
+        run: python3 scripts/publish_catalog.py
