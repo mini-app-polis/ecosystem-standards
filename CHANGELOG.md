@@ -1,3 +1,10 @@
+## [6.15.3](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.15.2...v6.15.3) (2026-09-11)
+
+
+### Bug Fixes
+
+* **catalog:** scope CD-019 (5) and correct the gap status description ([cba2317](https://github.com/mini-app-polis/ecosystem-standards/commit/cba2317968a0a7e233c02307e7001ca33aae1a8b))
+
 ## [6.15.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.15.1...v6.15.2) (2026-09-11)
 
 
