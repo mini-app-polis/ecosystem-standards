@@ -1,3 +1,10 @@
+## [6.15.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.15.1...v6.15.2) (2026-09-11)
+
+
+### Bug Fixes
+
+* **catalog:** apply four universal rules everywhere ([a07a376](https://github.com/mini-app-polis/ecosystem-standards/commit/a07a376657289dfaf103d7c2e3a7517f1d11e241))
+
 ## [6.15.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.15.0...v6.15.1) (2026-09-11)
 
 
