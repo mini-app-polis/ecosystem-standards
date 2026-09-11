@@ -89,3 +89,27 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      # After semantic-release, so the working tree holds the package.json it
+      # just bumped and the catalog compiles with the version being released.
+      # A run with no releasable commits publishes the version that is already
+      # stored, which the API accepts as a no-op — immutability makes the
+      # redundant post harmless rather than needing a condition here.
+      #
+      # The URL is a variable rather than a secret: it is the public address
+      # of a public API, and a secret would only make it harder to see which
+      # environment a run published to. Production only — dev reads the
+      # catalog from production, since rule text is not environment-specific.
+      - name: Publish standards catalog
+        env:
+          KAIANO_API_BASE_URL: ${{ vars.KAIANO_API_BASE_URL }}
+          ECOSYSTEM_STANDARDS_API_KEY: ${{ secrets.ECOSYSTEM_STANDARDS_API_KEY }}
+        run: python3 scripts/publish_catalog.py
