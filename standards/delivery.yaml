@@ -1205,10 +1205,16 @@ standards:
     severity: WARN
     applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app, shared-library, standards-repo, shared-workflows]
     description: >
-      A repo's ci.yml names its jobs `security`, `test` and `release`. The
-      work job is `test` whatever it happens to run — a build, a typecheck,
-      a lint, a schema validation. The name records the job's place in the
-      pipeline, not its contents.
+      A repo's ci.yml names its jobs `security`, `test`, `release` and
+      `evaluate`. The work job is `test` whatever it happens to run — a
+      build, a typecheck, a lint, a schema validation. The name records the
+      job's place in the pipeline, not its contents.
+
+      `evaluate` is the conformance request a repo makes on its own
+      release, calling the shared workflow in mini-app-polis/.github. It is
+      a stage rather than a variation on `test`: it runs after `release`, it
+      asks about the repository rather than about the change, and nothing
+      waits for its answer.
 
       Not every repo needs all three: a repo with no release path has no
       `release` job. The rule is that a job present is named canonically,
@@ -1221,8 +1227,8 @@ standards:
           `workflow_call` is called by others and names its jobs for its
           own reasons.
       (3) Collect the top-level keys under `jobs:`.
-      (4) Flag any job name outside the set {security, test, release},
-          naming the offending job.
+      (4) Flag any job name outside the set {security, test, release,
+          evaluate}, naming the offending job.
       Only `.github/workflows/ci.yml` is in scope. Scheduled and
       dispatch-triggered workflows are not pipelines and are not checked.
     origin: >

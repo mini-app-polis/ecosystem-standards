@@ -29,9 +29,11 @@ services:
   cog_subtype: pipeline
   host: railway
   description: 'Multi-mode AI evaluation cog. Runs post-pipeline behavioral evaluation
-    (pipeline_eval flow) and daily structural conformance checking against ecosystem
-    standards (conformance flow). Fetches live ecosystem inventory and standards rules
-    at runtime. All findings written to pipeline_evaluations table via api-kaianolevine-com
+    (pipeline_eval, called in-process by other cogs) and structural conformance
+    checking on demand — POST /invoke for one repository when it releases, POST /sweep
+    for the whole registry when the standards catalog or the evaluator releases. No
+    schedule and no Prefect deployment (ADR-0004). Reads the compiled rule catalog
+    from the API rather than checking out ecosystem-standards. All findings written to pipeline_evaluations table via api-kaianolevine-com
     with source field distinguishing evaluation type.
 
     '
