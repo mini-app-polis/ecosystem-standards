@@ -1,3 +1,10 @@
+## [6.15.4](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.15.3...v6.15.4) (2026-09-13)
+
+
+### Bug Fixes
+
+* calling eval on release ([40614fd](https://github.com/mini-app-polis/ecosystem-standards/commit/40614fdd2d2b08c42b0a31d1624d702c1736fdc2))
+
 ## [6.15.3](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.15.2...v6.15.3) (2026-09-11)
 
 
