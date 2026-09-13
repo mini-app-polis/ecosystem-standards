@@ -1,3 +1,10 @@
+# [6.17.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.16.0...v6.17.0) (2026-09-13)
+
+
+### Features
+
+* **cd-026:** evaluate is a canonical ci job ([0660c63](https://github.com/mini-app-polis/ecosystem-standards/commit/0660c63f8f545427bd43f8dfebde0da8b4c26204))
+
 # [6.16.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.15.4...v6.16.0) (2026-09-13)
 
 
