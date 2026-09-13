@@ -324,11 +324,25 @@ schema:
       Examples: ecosystem-standards.
     shared-workflows: >
       Reusable GitHub Actions workflow definitions consumed by other
-      repos via `uses:`. No source, no runtime, no deployment, no
-      published package — the workflow YAML is the whole artifact.
-      Deliberately absent from every rule's `applies_to`, so only the
-      `[all]` rules reach it: runtime, packaging and release rules are
-      out of scope here by taxonomy rather than by exemption.
+      repos via `uses:`. No source, no runtime, no deployment — the
+      workflow YAML is the whole artifact. Runtime and packaging rules
+      are out of scope by taxonomy rather than by exemption.
+
+      Release rules are NOT out of scope, and used to be. The original
+      description reasoned from "no published package" to "nothing to
+      release", which held only while `.github` was read as a folder of
+      YAML rather than as a dependency. It is a dependency: every repo
+      in the fleet resolves it by version reference at the moment its
+      pipeline starts, and a change to it reaches all of them at once.
+      That it ships by moving a git tag rather than by pushing to a
+      registry is a difference in mechanism, not in kind.
+
+      The cost of the earlier reading was that `.github` had no release
+      automation, no conformance check could say so, and on 2026-09-13
+      its one manual release step was missed three times in an afternoon
+      — each time surfacing as a CI failure in a consumer that looked
+      like a broken workflow. VER-003, VER-009, CD-025 and CD-026 now
+      scope to this type.
       Examples: .github.
 
   # Trait definitions. Each trait has a human-readable `description`

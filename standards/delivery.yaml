@@ -1172,7 +1172,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app, shared-library, standards-repo]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app, shared-library, standards-repo, shared-workflows]
     description: >
       Where a ci.yml carries both a `security` job and a `release` job, the
       release job names `security` in its `needs:`. A release job that lists
@@ -1203,7 +1203,7 @@ standards:
     status: convention
     dimension: structural_conformance
     severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app, shared-library, standards-repo]
+    applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app, shared-library, standards-repo, shared-workflows]
     description: >
       A repo's ci.yml names its jobs `security`, `test` and `release`. The
       work job is `test` whatever it happens to run — a build, a typecheck,
