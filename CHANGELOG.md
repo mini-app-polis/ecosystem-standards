@@ -1,3 +1,10 @@
+# [6.16.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.15.4...v6.16.0) (2026-09-13)
+
+
+### Features
+
+* **taxonomy:** scope release rules to shared-workflows ([91a4d00](https://github.com/mini-app-polis/ecosystem-standards/commit/91a4d00c3e5864bab19b6749f285bf6dba6cddbe))
+
 ## [6.15.4](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.15.3...v6.15.4) (2026-09-13)
 
 
