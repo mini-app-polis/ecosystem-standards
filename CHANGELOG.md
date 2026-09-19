@@ -1,3 +1,10 @@
+## [6.17.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.17.0...v6.17.1) (2026-09-19)
+
+
+### Bug Fixes
+
+* updating CD-020 and CD-021 drift from migration ([1df2ffe](https://github.com/mini-app-polis/ecosystem-standards/commit/1df2ffef226a6a8f6817d534449d251117b3f487))
+
 # [6.17.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.16.0...v6.17.0) (2026-09-13)
 
 
