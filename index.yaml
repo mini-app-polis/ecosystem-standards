@@ -182,7 +182,7 @@ schema:
         silently, while a rule scoped too broadly produces a finding
         someone can see and argue with. Narrow to an explicit type
         list only where the check cannot tell "no subject here" apart
-        from "violated" — CD-017, CD-021 and CD-024 are the current
+        from "violated" — CD-017 and CD-024 are the current
         examples: each fails on a missing `railway.json`, and a
         missing `railway.json` is also exactly what a repo hosted
         somewhere else looks like.
