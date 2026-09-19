@@ -266,7 +266,7 @@ standards:
 
       CD-020 makes a repo's own dependency declaration internally
       consistent: pyproject.toml, the sources table and the lockfile all
-      agree, and the release re-locks. That is necessary and not
+      agree, and a release cannot stale the lock. That is necessary and not
       sufficient. A repo can be perfectly self-consistent and pinned to a
       library release from three months ago, and nothing in the catalog
       notices — the declaration is honest, it is simply old.

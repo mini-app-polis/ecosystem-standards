@@ -945,13 +945,13 @@ standards:
       with the declaration it was generated from, and has to keep
       agreeing across releases. Three conditions, which fail as one:
 
-        - The release pipeline re-locks. semantic-release bumps the
-          version in pyproject.toml and does not touch uv.lock, so a
-          release that does not re-lock leaves the lock a version behind
-          the moment it succeeds — and the next release does it again.
-          `.releaserc.json` runs `uv lock` in its `@semantic-release/exec`
-          prepare step and lists `uv.lock` in the `@semantic-release/git`
-          assets.
+        - A release cannot stale the lock. The project's own version
+          is sourced from a committed file (PY-017), so `[project]`
+          declares `dynamic = ["version"]` and `uv.lock` records no
+          version for the project itself. A release then writes the
+          version file and never touches the lock. A lock that does
+          record the project's version goes a version behind the moment
+          a release succeeds, and every release after repeats it.
 
         - `uv.lock` is current: `uv lock --check` passes against the
           committed pyproject.toml.
@@ -969,24 +969,33 @@ standards:
       deploys of the same commit can install different code.
 
       These are one requirement rather than three because each alone is
-      insufficient. A correct lock without a re-locking pipeline is
-      correct until the next release; a re-locking pipeline does not fix
-      a lock that is already stale; and both are worthless if the
+      insufficient. A current lock that records the project's version
+      is current until the next release; a version-free lock does not
+      fix one that is already stale; and both are worthless if the
       declaration they encode disagrees with itself.
+
+      Re-locking in the release is not the remedy. PY-017 keeps
+      `uv.lock` out of the release commit, and owns that half of the
+      `.releaserc.json` shape; this rule reads the lock, not the
+      release config.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-        (1) Parse `.releaserc.json`. Require the `@semantic-release/exec`
-            `prepareCmd` to run `uv lock` alongside the version bump, and
-            the `@semantic-release/git` `assets` array to include
-            `uv.lock`. Flag a repo missing either — the two together are
-            what stops the drift recurring, and a repo with only one of
-            them re-drifts on its next release.
+        (1) Parse `uv.lock` and find the `[[package]]` entry for the
+            project itself: its name, PEP 503-normalised, equals
+            `[project] name`, and its `source` is the project directory
+            (`editable = "."` or `virtual = "."`). Flag the entry if it
+            carries a `version` key, reporting that version and whether
+            pyproject.toml declares a static `version` or
+            `dynamic = ["version"]`. No entry for the project is not a
+            finding; clause (2) covers a lock that does not match the
+            declaration. Do not read `.releaserc.json` — PY-017 owns it.
         (2) Run `uv lock --check` against the checked-out tree. It exits
-            non-zero when the lock needs updating. Flag a non-zero
-            result, reporting the version in pyproject.toml alongside the
-            version recorded in uv.lock so the finding names the gap
-            rather than just asserting one.
+            non-zero when the lock needs updating. Flag only the
+            lockfile-needs-updating result, not other failures to run.
+            Report the project version where both files record one;
+            under a dynamic version neither does, and the finding names
+            the stale dependency graph instead.
         (3) Parse `pyproject.toml`. For each key in `[tool.uv.sources]`,
             find the matching requirement string in the project's
             dependency list and in every optional-dependency group. Flag
@@ -1014,6 +1023,14 @@ standards:
       repos already run `uv lock` in `prepareCmd` and ship `uv.lock` as
       a release asset — this makes the majority convention the rule.
 
+      Revised 2026-09-19. PY-017 (2026-09-06) moved every Python repo to
+      a file-sourced dynamic version and took `uv.lock` out of the
+      release commit, which removed the drift clause (1) was written
+      against by a different route. Clause (1) still required the old
+      relock-and-commit mechanism, so every uv-managed repo failed it
+      while conforming to PY-017. It now checks the property the
+      relock existed to protect: that a release cannot stale the lock.
+
 # VER-007..VER-008 moved to standards/versioning.yaml.
 
   - id: CD-021
@@ -1023,7 +1040,7 @@ standards:
     status: gap
     dimension: cd_readiness
     severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service]
+    applies_to: []
     description: >
       A deployable service ships an image definition in its repository,
       so the runtime it executes in is reproducible from source rather
@@ -1046,13 +1063,24 @@ standards:
       Promote to `convention` or `requirement` when the first service
       carries a Dockerfile and the cost of maintaining one is known
       rather than estimated.
-    checkable: true
+
+      Scoped to no repo type while no service carries a Dockerfile. With
+      the gap universal, a check could only restate it once per service
+      per run, and those rows read as open violations beside the real
+      ones. The gap is stated here instead.
+    checkable: false
     check_notes: >
-      DETERMINISTIC CHECK.
-      Pass if a `Dockerfile` exists at the repo root and the platform
-      descriptor (`railway.json` / `railway.toml`) selects the dockerfile
-      builder rather than leaving the builder unset. A Dockerfile the
-      platform does not use is not a runtime definition.
+      NOT CHECKABLE while no service carries an image definition — every
+      deployable repo would fail identically, so the finding carries no
+      information the description does not.
+
+      Becomes checkable when the first service adds a Dockerfile. Restore
+      `applies_to: [pipeline-cog, trigger-cog, api-service]` and a
+      deterministic check: pass if a `Dockerfile` exists at the repo root
+      and the platform descriptor (`railway.json` / `railway.toml`)
+      selects the dockerfile builder rather than leaving the builder
+      unset. A Dockerfile the platform does not use is not a runtime
+      definition.
 
   - id: CD-022
 
