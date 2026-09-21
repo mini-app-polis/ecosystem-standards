@@ -1,3 +1,14 @@
+# [7.0.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.18.0...v7.0.0) (2026-09-21)
+
+
+* feat!: redefine pipeline-cog as a Lambda behind its own queue (ADR-009) ([d77d6b1](https://github.com/mini-app-polis/ecosystem-standards/commit/d77d6b1b48ce8e2bf6742a9e6717319029e709f8))
+
+
+### BREAKING CHANGES
+
+* pipeline-cog now means an AWS Lambda fed by an SQS
+queue declared in infra/. Cogs still on Prefect/Railway fail PIPE-016.
+
 # [6.18.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.17.1...v6.18.0) (2026-09-21)
 
 
