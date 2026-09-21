@@ -1,3 +1,10 @@
+# [6.18.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.17.1...v6.18.0) (2026-09-21)
+
+
+### Features
+
+* **CD-026:** add deploy to the canonical ci.yml job set ([8076b52](https://github.com/mini-app-polis/ecosystem-standards/commit/8076b520bb2881ea4568316ae8461c0f83c12e23))
+
 ## [6.17.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.17.0...v6.17.1) (2026-09-19)
 
 
