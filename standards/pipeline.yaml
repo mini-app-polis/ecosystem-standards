@@ -7,36 +7,6 @@ standards:
   # ORCHESTRATION STACK
   # ─────────────────────────────────────────────
 
-  - id: PIPE-001
-    title: Prefect for new pipelines
-    status: requirement
-    dimension: structural_conformance
-    severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog]
-    description: >
-      New event-driven pipelines use Prefect. Python-native, built-in
-      observability, retry logic, run history. GitHub Actions is for
-      CI/CD only — not pipeline orchestration.
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      Verify Prefect is present as the orchestration layer:
-        (1) `prefect` appears in pyproject.toml [project.dependencies].
-            Flag if absent on a pipeline-cog or trigger-cog repo.
-        (2) At least one Python source file imports from `prefect`:
-              - Pipeline cogs: must contain `@flow` decorator usage
-                (from `prefect import flow` or similar).
-              - Trigger cogs: must contain either `@flow` usage OR
-                a Prefect client call pattern (creating flow runs via
-                `prefect.deployments.run_deployment` or PrefectClient).
-            Flag repos of these types with zero Prefect imports.
-        (3) This rule overlaps with CD-005 (Prefect Cloud for
-            observability). CD-005 focuses on the observability
-            connection; PIPE-001 focuses on the orchestration
-            framework itself. A repo failing both produces two
-            findings, which is correct — they fail for different
-            reasons.
-
   # ─────────────────────────────────────────────
   # PIPELINE DESIGN
   # ─────────────────────────────────────────────
@@ -88,8 +58,8 @@ standards:
     checkable: true
     check_notes: >
       LLM CHECK.
-      For each function in src/**/*.py decorated with `@task` (from
-      `prefect`), assess whether the task body performs BOTH of the
+      For each function in src/**/*.py that a worker mode calls once per
+      input item, assess whether its body performs BOTH of the
       following within one function:
         (a) Processing of a single, discrete input item — e.g. a single
             file, row, or record passed as an argument and transformed
@@ -108,32 +78,6 @@ standards:
       because the distinction between "touching multiple related
       records" (legitimate) and "rebuilding the collection" (violation)
       requires reading intent, not just matching patterns.
-
-  - id: PIPE-004
-    title: Concurrency groups required for shared resources
-    status: requirement
-    dimension: structural_conformance
-    severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog]
-    description: >
-      Pipelines writing to shared resources declare a concurrency group.
-      cancel-in-progress: false for data pipelines.
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      Search Python source files for @flow decorated functions. For each flow
-      that writes to a shared resource (database writes, Drive moves, API
-      POST/PATCH calls), check for EITHER:
-        (a) concurrency_limit=N parameter on the @flow decorator, OR
-        (b) a 'with concurrency(...)' block from prefect.concurrency.sync
-            wrapping the scanning/processing logic (see PIPE-009 for the
-            preferred runtime slot approach).
-      Flag flows with shared-resource writes that have neither.
-      Flag flows that rely only on deployment-level concurrency_limit=1 —
-      this controls scheduling but not runtime execution overlap.
-      Note: PIPE-009 is the preferred implementation for pipeline cogs that
-      scan shared resources. PIPE-004 is the broader requirement that covers
-      all shared-resource writes including non-scanning writes.
 
   - id: PIPE-005
     title: Raw inputs are archived, not deleted
@@ -163,35 +107,6 @@ standards:
       Exempt: test fixtures, build artifacts in `dist/` or `build/`,
       tempfile cleanup with explicit `tempfile` or `tmp_path` context.
 
-  - id: PIPE-006
-    title: Dual logger pattern in Prefect flows
-    status: requirement
-    dimension: structural_conformance
-    severity: WARN
-    applies_to: [pipeline-cog, trigger-cog]
-    description: >
-      Flow functions use get_run_logger() for Prefect-visible logs with fallback
-      to standard logger for local runs:
-        try: logger = get_run_logger()
-        except Exception: logger = log
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      For every function in src/**/*.py decorated with `@flow` (from
-      `prefect import flow`):
-        (1) The function body must contain a call to `get_run_logger()`
-            (imported from `prefect` or `prefect.logging`). Flag if absent.
-        (2) The `get_run_logger()` call must be wrapped in a `try` block
-            whose `except` branch assigns a standard-library logger
-            (e.g. `logger = logging.getLogger(__name__)` or an imported
-            `log` from `common_python_utils`). Flag if the call appears
-            without a `try`/`except` wrapper.
-        (3) Inside the flow body, only the resulting `logger` variable
-            may be used for logging — flag any direct `logging.info(...)`,
-            `print(...)`, or calls on an imported module-level logger
-            that bypass the dual-assigned `logger`.
-      Exempt: flows under tests/**/*.py.
-
   - id: PIPE-007
     title: Retry logic on external API calls
     status: requirement
@@ -199,17 +114,38 @@ standards:
     severity: WARN
     applies_to: [pipeline-cog, trigger-cog]
     description: >
-      Tasks that call external APIs use retries=2, retry_delay_seconds=30. Tasks
-      calling Google APIs inherit common-python-utils retry logic.
+      A call to an external API is retried at the call site when it fails
+      transiently. Any of these counts: a common-python-utils client that
+      retries internally (DriveFacade, the Sheets helpers, LLMClient,
+      KaianoApiClient), a client library's own retry (spotipy, the AWS
+      SDK), tenacity, or a hand-written attempt loop.
+
+      Queue redelivery is not the retry. On a queue-driven pipeline cog a
+      failed message comes back after the visibility timeout and runs
+      from the top, and after max_receive_count attempts it goes to the
+      dead-letter queue (PIPE-017). That is the backstop for a job that
+      cannot succeed, not the answer to one 503: it repeats every step
+      the job already did, waits minutes rather than seconds, and spends
+      an attempt the job may need later.
+
+      A call whose failure does not matter — a heartbeat ping, a
+      best-effort notification — needs no retry, and says so with a
+      `# no-retry: <reason>` comment in the function.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Search Python source files for @task decorated functions. For each task
-      that makes an external API call (httpx, Drive API, Sheets API, Anthropic
-      API), check for retries= parameter on the @task decorator. Flag any
-      external-calling task missing retries=2 unless it explicitly inherits
-      retry logic from common-python-utils (check for DriveFacade or
-      LLMClient usage, which have internal retry handling).
+      Parse every Python module under src/. For each function that calls
+      httpx or requests directly (httpx.get/post/put/patch/delete/request,
+      httpx.Client, httpx.AsyncClient, requests.<verb>, requests.Session),
+      the call is covered when any of these holds: the function is
+      decorated with a retry decorator (a decorator named `retry`, as
+      tenacity's is); the call sits inside a for or while loop in that
+      function; or the function body carries a `# no-retry:` comment.
+      Flag each uncovered function, naming module and function. Calls
+      through common-python-utils clients and SDKs are not direct calls
+      and are not examined.
+      Previously this looked for Prefect @task(retries=) decorators;
+      Prefect is retired (ADR-009).
 
   - id: PIPE-008
     title: Retired trigger patterns are not used
@@ -222,7 +158,7 @@ standards:
       (repository_dispatch relays, workflow_dispatch from application
       code, direct GitHub API calls to trigger workflows,
       google-app-script-trigger references). These were replaced by
-      the watcher-cog → Prefect API pattern. The broader "does this
+      watcher-cog → api-kaianolevine-com → the cog's queue. The broader "does this
       cog's trigger architecture match the canonical pattern" check
       lives in PIPE-015.
     supersedes: "Apps Script → repository_dispatch → GitHub Actions (retired 2026-03)"
@@ -230,8 +166,9 @@ standards:
     check_notes: >
       DETERMINISTIC CHECK.
       The canonical production trigger path in MiniAppPolis is:
-      watcher-cog detects a source-of-truth change → fires a Prefect
-      deployment trigger → pipeline-cog flow runs. GitHub Actions
+      watcher-cog detects a source-of-truth change → asks
+      api-kaianolevine-com to run the cog → the API enqueues onto the
+      cog's queue → the cog's Lambda runs. GitHub Actions
       should not be a relay for production flow triggers.
 
       Flag a workflow if ALL of the following are true:
@@ -240,76 +177,34 @@ standards:
         (2) It invokes application code directly — e.g.
             `uv run python -u src/<cog>/<module>.py`, `pnpm run <script>`
             executing app logic, or a custom action that runs a flow.
-        (3) The same functionality exists, or should exist, as a Prefect
-            flow triggered by watcher-cog. The giveaway is a production
-            flow registered via `prefect.serve()` whose work is
-            duplicated or shadowed by the workflow.
+        (3) The same functionality exists, or should exist, as queued
+            work the cog's Lambda runs. The giveaway is a worker mode
+            whose work is duplicated or shadowed by the workflow.
 
       DO NOT flag a workflow in any of these cases:
         - It uses `on: workflow_dispatch:` (manual-only). Manual triggers
           for debugging, one-off runs, or convenience are legitimate.
         - It handles deprecated or archival functionality that has been
-          intentionally kept out of Prefect (e.g. to avoid consuming
-          Hobby-tier deployment slots for rarely-run operations). Look
+          intentionally kept off the queue (e.g. rarely-run local or
+          archival operations). Look
           for a comment in the workflow, a note in the README, or a
           retired/deprecated marker. If the repo's docs indicate the
           functionality is legacy, the workflow is not drift.
         - It is pure CI/CD — running tests, linting, building, deploying.
           Those are not application-code triggers.
-        - It dispatches a Prefect deployment via the Prefect API rather
-          than invoking app code directly. That IS the canonical trigger
-          path — it's just initiated from GitHub instead of watcher-cog,
-          which is a different question (and out of scope for PIPE-008).
+        - It asks api-kaianolevine-com to enqueue the work rather than
+          invoking app code directly. That IS the canonical path — it's
+          just initiated from GitHub instead of watcher-cog, which is a
+          different question (CD-006, and out of scope for PIPE-008).
 
       When flagging, cite the specific workflow file(s) and name the
-      Prefect flow or watcher-cog path that should be the canonical
+      queued mode or watcher-cog path that should be the canonical
       trigger instead. If the canonical path does not yet exist, say so
       — that changes the remediation from "remove the workflow" to
       "consolidate onto the canonical path."
 
       COG SUBTYPE: This rule applies to pipeline cogs only. Skip for
       trigger cogs and watcher-cog itself.
-
-  - id: PIPE-009
-    title: Pipeline cogs must acquire a named Prefect concurrency slot before scanning shared resources
-    status: requirement
-    dimension: pipeline_reliability
-    severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog]
-    description: >
-      Any pipeline cog that scans a shared resource (Drive folder, S3 bucket,
-      database table, etc.) and processes items sequentially must acquire a
-      named Prefect concurrency slot before scanning. This prevents two
-      concurrent runs from scanning the same resource state simultaneously,
-      which would cause duplicate LLM calls, redundant processing, and
-      potential data integrity issues even when a unique constraint is present.
-
-      The deployment concurrency_limit=1 is insufficient — it controls
-      scheduling but does not prevent a second run from executing if it was
-      picked up by the runner before the first run registered as active.
-      The runtime concurrency slot is the correct enforcement point.
-
-      Implementation:
-        from prefect.concurrency.sync import concurrency
-
-        with concurrency("cog-name", occupy=1):
-            # all scanning and processing logic here
-
-      The slot name must match a concurrency limit created in Prefect Cloud
-      (Settings → Concurrency). Limit must be set to 1. The limit must exist
-      before the cog is deployed or the slot acquisition will be silently
-      skipped by Prefect.
-
-      Naming convention: use the cog name as the slot name (e.g.
-      notes-ingest, deejay-cog, evaluator-cog).
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      Search flow.py for 'from prefect.concurrency.sync import concurrency'
-      and a corresponding 'with concurrency(' block wrapping the flow body.
-      Flag if either is absent in a pipeline cog that scans a shared resource.
-      Also flag if the cog has deployment concurrency_limit=1 but no runtime
-      concurrency slot — this is insufficient protection.
 
   - id: PIPE-011
     title: AI evaluation step as final pipeline task
@@ -340,33 +235,6 @@ standards:
       only. Do not flag trigger cogs (cog_subtype: trigger) — they fire flow
       runs but do not run pipelines themselves and have no evaluation step.
       Skip this check for any cog with cog_subtype: trigger.
-
-  - id: PIPE-012
-    title: Retry delay disabled in test context
-    status: convention
-    dimension: pipeline_consistency
-    severity: WARN
-    applies_to: [pipeline-cog, trigger-cog]
-    description: >
-      Prefect @task decorators with retry_delay_seconds= must zero out
-      the delay when running under pytest. Use os.getenv("PYTEST_CURRENT_TEST")
-      as the guard — pytest sets this automatically on every test run.
-      Retries still happen; only the wait between retries is zeroed out.
-      This prevents retry cooldowns from inflating test suite duration.
-      Correct pattern:
-        @task(
-            retries=2,
-            retry_delay_seconds=0 if os.getenv("PYTEST_CURRENT_TEST") else 30,
-        )
-      Never monkeypatch retry settings in tests — fix the decorator.
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      Search src/**/*.py for @task decorators containing retry_delay_seconds=
-      with a hardcoded non-zero numeric value. Flag any that do not guard
-      the value with os.getenv("PYTEST_CURRENT_TEST"). Pass if the value
-      is already zero, sourced from a settings field, or uses the
-      PYTEST_CURRENT_TEST conditional pattern.
 
   - id: PIPE-013
     title: Flow design is idempotent end-to-end
@@ -444,8 +312,9 @@ standards:
       The canonical Drive-event trigger pattern is:
         File appears in watched Drive folder
         → watcher-cog detects the change (1-minute poll via Drive API)
-        → watcher-cog calls Prefect API to create a flow run
-        → Prefect executes the cog flow.
+        → watcher-cog asks api-kaianolevine-com to run the cog
+        → the API enqueues one message onto the cog's queue
+        → the cog's Lambda runs it.
       This rule checks whether a cog's overall trigger architecture
       conforms to the pattern — not just whether it avoids retired
       patterns (PIPE-008). The two checks fail for different reasons
@@ -457,21 +326,167 @@ standards:
       are initiated. Flag if:
         (1) The cog polls for input changes itself (duplicates
             watcher-cog's responsibility).
-        (2) The cog's flow is invoked directly by cron or by a
-            Railway-scheduled command, rather than via Prefect
-            deployment trigger.
+        (2) The cog's work is invoked directly by cron or by a
+            scheduled command, rather than via its queue.
         (3) The cog uses watcher-cog but the WatcherConfig entry
             for its input folder is missing from watcher-cog's
             config — this creates a cog that expects to be triggered
             but has no trigger configured.
-        (4) The cog receives triggers from a source other than
-            watcher-cog or Prefect deployments (e.g. direct HTTP
-            calls from a frontend, webhook from a third party).
+        (4) The cog receives triggers from a source other than its
+            queue, which only the API sends to (e.g. direct HTTP calls
+            from a frontend, a webhook from a third party).
             These may be legitimate patterns for specific cog types
             — flag for review rather than as an automatic violation.
       This is LLM-judged because the "what's your trigger source"
-      question requires tracing from the flow body outward to
-      deployment config, watcher-cog config, and ecosystem.yaml
-      service wiring.
+      question requires tracing from the worker outward to its
+      queue, the API route that enqueues onto it, watcher-cog config,
+      and ecosystem.yaml service wiring.
 
       COG SUBTYPE: Skip for trigger cogs and watcher-cog itself.
+
+  # ─────────────────────────────────────────────
+  # RUNTIME — QUEUE AND LAMBDA
+  # ─────────────────────────────────────────────
+
+  - id: PIPE-016
+    title: Pipeline cogs run on Lambda behind their own queue
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    applies_to: [pipeline-cog]
+    supersedes: >
+      PIPE-001 (Prefect for new pipelines), CD-005 (Prefect Cloud for
+      pipeline observability), CD-015 (Prefect serve() — no work pool) and
+      CD-016 (serve() wrapped in serve_with_retry), all retired 2026-09 per
+      ADR-009. They required a resident Railway container polling Prefect
+      Cloud; the fleet's pipeline cogs now hold no resident process.
+    description: >
+      A pipeline cog is an AWS Lambda function fed by an SQS queue of its
+      own, and its repository owns that infrastructure: `infra/` declares
+      the queue, the function and the event source mapping between them.
+      AWS polls the queue and invokes the function, so nothing of the
+      cog's stays running between jobs.
+
+      One queue per cog, because SQS has no selective receive: on a shared
+      queue each consumer would take, fail to recognise and dead-letter
+      the others' work. The API is the only producer (CD-006), and derives
+      the queue name from the cog's name and its own environment.
+
+      Prefect is not a dependency. A cog that still declares it has not
+      finished moving, whatever else it runs on.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Read `infra/*.tf`. Fail if it does not declare all three of
+          `resource "aws_sqs_queue"`, `resource "aws_lambda_function"`
+          and `resource "aws_lambda_event_source_mapping"`. Name the ones
+          missing; a repo with no `infra/` fails on all three.
+      (2) Fail if `prefect` is declared in pyproject.toml or
+          requirements.txt.
+    origin: >
+      2026-09: evaluator-cog and deejay-cog moved from Prefect on Railway
+      to SQS and Lambda (evaluator-cog docs/serverless-migration.md), and
+      the rules still describing the old runtime graded both as drifted.
+
+  - id: PIPE-017
+    title: A failed job is handed back, retried and dead-lettered
+    status: requirement
+    dimension: pipeline_reliability
+    severity: ERROR
+    applies_to: [pipeline-cog]
+    supersedes: >
+      CD-017 (version-controlled Railway restart policy) for pipeline cogs,
+      which no longer have a process to restart. The queue's redelivery is
+      their retry policy.
+    description: >
+      Nothing is deleted from the queue until its work is done. The event
+      source mapping deletes every record the handler does not name, so
+      the handler reports failures per record — `ReportBatchItemFailures`
+      on the mapping, a `batchItemFailures` list from the handler — rather
+      than raising, which would redeliver a whole batch for one bad record.
+
+      A record that keeps failing must end somewhere a person can see it:
+      the queue has a redrive policy to a dead-letter queue. Without one a
+      poison message retries forever.
+
+      The queue's visibility timeout is longer than the function's
+      timeout. Shorter, and SQS redelivers a job while the first attempt
+      is still running, so the same work runs twice.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) In `infra/*.tf`, fail unless the `aws_lambda_event_source_mapping`
+          sets `function_response_types` including "ReportBatchItemFailures".
+      (2) Fail unless an `aws_sqs_queue` sets a `redrive_policy` naming a
+          `deadLetterTargetArn`.
+      (3) Fail unless the queue's `visibility_timeout_seconds` is derived
+          from the function's timeout (references the same variable) or,
+          when both are literals, exceeds it.
+      (4) Fail if no production source file under src/ returns a
+          `batchItemFailures` value.
+    origin: >
+      evaluator-cog's migration: a stub Lambda that returned success ate
+      five real evaluations, and the delete-on-success rule is what the
+      queue was introduced for.
+
+  - id: PIPE-018
+    title: Pipeline cogs declare their concurrency
+    status: requirement
+    dimension: pipeline_reliability
+    severity: WARN
+    applies_to: [pipeline-cog]
+    supersedes: >
+      PIPE-004 (Prefect concurrency groups for shared resources) and
+      PIPE-009 (named Prefect concurrency slot before scanning a shared
+      resource), retired 2026-09 per ADR-009.
+    description: >
+      How many jobs may run at once is stated in `infra/`, not left to the
+      account's pool. Lambda will otherwise scale a burst out as wide as
+      the account allows, and every one of those workers writes to the
+      same API, the same Drive folders and the same Sheets.
+
+      The ceiling is `scaling_config.maximum_concurrency` on the event
+      source mapping (at least 2 — AWS's floor), or
+      `reserved_concurrent_executions` on the function, which is the only
+      way to get 1. A cog whose job sweeps a shared resource — two
+      concurrent runs would process the same items — needs 1, and says so.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      In `infra/*.tf`, fail unless the `aws_lambda_event_source_mapping`
+      has a `scaling_config` block setting `maximum_concurrency`, or the
+      `aws_lambda_function` sets `reserved_concurrent_executions`.
+    origin: >
+      The Prefect limits these replace were set in code; deejay-cog's sweep
+      needs one run at a time and the mapping cannot go below two.
+
+  - id: PIPE-019
+    title: Trigger cogs start work through the API
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    applies_to: [trigger-cog]
+    supersedes: >
+      PIPE-001's trigger-cog half, which required the Prefect client, and
+      was retired 2026-09 per ADR-009.
+    description: >
+      A trigger cog detects that there is work and asks
+      api-kaianolevine-com to run it; the API enqueues onto the owning
+      cog's queue. It does not create Prefect flow runs, and it does not
+      hold a key that can write to a queue.
+
+      Its triggers are gated to production. A development trigger cog
+      watches the same sources production does, so anything it fires is a
+      second trigger for production's work.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Fail if `prefect` is declared in pyproject.toml or
+          requirements.txt, or production source references
+          `create_flow_run`, `run_deployment` or `get_client(` from Prefect.
+      (2) Fail if production source calls boto3's SQS `send_message`.
+    origin: >
+      watcher-cog's deejay trigger moved to POST /v1/deejay/runs in 2026-09;
+      its transcription triggers remain on Prefect until transcription-cog
+      moves, and this rule is what says so.
+

@@ -20,9 +20,10 @@ For the process of writing or superseding an ADR, see
 | ADR-003 | Accepted  | [Conformance Checker Architecture](ADR-003-conformance-checker-architecture.md) |
 | ADR-004 | Accepted  | [`applies_to` Has a Single Meaning; `evaluator-service` Removed](ADR-004-applies-to-single-meaning.md) |
 | ADR-005 | Accepted  | [Schema Clarity Audit — Document All Rule Fields, Formalize Traits, Specify Dispatch](ADR-005-schema-clarity-audit.md) |
-| ADR-006 | Accepted  | [Startup Registration Resilience for serve()-Based Cogs](ADR-006-serve-startup-resilience.md) |
+| ADR-006 | Superseded | [Startup Registration Resilience for serve()-Based Cogs](ADR-006-serve-startup-resilience.md) |
 | ADR-007 | Accepted  | [External Provider Failure — Reporting and Recovery Contract](ADR-007-external-provider-failure-contract.md) |
 | ADR-008 | Accepted  | [Named Machine Keys as the Machine Identity](ADR-008-named-machine-keys.md) |
+| ADR-009 | Accepted  | [Pipeline Cogs Run on Lambda Behind Their Own Queue](ADR-009-pipeline-cogs-on-lambda.md) |
 
 ---
 
@@ -119,6 +120,13 @@ Authority becomes roles and scopes (`<domain>.<resource>.<action>`),
 with the machine roster declared in code and reconciled at boot. The
 Clerk M2M path was removed outright, with no fallback. Retires CD-012
 and AUTH-001; derives CD-019, AUTH-003, and AUTH-004.
+
+**ADR-009 — Pipeline Cogs Run on Lambda Behind Their Own Queue.**
+Redefines `pipeline-cog` as a Lambda function behind an SQS queue of its
+own and `trigger-cog` as a loop that starts work through the API. Retires
+the eight rules that encoded Prefect on Railway (PIPE-001/004/006/009/012,
+CD-005/015/016) and adds PIPE-016 to PIPE-019. Cogs not yet moved read as
+backlog rather than being exempted. Supersedes ADR-006.
 
 ---
 

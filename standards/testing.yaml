@@ -171,8 +171,10 @@ standards:
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Check CI workflow for pytest --cov or pytest-cov invocation. Flag if coverage
-      is not measured in CI.
+      Check CI workflow for pytest --cov or pytest-cov invocation. A job that
+      calls mini-app-polis/.github's python-test.yml satisfies this unless it
+      passes `pytest-args` without --cov, since that workflow runs pytest with
+      --cov=src by default. Flag if coverage is not measured in CI.
 
   - id: TEST-007
     title: respx/httpx for HTTP mocking — no real external calls

@@ -1,10 +1,13 @@
 ---
 # Playbook: new cog
 
-A cog is an always-on Python worker service deployed on Railway. This
-playbook covers both subtypes:
-- **Pipeline cog** — runs a Prefect @flow to process data (e.g. deejay-cog)
-- **Trigger cog** — detects events and fires Prefect flow runs (e.g. watcher-cog)
+A cog is a Python service. This playbook covers both subtypes:
+- **Pipeline cog** — a Lambda function behind its own SQS queue that
+  processes one job per message (e.g. deejay-cog, evaluator-cog). Nothing
+  runs between jobs. See ADR-009.
+- **Trigger cog** — an always-on worker on Railway that detects events and
+  asks api-kaianolevine-com to run a job (e.g. watcher-cog). The API is the
+  only producer to any queue.
 
 ---
 
@@ -13,10 +16,10 @@ playbook covers both subtypes:
 - Python 3.11+
 - uv installed (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - Access to the mini-app-polis GitHub org
-- Railway account with access to the ecosystem project
-- Prefect Cloud account
+- Doppler access to the cog's project
 - Sentry account (free tier)
-- Healthchecks.io account (free tier)
+- Pipeline cogs: AWS CLI with the `miniapppolis` profile, Terraform
+- Trigger cogs: Railway access to the ecosystem project, Healthchecks.io
 
 ---
 
@@ -145,31 +148,23 @@ Create `CHANGELOG.md` (empty, semantic-release will populate):
 
 ## Step 5 — GitHub Actions
 
-Create `.github/workflows/ci.yml`:
+Copy `.github/workflows/ci.yml` from deejay-cog and change only the
+`deploy` job's inputs. The stages are the same in every cog, in this order:
+
+- **security** — `mini-app-polis/.github/.github/workflows/security.yml@v3`
+- **test** — `mini-app-polis/.github/.github/workflows/python-test.yml@v3`
+  (lock check, ruff, format, pytest with coverage)
+- **release** — semantic-release, recording the tag it cut as a job output
+- **deploy** (pipeline cogs) — `lambda-deploy.yml@v3`, `needs: release`, run
+  only when a tag was cut. It is a job rather than an `on: release`
+  workflow because a release published with `GITHUB_TOKEN` starts no
+  workflows. `handler`, `architecture` and `python-version` must match
+  `infra/worker.tf`.
+- **evaluate** — `evaluate.yml@v3`, `needs: deploy`, so a release is
+  graded only once it is running
+
+The release job, for reference:
 ```yaml
-name: CI
-on:
-  push:
-    branches: [main]
-  pull_request:
-
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v7
-        with:
-          enable-cache: true
-      - run: uv sync --all-extras
-      - run: uv run ruff check src tests
-      - run: uv run ruff format --check src tests
-      - run: uv run pytest --cov={package_name} --cov-report=term-missing
-
   release:
     name: Release
     needs: test
@@ -180,7 +175,7 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -200,6 +195,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
+      - name: Record the release tag
+        id: released
+        run: echo "tag=$(git tag --points-at HEAD --list 'v*' | head -n1)" >> "$GITHUB_OUTPUT"
 ```
 
 ---
@@ -210,20 +208,35 @@ Use the watcher-cog repo as the reference implementation for trigger
 cogs. Use deejay-cog as the reference implementation for pipeline cogs.
 
 All cogs must include:
-- `logger.py` — imports logger from `mini_app_polis.logging`
-- `main.py` — entry point, loads env, initialises Sentry, starts loop
+- Logging through `mini_app_polis.logging` — no `basicConfig` (the Lambda
+  runtime has already configured the root logger, so it would do nothing)
+- Sentry init before any application logic
+- External API calls retried at the call site (PIPE-007): a
+  common-python-utils client, the library's own retry, or tenacity. Queue
+  redelivery is the backstop, not the retry.
+
+Pipeline cogs:
+- `worker.py` — `lambda_handler(event, context)` iterates the SQS records,
+  runs `process_message(body, run_id=record["messageId"])` for each, and
+  returns `{"batchItemFailures": [...]}` naming the records that raised.
+  A malformed message is reported and dropped (never retried). Copy
+  deejay-cog's `worker.py`.
+- `infra/` — copied from deejay-cog: queue and DLQ with a redrive policy,
+  the function, the event source mapping with `ReportBatchItemFailures`
+  and `scaling_config.maximum_concurrency`, a DLQ alarm with an action,
+  and the `tf` wrapper that feeds Doppler secrets in as `TF_VAR_*`.
+  Queue names are `<cog>-jobs` in production and `<cog>-dev-jobs`
+  elsewhere; api-kaianolevine-com derives them the same way.
+- An API dispatch path in api-kaianolevine-com (`services/<cog>_dispatch.py`
+  plus a `POST /v1/<cog>/runs` route) — the queue has no other producer.
+- An ADR recording the move, if the cog existed before.
+
+Trigger cogs:
+- `main.py` — entry point, loads env, initialises Sentry, starts the loop
 - `config.py` — config dataclass, empty config list by default
-- Sentry init at entry point before any application logic
 - Healthchecks.io ping on every work cycle
-
-For pipeline cogs, wrap external API calls in `@task` with retries per PIPE-007. Retry delays must use the `PYTEST_CURRENT_TEST` guard (PIPE-012):
-
-```python
-@task(
-    retries=2,
-    retry_delay_seconds=0 if os.getenv("PYTEST_CURRENT_TEST") else 30,
-)
-```
+- Runs are started with a POST to api-kaianolevine-com through
+  `KaianoApiClient`, never by sending to a queue (PIPE-019)
 
 ---
 
@@ -236,11 +249,19 @@ Create `docs/CONFIGURATION.md` — every environment variable documented.
 
 ## Step 8 — Post-deploy setup
 
-After deploying to Railway, complete the manual setup documented in
-the README "Post-deploy setup" section:
-1. Healthchecks.io — create check, set HEALTHCHECKS_URL in Railway
-2. Prefect Cloud — create automation per deployment for failure alerts
-3. Sentry — create project, set SENTRY_DSN in Railway
+Pipeline cogs:
+1. Sentry — create the project and put `SENTRY_DSN` in Doppler
+2. `cd infra && ./tf init && ./tf plan -out tfplan && ./tf apply tfplan`.
+   Secrets come from Doppler; `terraform.tfvars` holds only non-secret
+   settings. Terraform never creates access keys — mint any by hand with
+   `aws iam create-access-key` and put them straight into Doppler.
+3. Confirm the SNS subscription email for the DLQ alarm
+4. Set the repo variables the deploy job reads (`AWS_DEPLOY_ROLE_ARN`,
+   `AWS_REGION`, `AWS_FUNCTION_NAME`)
+
+Trigger cogs, after deploying to Railway:
+1. Healthchecks.io — create check, set HEALTHCHECKS_URL in Doppler
+2. Sentry — create project, set SENTRY_DSN in Doppler
 
 ---
 

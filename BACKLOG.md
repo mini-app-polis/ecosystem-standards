@@ -165,24 +165,15 @@ Priority: low — functional but will drift further as UI evolves.
 
 ---
 
-## PIPE-009 Remediation
+## Pipeline concurrency (PIPE-018)
 
-PIPE-009 requires pipeline cogs to acquire a named Prefect concurrency slot
-before scanning shared resources. transcription-cog (which absorbed the
-former notes-ingest-cog as its `wcs-transcripts` mode in May 2026) is
-compliant as of 2026-04. The following cogs need remediation:
+PIPE-009's Prefect concurrency slot is retired (ADR-009); PIPE-018 asks for
+the ceiling in `infra/` instead.
 
-- [ ] **deejay-cog** — add `with concurrency("deejay-cog", occupy=1)` wrapping
-  the flow body. Create `deejay-cog` concurrency limit in Prefect Cloud
-  (limit: 1). Verified still open as of 2026-08-19 (no `concurrency(` call
-  anywhere in `src/`). Note there is no `flow.py` in this repo — the flow
-  bodies live in `process_new_files.py` and `ingest_live_history.py`, and
-  the router in `main.py`; wrap the two dispatched flows, not the router,
-  or the slot is held for the lifetime of the dispatch.
-- [ ] **evaluator-cog** — add `with concurrency("evaluator-cog", occupy=1)`
-  wrapping the flow body in `flow.py`. Create `evaluator-cog` concurrency limit
-  in Prefect Cloud (limit: 1).
-
+- [ ] **deejay-cog** — `reserved_concurrent_executions = 1` once the account's
+  Lambda concurrency quota increase (requested 2026-09-21) is approved; until
+  then `maximum_concurrency = 2` satisfies the rule but allows two sweeps.
+- [x] **evaluator-cog** — `maximum_concurrency = 4` on the mapping.
 ---
 
 ## Candidate standards — additions considered during 2026-04 audit

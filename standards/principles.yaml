@@ -78,7 +78,8 @@ standards:
     check_notes: >
       LLM CHECK.
       Check for Sentry integration, structured logging via common-python-utils
-      or common-typescript-utils, and Prefect run history (for pipelines). Flag any
+      or common-typescript-utils, and run history (for pipelines: a run report
+      per run under a run id, and a report for every run that raised). Flag any
       production service missing any of these three.
 
   - id: PRIN-006

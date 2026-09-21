@@ -301,12 +301,16 @@ schema:
   # taxonomy grows.
   repo_types:
     pipeline-cog: >
-      Always-on Railway worker running one or more Prefect @flow(s).
-      Processes data. Examples: deejay-cog, evaluator-cog, transcription-cog.
+      Queue-driven worker: an AWS Lambda function behind an SQS queue of
+      its own, both declared in the repo's `infra/`. Processes data and
+      holds no resident process between jobs. Examples: deejay-cog,
+      evaluator-cog. (transcription-cog and wiki-curator-cog are this type
+      and have not finished moving; their findings are the backlog —
+      ADR-009.)
     trigger-cog: >
-      Always-on Railway worker running a plain asyncio loop. Detects
-      events and fires Prefect flow runs via API. No @flow decorator.
-      Examples: watcher-cog.
+      Always-on worker running a plain asyncio loop. Detects events and
+      asks api-kaianolevine-com to run the owning cog, which enqueues onto
+      that cog's queue. Examples: watcher-cog.
     api-service: >
       HTTP API service with routes, auth, and a database. FastAPI (Python)
       or Hono (TypeScript). Examples: api-kaianolevine-com, deejaytools-com-api.
@@ -376,18 +380,6 @@ schema:
         push to main). No ci.yml required — Cloudflare Pages is the
         CI/CD pipeline.
       exempts: [VER-003, VER-005, VER-006]
-
-    multi-flow:
-      description: >
-        Runs multiple Prefect flows registered via separate entry
-        points. The CD-015 source scanner may not resolve
-        prefect.serve() in this configuration.
-      downgrades:
-        - rule: CD-015
-          to: INFO
-          reason: >
-            Source scanner false-positive. The multi-flow pattern is
-            correct; the scanner's resolution is incomplete.
 
     pipeline-cog-evaluator:
       description: >

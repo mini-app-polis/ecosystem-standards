@@ -258,7 +258,7 @@ standards:
     status: gap
     dimension: operational_readiness
     severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog]
+    applies_to: [trigger-cog]
     description: >
       A worker that holds long-running work registers a SIGTERM handler
       that stops accepting new work, finishes or releases what it holds,
@@ -271,9 +271,13 @@ standards:
 
       This is `status: gap` deliberately, and the gap is in the shared
       library rather than in the consuming repos. The rule should require
-      the shared drain helper the way CD-016 requires `serve_with_retry`
-      — one implementation the fleet inherits, rather than four hand-rolled
-      handlers that drift. That helper does not exist yet, so no repo can
+      a shared drain helper — one implementation the fleet inherits,
+      rather than hand-rolled handlers that drift.
+
+      Pipeline cogs are out of scope. On Lambda a job interrupted
+      mid-run is not lost: its message returns to the queue when the
+      visibility timeout expires, which PIPE-017 requires be longer than
+      the function timeout. That helper does not exist yet, so no repo can
       satisfy this rule by any correct means, and stating that plainly is
       better than a requirement nothing can meet or a weaker rule that
       accepts four divergent implementations.
