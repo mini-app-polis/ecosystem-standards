@@ -1233,10 +1233,19 @@ standards:
     severity: WARN
     applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app, shared-library, standards-repo, shared-workflows]
     description: >
-      A repo's ci.yml names its jobs `security`, `test`, `release` and
-      `evaluate`. The work job is `test` whatever it happens to run — a
-      build, a typecheck, a lint, a schema validation. The name records the
-      job's place in the pipeline, not its contents.
+      A repo's ci.yml names its jobs `security`, `test`, `release`,
+      `deploy` and `evaluate`. The work job is `test` whatever it happens to
+      run — a build, a typecheck, a lint, a schema validation. The name
+      records the job's place in the pipeline, not its contents.
+
+      `deploy` ships what `release` just versioned, for a repo whose release
+      is a running service — a Lambda cog calling the shared
+      `lambda-deploy.yml` in mini-app-polis/.github. It is a stage, not part
+      of `release`: it needs cloud credentials the release job should not
+      hold, and a stage that must run on the new code (a fleet sweep) says
+      so with `needs: deploy`. It is a job rather than a workflow triggered
+      `on: release`, because semantic-release publishes with GITHUB_TOKEN
+      and GitHub starts no workflows from that token's events.
 
       `evaluate` is the conformance request a repo makes on its own
       release, calling the shared workflow in mini-app-polis/.github. It is
@@ -1244,9 +1253,10 @@ standards:
       asks about the repository rather than about the change, and nothing
       waits for its answer.
 
-      Not every repo needs all three: a repo with no release path has no
-      `release` job. The rule is that a job present is named canonically,
-      not that every job is present.
+      Not every repo needs every stage: a repo with no release path has no
+      `release` job, and a repo that deploys through its host (Railway,
+      Cloudflare Pages) has no `deploy` job. The rule is that a job present
+      is named canonically, not that every job is present.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -1256,10 +1266,12 @@ standards:
           own reasons.
       (3) Collect the top-level keys under `jobs:`.
       (4) Flag any job name outside the set {security, test, release,
-          evaluate}, naming the offending job.
+          deploy, evaluate}, naming the offending job.
       Only `.github/workflows/ci.yml` is in scope. Scheduled and
       dispatch-triggered workflows are not pipelines and are not checked.
     origin: >
       Five names for the same job across thirteen repos in 2026-09 —
       `test`, `build`, `ci`, `verify`, `validate` — which made cross-repo
       checks reason about job identity by position rather than by name.
+      `deploy` joined in 2026-09, when evaluator-cog and deejay-cog moved to
+      Lambda: both had the job, and the check flagged both on every release.
