@@ -21,7 +21,7 @@ jobs:
   # sbom: false and no gitleaks pre-commit hook — SEC-005 and SEC-001 do
   # not list standards-repo in their applies_to.
   security:
-    uses: mini-app-polis/.github/.github/workflows/security.yml@v2
+    uses: mini-app-polis/.github/.github/workflows/security.yml@v3
     with:
       language: typescript
       package-manager: npm
