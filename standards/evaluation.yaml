@@ -72,7 +72,7 @@ standards:
       (source in {conformance_llm, conformance_deterministic,
       standards_drift, data_quality}):
         (1) Every finding_text must contain at least one rule ID
-            matching the pattern [A-Z]+-\d+ (e.g. API-001, CD-005,
+            matching the pattern [A-Z]+-\d+ (e.g. API-001, CD-006,
             PIPE-013). Flag any finding whose text does not reference
             a rule ID.
         (2) finding_text length must be > 60 characters. Findings

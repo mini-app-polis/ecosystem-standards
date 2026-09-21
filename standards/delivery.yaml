@@ -60,7 +60,7 @@ standards:
       Flags are NOT used for:
         - Fine-grained A/B testing or percentage rollouts
         - Per-user targeting
-        - Replacing Prefect flow configuration
+        - Replacing per-cog configuration (environment, Terraform variables)
         - Gating minor implementation details
 
       Clients check flags at runtime (not build time) via a short-TTL
@@ -121,7 +121,7 @@ standards:
         infra:    service lifecycle, triggers fired/not fired, heartbeats,
                   Drive poll results
         pipeline: file processed/skipped/failed, pipeline completed/failed,
-                  Prefect flow run created
+                  job enqueued / job received
         data:     data quality issues, schema violations, evaluation findings,
                   duplicate detection
         api:      HTTP errors (4xx/5xx), slow responses (>2s), external
@@ -181,37 +181,6 @@ standards:
 
 # VER-001..VER-006 moved to standards/versioning.yaml.
 
-  - id: CD-005
-
-
-    title: Prefect Cloud for pipeline observability
-    status: requirement
-    dimension: cd_readiness
-    severity: WARN
-    applies_to: [pipeline-cog, trigger-cog]
-    description: >
-      All pipeline flows connect to Prefect Cloud (free tier). Run
-      history, step logs, and flow state are visible at app.prefect.cloud.
-      GitHub Actions logs are for deep debugging only — not the primary
-      observability surface.
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      Verify Prefect is the orchestration layer:
-        (1) `prefect` appears in pyproject.toml [project.dependencies].
-            Flag if absent on a pipeline-cog or trigger-cog repo.
-        (2) `PREFECT_API_URL` and `PREFECT_API_KEY` referenced in at
-            least one of: .env.example, docs/**/*.md, or src/**/*.py
-            (via os.environ, os.getenv, or settings class).
-            Flag if neither referenced — repo is using Prefect but not
-            pointing at Cloud.
-        (3) Flag presence of competing orchestrators as violations:
-              - `celery`, `dramatiq`, `rq` as dependencies.
-              - `APScheduler` used as the primary scheduler (OK if used
-                as a local dev fallback).
-              - `schedule:` cron blocks in .github/workflows/*.yml that
-                invoke application code directly (vs. CI/CD tasks).
-
   - id: CD-006
 
 
@@ -223,9 +192,11 @@ standards:
     description: >
       GitHub Actions handles lint, tests, deploys, and semantic-release.
       It does not trigger pipeline flows. Drive-event triggers go through
-      watcher-cog. Scheduled and manual triggers go through Prefect
-      deployments. `repository_dispatch` as a trigger relay for cogs is
-      a retired pattern.
+      watcher-cog, which asks api-kaianolevine-com to enqueue the work
+      onto the cog's queue; the API is the only producer. A release job's
+      conformance request through the shared evaluate.yml is the one
+      sanctioned call from a workflow. `repository_dispatch` as a trigger
+      relay for cogs is a retired pattern.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -233,7 +204,7 @@ standards:
         (1) Flag any workflow with `on: repository_dispatch:` as a trigger.
             Exception: if the repository_dispatch workflow only performs
             CI/CD tasks (tests, build, deploy) and does not invoke
-            application code or Prefect APIs, it is allowed. Read the
+            application code or start pipeline work, it is allowed. Read the
             workflow body to distinguish.
         (2) Flag any scheduled workflow (`on: schedule: - cron:`) whose
             job body contains HTTP calls to Prefect Cloud API
@@ -244,9 +215,10 @@ standards:
             Allowed scheduled workflows: drift-check, dependency update
             (dependabot, renovate), nightly test runs.
         (3) Flag any workflow that POSTs to an internal API endpoint
-            that triggers a flow (e.g. /v1/trigger, /v1/runs) —
-            scheduled or manual triggers must go through Prefect
-            deployments, not via an API relay.
+            that starts pipeline work (e.g. /v1/trigger, /v1/<cog>/runs) —
+            that belongs to watcher-cog, not to a workflow acting as a
+            relay. The shared evaluate.yml's conformance request is the
+            exception.
 
   - id: CD-007
 
@@ -255,22 +227,22 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [pipeline-cog, trigger-cog]
+    applies_to: [trigger-cog]
     description: >
       Trigger cogs — services running their own continuous polling loop without
       external orchestration visibility — integrate Healthchecks.io as a dead
-      man's switch. If a trigger cog silently dies, no flow runs are triggered
-      and the failure is invisible to Prefect Cloud.
+      man's switch. If a trigger cog silently dies, no work is triggered and
+      nothing else in the system notices.
       The service pings HEALTHCHECKS_URL on every poll cycle. If the ping goes
       silent beyond the grace period, Healthchecks.io sends an email alert.
       Recommended settings: period 1 minute, grace 5 minutes.
       HEALTHCHECKS_URL is set as an environment variable — never hardcoded.
       Free tier is sufficient.
-      Pipeline cogs using prefect.serve() are exempt — Prefect Cloud provides
-      run-level liveness monitoring and Railway provides process-level restart.
+      Pipeline cogs are out of scope: they run on Lambda and hold no process
+      between jobs, so there is nothing to ping. Their liveness signal is the
+      dead-letter-queue alarm (CD-010, Layer 1).
       The test: if a silent crash would cause work to stop being triggered with
-      no external visibility, Healthchecks is required. If Prefect would surface
-      the failure anyway, it is not.
+      no external visibility, Healthchecks is required.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -339,7 +311,7 @@ standards:
         infra:    service lifecycle, triggers fired/not fired, heartbeats,
                   Drive poll results
         pipeline: file processed/skipped/failed, pipeline completed/failed,
-                  Prefect flow run created
+                  job enqueued / job received
         data:     data quality issues, schema violations, evaluation findings,
                   duplicate detection
         api:      HTTP errors (4xx/5xx), slow responses (>2s), external
@@ -367,7 +339,12 @@ standards:
     description: >
       Every production service implements all three observability layers:
         Layer 1 — Liveness:    Healthchecks.io for always-on workers.
-                               Railway auto-restart for all services.
+                               Railway auto-restart for Railway services.
+                               For queue-driven pipeline cogs, an alarm
+                               on the dead-letter queue with an action —
+                               there is no process to be alive between
+                               jobs, and a job that fails every retry is
+                               the event that must reach a person.
         Layer 2 — Structured logs: common-python-utils or common-typescript-utils
                                logger emitting JSON events with standard shape.
                                Queryable in Railway log viewer or Better Stack.
@@ -378,14 +355,18 @@ standards:
         Layer 2 catches: business logic errors, skipped work, slow operations
         Layer 3 catches: unhandled exceptions and crashes
       A service missing any layer has a blind spot in production.
-      Pipelines additionally require Prefect run history as a fourth layer
-      covering orchestration-level observability.
+      Pipelines additionally report every run — and every run that
+      raised — to the notification channel under a run id, which is their
+      run history.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
       For each production service, verify all three layers are present.
       Layer 1: HEALTHCHECKS_URL in .env.example + ping call in main loop
-               (worker services only — HTTP services rely on Railway restart).
+               (trigger cogs — HTTP services rely on Railway restart).
+               Pipeline cogs: an aws_cloudwatch_metric_alarm on the
+               dead-letter queue with non-empty alarm_actions, in
+               infra/*.tf.
       Layer 2: shared library logger imported and used throughout.
       Layer 3: Sentry initialised at entry point, SENTRY_DSN in .env.example.
       Flag any service missing any layer.
@@ -417,6 +398,11 @@ standards:
                         the Doppler → Railway native sync
         GitHub Actions: CI secrets synced via Doppler → GitHub integration
         Cloudflare Pages: secrets synced via Doppler CLI in CI/CD
+        AWS Lambda:     not a sync. Each cog's infra/tf wrapper reads
+                        Doppler at plan/apply time and passes the values
+                        as TF_VAR_*; Terraform sets them on the function.
+                        A rotated secret reaches the function on the next
+                        apply, not automatically.
 
       Secret management workflow:
         - All secret changes are made in Doppler only
@@ -431,12 +417,10 @@ standards:
         One Doppler project per service or cog.
         Environments: development, staging, production (minimum).
 
-      The only known carve-out is Prefect Cloud. Prefect uses its own
-      encrypted Blocks for flow-level secrets. Prefect Blocks are managed
-      directly in Prefect Cloud and are not synced from Doppler. When a
-      secret used in a Prefect Block is rotated, Prefect must be updated
-      manually. This is a known limitation — document it per-secret in
-      Doppler's description field.
+      The Lambda path is the one place a rotation is not pushed: after
+      rotating a secret a Lambda consumes, run the cog's infra/tf apply.
+      Secrets never live in terraform.tfvars, and Terraform never creates
+      access keys — those are minted by hand and stored in Doppler.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -468,130 +452,6 @@ standards:
       referenced (netlify.toml, vercel.json, .github/workflows with gh-pages).
       If no deployment target is detectable, flag as unverified.
 
-  - id: CD-015
-
-
-    title: Prefect serve() — no work pool
-    status: requirement
-    dimension: structural_conformance
-    severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog]
-    description: >
-      Cogs register flows using prefect.serve() running in-process on Railway.
-      The Prefect work pool architecture is not used — it requires an external
-      agent process and adds infrastructure complexity with no benefit at this
-      scale. prefect.serve() runs the flow directly in the cog's Railway
-      process with full access to environment variables and the filesystem.
-      Any cog using flow.deploy() targeting a work pool, or referencing a
-      work pool name in its Prefect configuration, is violating this pattern.
-
-      Registration may go through the shared wrapper
-      mini_app_polis.serve_resilience.serve_with_retry() instead of calling
-      prefect.serve() directly — the wrapper calls prefect.serve() and is
-      the same pattern, not a deviation. CD-016 requires it. A cog that
-      adopts the wrapper has no bare serve( token left in its source, so
-      the check below must recognize serve_with_retry( or it will report a
-      compliant cog as having no registration mechanism at all.
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      Search Python source files for flow.deploy() calls or work_pool_name
-      references. Search prefect.yaml if present for work pool configuration.
-      Flag any found. Confirm one of the following is used as the flow
-      registration mechanism in the cog's main entry point:
-        (a) prefect.serve(...) or flow.serve(...)
-        (b) a bare serve(...) call where `serve` is imported from prefect
-        (c) serve_with_retry(...) imported from mini_app_polis.serve_resilience
-      Flag if none of (a)/(b)/(c) and no deploy() is found — the registration
-      pattern is missing entirely. Do not flag (c): it wraps prefect.serve()
-      and satisfies this rule.
-
-  - id: CD-016
-
-
-    title: serve() startup registration wrapped in serve_with_retry
-    status: requirement
-    dimension: cd_readiness
-    severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog]
-    description: >
-      Cogs register their deployments via
-      mini_app_polis.serve_resilience.serve_with_retry() rather than calling
-      prefect.serve() directly.
-
-      prefect.serve() makes a blocking, fail-fast HTTP call to Prefect Cloud
-      (read_deployment_by_name) before its runner loop begins. Unguarded,
-      a transient upstream error on that single call propagates out of main()
-      and the process exits at boot. Because every cog shares the same
-      serve()-in-main() scaffolding (CD-015), this is one single point of
-      failure shared across the whole fleet, not a per-cog risk.
-
-      serve_with_retry() retries transient failures (any HTTP 5xx, plus 408
-      and 429, plus network-level httpx transport errors) with bounded
-      exponential backoff up to a wall-clock ceiling, fails fast on the rest
-      of 4xx (401/403/404), and on give-up posts one source="startup"
-      CRITICAL finding before re-raising so the process still exits non-zero.
-
-      The 5xx classification is a range rather than an allowlist because
-      Prefect Cloud is Cloudflare-fronted: its edge emits 520-529 (522, 524)
-      when an origin is degraded, which is the most common client-side
-      presentation of a Prefect Cloud incident.
-
-      This is layer 1 of two. CD-017 is layer 2 (Railway restart policy).
-      They are independent — retry rides out the blip in-process, restart
-      recovers when retries are exhausted or when the failure is something
-      retries cannot fix. Implement both.
-
-      The helper is shared library code, not per-cog code. A cog that
-      hand-rolls its own retry around serve() violates this rule: the point
-      is that one fix covers the fleet, and four copies drift.
-
-      SCOPE LIMIT: this rule checks the cog's *source* — that main.py
-      imports and calls serve_with_retry. It does not and cannot check
-      that the common-python-utils version the repo actually resolves to
-      contains serve_with_retry. A repo whose uv.lock pins a git SHA
-      predating the helper passes this check and still dies at import on
-      deploy (deejay-cog, 2026-08-19). Keeping the locked dependency
-      current is per-repo release hygiene, not a catalog rule; the
-      practical guard is to relock as part of the change that needs the
-      new code, and to have one test that imports the entry-point module
-      so CI fails instead of the container. See the scope warning on the
-      lockfile-integrity candidate in BACKLOG.md — `uv lock --check`
-      does not cover this either.
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      (0) APPLICABILITY GATE. Scan the repo's Python source for any of
-          prefect.serve( / flow.serve( / a bare serve( where `serve` is
-          imported from prefect / serve_with_retry( . If none is present,
-          this repo has no serve() entry point and the rule does not
-          apply — skip it and emit no finding. This gate exists because
-          trigger-cog is in applies_to for the cogs that do serve, but a
-          trigger-cog that runs a plain asyncio loop with no @flow has
-          nothing to register; flagging it would be a false ERROR on a
-          correct repo.
-      (1) Resolve the main entry point from railway.json deploy.startCommand
-          (CD-017 makes that field mandatory, so it is normally present);
-          fall back to src/<pkg>/main.py when railway.json is absent or has
-          no startCommand. In that module, confirm an import of
-          serve_with_retry from mini_app_polis.serve_resilience and a call
-          to serve_with_retry(...). Flag if the module calls prefect.serve()
-          / flow.serve() / a bare serve( directly instead.
-      (2) Confirm the serve_with_retry(...) call passes a `repo=` keyword.
-          The shared helper cannot infer the cog identity and the emitted
-          finding is unattributable without it. Flag a call with no repo=.
-      (3) Confirm common-python-utils is declared as a dependency in
-          pyproject.toml. Flag if absent — the import cannot resolve.
-      Shared-library and standards repos are already out of scope by type.
-    origin: >
-      2026-07-22: a transient Prefect Cloud 503 on the deployment-registration
-      endpoint crashed all four serve()-based cogs simultaneously. Each cog's
-      only except clause was KeyboardInterrupt, so the 503 propagated out of
-      main() and every process exited non-zero. None auto-restarted (CD-017)
-      and no finding was posted — the flows' on_crashed hooks attach to flow
-      runs, and this crash happened before any flow run existed. The fleet was
-      down silently. See deejay-cog ADR-005 and ecosystem-standards ADR-006.
-
   - id: CD-017
 
 
@@ -599,7 +459,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog, api-service]
+    applies_to: [trigger-cog, api-service]
     description: >
       Every Railway-hosted service declares its restart policy in a
       version-controlled railway.json at the repo root, with
@@ -617,11 +477,13 @@ standards:
       deliberate shutdown and should not be fought. Only non-zero exits —
       crashes — are restarted.
 
-      This is layer 2 of two. CD-016 is layer 1 (in-process retry). The
-      layers multiply: total unattended outage coverage is roughly the
-      layer-1 wall-clock ceiling times restartPolicyMaxRetries. A low
-      max-retries value silently caps that coverage, which is why the
-      floor is 10 rather than "any value".
+      The floor is 10 rather than "any value" because the retry count caps
+      how long an outage the service rides out unattended; a low value
+      caps it silently.
+
+      Pipeline cogs are out of scope: they run on Lambda, have no process
+      to restart, and a failed job is retried by its queue instead — see
+      PIPE-017.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -691,13 +553,14 @@ standards:
       Two limits on Layer 3 that make the explicit capture load-bearing
       for cogs specifically, rather than a nicety:
 
-        - Prefect catches exceptions raised inside a @flow in order to
-          mark the run Failed or Crashed. They do not propagate to
-          sys.excepthook, so Sentry's Excepthook integration does not
-          fire for flow-body code — which is most cog code. The
-          on_failure / on_crashed hooks (PIPE, mini_app_polis.
-          pipeline_status.make_failure_hook) cover the Pipeline Health
-          leg for that case, not the Sentry leg.
+        - A queue worker catches the exception raised for each record
+          so it can report that record in batchItemFailures (PIPE-017)
+          and let the rest of the batch succeed. The exception never
+          reaches sys.excepthook or the Lambda runtime, so neither
+          Sentry's Excepthook integration nor its AWS Lambda
+          integration sees it — and that covers nearly all cog code.
+          The run report covers the notification leg for that case,
+          not the Sentry leg.
         - Failures at module import time happen before
           sentry_sdk.init() runs, whatever "initialise at the entry
           point" is taken to mean, and are structurally invisible to
@@ -722,7 +585,7 @@ standards:
 
       Startup-lifecycle failures satisfy the Report leg via
       source="startup" rather than source="external_dependency" — see
-      CD-016 and ADR-006. Do not emit both for one event.
+      ADR-006. Do not emit both for one event.
     checkable: true
     check_notes: >
       LLM CHECK.
@@ -1182,15 +1045,23 @@ standards:
       A `convention` because the correct limit for most of these services
       is not yet known, and a requirement to declare a number nobody has
       measured produces confident fiction.
+
+      A pipeline cog's platform descriptor is its `infra/` Terraform, and
+      its ceiling is the Lambda function's `memory_size` and `timeout`.
+      Lambda allocates CPU in proportion to memory, so there is no
+      separate CPU ceiling to declare; a stated memory size and timeout
+      are the whole of the footprint.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      (1) Read `railway.json` or `railway.toml` at the repo root. Absent
-          → fail.
-      (2) Fail if memory and CPU limit keys are absent or null.
-      Accept either the platform's native limit keys or a documented
-      equivalent — the check is that a ceiling is stated, not which
-      spelling states it.
+      Pipeline cogs: (1) read `infra/*.tf`; fail if no
+      `aws_lambda_function` resource is declared there. (2) Fail if that
+      resource does not set both `memory_size` and `timeout`.
+      Other types: (1) read `railway.json` or `railway.toml` at the repo
+      root. Absent → fail. (2) Fail if memory and CPU limit keys are
+      absent or null. Accept either the platform's native limit keys or a
+      documented equivalent — the check is that a ceiling is stated, not
+      which spelling states it.
 
 
   - id: CD-025

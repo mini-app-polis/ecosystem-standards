@@ -7,10 +7,11 @@ definitions_of_done:
   new_cog:
     label: New Python Cog
     note: >
-      Two cog subtypes exist. Pipeline cogs (e.g. deejay-cog) run Prefect
-      flows and process data. Trigger cogs (e.g. watcher-cog) detect events
-      and fire Prefect flow runs. Some checklist items apply only to one
-      subtype — see inline notes.
+      Two cog subtypes exist. Pipeline cogs (e.g. deejay-cog) are Lambda
+      functions behind their own SQS queue and process data. Trigger cogs
+      (e.g. watcher-cog) detect events and ask api-kaianolevine-com to run
+      a job, which enqueues it (ADR-009). Some checklist items apply only
+      to one subtype — see inline notes.
     checklist:
       - Bootstrapped following playbooks/new-cog.md in this repo
       - uv for dependency management, ruff for linting
@@ -33,12 +34,15 @@ definitions_of_done:
       - Pydantic models used for all external data validation unless external
         data is consumed exclusively via common-python-utils wrappers which
         handle validation internally (e.g. Drive API via DriveFacade)
-      - "If cog runs a pipeline: main entry point wrapped in @flow decorator
-        and connected to Prefect Cloud"
-      - "@task decorators with retry_delay_seconds= use PYTEST_CURRENT_TEST
-        guard to zero out delay in test context"
-      - "If cog is a trigger service (e.g. watcher-cog): connects to Prefect
-        Cloud via API to create flow runs — no @flow decorator required"
+      - "If pipeline cog: worker.lambda_handler consumes SQS records and
+        returns batchItemFailures; infra/ declares the queue, DLQ, function
+        and event source mapping (PIPE-016, PIPE-017)"
+      - "If pipeline cog: deployed by the shared lambda-deploy workflow as a
+        job after release; secrets reach the function through infra/tf, never
+        terraform.tfvars"
+      - "If trigger cog (e.g. watcher-cog): starts runs by POSTing to
+        api-kaianolevine-com — no queue or Prefect client of its own (PIPE-019)"
+      - External API calls retried at the call site (PIPE-007)
       - "Sentry integration configured — sentry_sdk.init() at entry point, SENTRY_DSN in .env.example"
       - Structured logging via common-python-utils logger — not inline logging configuration
 
@@ -67,15 +71,14 @@ definitions_of_done:
   new_pipeline:
     label: New Pipeline
     checklist:
-      - Main entry point wrapped in @flow decorator
-      - Connected to Prefect Cloud — flows visible in dashboard
-      - External API calls wrapped in @task with retry logic
-      - "Dual logger pattern: get_run_logger() with fallback to standard logger"
+      - Reachable from the cog's queue — a mode in the message schema and an
+        API dispatch path that enqueues it
+      - External API calls retried at the call site (PIPE-007)
+      - Run report delivered under the run id (the SQS messageId)
       - Log events use standard shape — category, event, context fields present on all INFO and above
       - Idempotent steps — safe to re-run
       - AI evaluation step included as final task
-      - Concurrency group declared
-      - GitHub Actions workflow updated with PREFECT_API_KEY and PREFECT_API_URL
+      - Concurrency bounded on the event source mapping or the function (PIPE-018)
       - Pipeline flow documented in docs/PIPELINE.md
       - Deprecation plan documented if workflow is temporary
 

@@ -1,7 +1,8 @@
 # ADR-006: Startup registration resilience for serve()-based cogs
 
 **Date:** 2026-08-19
-**Status:** Accepted
+**Status:** Superseded
+**Superseded by:** ADR-009 — pipeline cogs run on Lambda and register nothing at startup
 **Repo:** ecosystem-standards
 **Depends on:** ADR-003 (conformance checker architecture)
 
