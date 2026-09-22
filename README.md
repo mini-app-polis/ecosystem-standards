@@ -85,7 +85,6 @@ ecosystem-standards/
 │   ├── versioning.yaml             ← VER — Conventional Commits, semantic-release
 │   ├── meta.yaml                   ← META — rules governing this repo itself
 │   ├── evaluation.yaml             ← EVAL — how AI evaluation is performed
-│   ├── monorepo.yaml               ← MONO — pnpm workspace rules
 │   └── cross-stack.yaml            ← XSTACK — Python/TypeScript parity rules
 ├── scripts/                        ← catalog tooling (PyYAML only; stdlib otherwise)
 │   ├── catalog_sources.py          ← shared loading, so validator and compiler agree
@@ -157,7 +156,6 @@ Evaluation dimensions map directly to the `pipeline_evaluations` table. Every ru
 | `cd_readiness` | Safe to deploy continuously — Sentry, structured logging, semantic-release, feature flags. |
 | `cross_repo_coherence` | Similar concepts look similar across repos — naming, response shapes, shared library usage. |
 | `standards_currency` | Evaluated against current standards version — version resolution, staleness, evaluator/standards drift. |
-| `monorepo_coherence` | pnpm monorepo workspaces satisfy per-app and root-level rules — workspace_deps, scoping, dedup. |
 
 Canonical definitions live in `index.yaml` `dimensions:` — edit there, not here.
 

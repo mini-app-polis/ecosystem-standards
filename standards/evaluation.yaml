@@ -313,11 +313,10 @@ standards:
   #                            the evaluator's own output or on the
   #                            ecosystem inventory. Current consumers:
   #                            EVAL-003 (finding specificity / actionability
-  #                            against stored pipeline_evaluations rows)
-  #                            and MONO-003 (monorepo dedup integrity of
-  #                            ecosystem.yaml). These checks do not target
-  #                            a specific repo's source tree; they target
-  #                            the ecosystem's recorded state.
+  #                            against stored pipeline_evaluations rows).
+  #                            These checks do not target a specific
+  #                            repo's source tree; they target the
+  #                            ecosystem's recorded state.
   #
   # Rule: the `source` value is authoritative at the point of emission.
   # Downstream code (including the evaluator-cog API client) must not

@@ -75,9 +75,8 @@ _RULE_FIELDS: tuple[str, ...] = (
 #:
 #: ``rule_fields`` is authoring metadata — the validator reads it straight
 #: from ``index.yaml`` and no consumer needs it at evaluation time.
-#: ``service_fields``, ``monorepo_fields`` and ``ecosystem_sections``
-#: describe the shape of ``ecosystem.yaml``, which is being removed; a
-#: repo's own ``evaluator.yaml`` is becoming the only source of its
+#: ``service_fields`` describes the shape of ``ecosystem.yaml``, which is
+#: being removed; a repo's own ``evaluator.yaml`` is becoming the only source of its
 #: context, and this repo is to carry no repo or org knowledge at all.
 _SCHEMA_BLOCKS: tuple[str, ...] = (
     "repo_types",

@@ -168,7 +168,6 @@ ecosystem-standards/
 │   ├── versioning.yaml             ← VER
 │   ├── meta.yaml                   ← META (rules for this repo)
 │   ├── evaluation.yaml             ← EVAL
-│   ├── monorepo.yaml               ← MONO
 │   └── cross-stack.yaml            ← XSTACK
 ├── docs/
 │   └── decisions/                  ← ADRs (ADR-NNN-slug.md)

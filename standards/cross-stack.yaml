@@ -45,22 +45,11 @@ standards:
           appears in package.json `dependencies` or `devDependencies`.
           Flag if absent.
       STATIC-SITE EXCEPTION: Do not flag static-site repos — they
-        contain no server-side logic and cannot install
-        monorepo-internal packages.
-      MONOREPO EXCEPTION: For services with a `monorepo` field in
-        ecosystem.yaml, check the workspace root `package.json`
-        `workspace_deps` list before flagging per-app absence. If
-        the shared library is declared at the workspace level, the
-        check passes for all apps in that monorepo.
+        contain no server-side logic.
       SELF-EXEMPTION: The shared library itself
         (common-python-utils, common-typescript-utils) is not
         required to depend on itself. Skip this check for repos with
         trait `logger-primitive`.
-      Additionally: for monorepo apps, file-presence checks (README.md,
-      CHANGELOG.md, .releaserc.json, .env.example, ci.yml) should check
-      BOTH the app subdirectory (monorepo_path) AND the monorepo root before
-      flagging absence. These files commonly live at the workspace root and
-      apply to all apps in the monorepo. Flag only if absent from both locations.
 
   - id: XSTACK-005
     title: Shared helpers are not reimplemented
@@ -161,19 +150,17 @@ standards:
     severity: ERROR
     applies_to: [api-service, react-app]
     description: >
-      All TypeScript projects — monorepos and standalone services — use pnpm
+      All TypeScript projects use pnpm
       as the package manager. Not npm, not yarn. pnpm-lock.yaml is the
       lockfile. package-lock.json and yarn.lock must not be present. This is
-      the TypeScript equivalent of PY-001 (uv for Python). pnpm workspaces
-      are used for monorepo package management (deejaytools-com).
+      the TypeScript equivalent of PY-001 (uv for Python).
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
       Check for pnpm-lock.yaml in the repo root. Flag if package-lock.json
       or yarn.lock is present instead. Require that ci.yml contains either
       pnpm/action-setup or corepack enable. Flag if neither is present. Flag if npm
-      install or yarn install appears in CI steps. For monorepos, check
-      pnpm-workspace.yaml exists.
+      install or yarn install appears in CI steps.
 
   - id: XSTACK-004
     title: Env var naming conventions by runtime

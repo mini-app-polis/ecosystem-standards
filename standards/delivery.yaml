@@ -495,8 +495,6 @@ standards:
       (4) Confirm deploy.startCommand is present and non-empty. Flag if
           absent — a railway.json that omits it leaves the effective start
           command dashboard-owned, which defeats the purpose of the file.
-      Monorepo services: read railway.json at the service's monorepo_path,
-      falling back to the repo root.
     origin: >
       2026-07-22: after a transient Prefect Cloud 503 crashed all four
       serve()-based cogs, none of them came back. Railway restart policy was

@@ -62,10 +62,8 @@ role.
        One-paragraph description — what the service does, what it
        consumes, what it produces.
    ```
-2. If the service belongs in a monorepo, add `monorepo:` and
-   `monorepo_path:` (see `index.yaml` `schema.monorepo_fields`).
-3. If the service has no matching DoD checklist yet, see §5.
-4. If the service introduces a new type, see §2 first.
+2. If the service has no matching DoD checklist yet, see §5.
+3. If the service introduces a new type, see §2 first.
 
 ### Renaming a service
 
@@ -303,8 +301,8 @@ If no service references the `dod_type`, delete the key. Grep
 ## §6 — `index.yaml` schema surface
 
 The `schema:` section of `index.yaml` documents the shape of rule
-files, the `evaluator.yaml` file per repo, service fields in
-`ecosystem.yaml`, and monorepo fields. Changes here are changes to
+files, the `evaluator.yaml` file per repo, and service fields in
+`ecosystem.yaml`. Changes here are changes to
 the data contract between this repo and every consumer.
 
 ### Adding a schema field

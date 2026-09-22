@@ -316,14 +316,14 @@ schema:
   used for repo-specific checker limitations not covered by a
   shared trait. Currently unused by any repo, so the gap is latent
   rather than actively broken.
-- Honor the optional `modifies:` field on rules (ADR-005, MONO-001
-  and MONO-002 are the current consumers).
+- Honor the optional `modifies:` field on rules (ADR-005). No rule
+  currently declares it.
 - Implement the eight-step dispatch precedence defined in
   `index.yaml` `schema.dispatch.precedence` (ADR-005 introduced
   seven; v4.1.0 inserted `repo_downgrade` as step 6 between
   `trait_downgrade` and `rule_modifier`).
 - Implement runtime data-quality checks for rules that omit
-  `applies_to` — currently EVAL-003, MONO-003, and EVAL-007
+  `applies_to` — currently EVAL-003 and EVAL-007
   (ADR-004).
 - Reject rules carrying `status: advisory` or `status: idea` —
   both statuses were removed in ADR-005.
