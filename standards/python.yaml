@@ -328,7 +328,7 @@ standards:
     severity: ERROR
     applies_to: [pipeline-cog, trigger-cog, api-service, shared-library]
     description: >
-      Any interface to an external service — Prefect Cloud, Google, Clerk,
+      Any interface to an external service — AWS, Google, Clerk,
       Anthropic, OpenAI, Spotify, AcoustID, MusicBrainz, Todoist, GitHub,
       or another Kaiano service — must let its caller tell these two
       conditions apart:
@@ -384,7 +384,7 @@ standards:
       LLM CHECK.
       (1) [deterministic] Identify outbound-call sites: imports of or calls
           through httpx, requests, googleapiclient, spotipy, anthropic,
-          openai, prefect client, musicbrainzngs, or acoustid.
+          openai, boto3, musicbrainzngs, or acoustid.
       (2) [deterministic] Flag the collapsing anti-pattern — a bare
           `except Exception` (or `except BaseException`) wrapping such a
           call site whose handler raises a single error type built from an
