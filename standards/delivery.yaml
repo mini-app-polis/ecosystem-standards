@@ -1145,3 +1145,39 @@ standards:
       checks reason about job identity by position rather than by name.
       `deploy` joined in 2026-09, when evaluator-cog and deejay-cog moved to
       Lambda: both had the job, and the check flagged both on every release.
+
+  - id: CD-027
+    title: Infrastructure code is checked in CI
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog, api-service]
+    description: >
+      A repo that declares infrastructure as code checks it on every push:
+      `terraform fmt -check` and `terraform validate`, in the `test` stage.
+      Neither needs state or credentials — validate reads the providers'
+      schemas — so this is the half of Terraform that CI can own while
+      applying stays on a workstation.
+
+      What it catches is what a plan would have caught a day later: a
+      syntax error, a reference to a variable that no longer exists, a
+      failed variable validation, a file nobody formatted. What it does not
+      catch is anything the API only rejects at apply time, and it is not
+      an argument for applying in CI — that needs remote state and a role
+      broad enough to rewrite the account, which is a separate decision.
+
+      The version Terraform runs as in CI matches the one that applies it,
+      or `fmt` disagrees between the two.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Skip the repo when it has no `infra/**/*.tf`.
+      Otherwise parse `.github/workflows/ci.yml` and fail unless it either
+      runs `terraform fmt` and `terraform validate` itself, or passes a
+      Terraform directory to the shared `python-test.yml` (the
+      `terraform-dir` input).
+    origin: >
+      2026-09: three cogs gained an `infra/` directory within a week, and
+      the first sign that a `.tf` file was malformed was a plan on a
+      workstation. The shared `python-test.yml` grew a `terraform-dir`
+      input the same day.

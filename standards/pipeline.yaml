@@ -450,15 +450,32 @@ standards:
       `reserved_concurrent_executions` on the function, which is the only
       way to get 1. A cog whose job sweeps a shared resource — two
       concurrent runs would process the same items — needs 1, and says so.
+
+      One or the other, not both. AWS refuses to create a mapping whose
+      maximum concurrency exceeds the function's reservation, and the
+      mapping cannot go below 2, so a reservation of 1 means no
+      `scaling_config` at all. A stack that carries both applies only
+      while the mapping predates the reservation, and fails the day
+      anything recreates it.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      In `infra/*.tf`, fail unless the `aws_lambda_event_source_mapping`
-      has a `scaling_config` block setting `maximum_concurrency`, or the
-      `aws_lambda_function` sets `reserved_concurrent_executions`.
+      In `infra/*.tf`:
+      (1) Fail unless the `aws_lambda_event_source_mapping` has a
+          `scaling_config` block setting `maximum_concurrency`, or the
+          `aws_lambda_function` sets `reserved_concurrent_executions`.
+      (2) Fail when both are set and the function's
+          `reserved_concurrent_executions` is a literal lower than the
+          mapping's `maximum_concurrency` literal — AWS rejects that pair
+          at create time. Variable defaults count as literals when the
+          value is a `default =` in `variables.tf`.
     origin: >
       The Prefect limits these replace were set in code; deejay-cog's sweep
       needs one run at a time and the mapping cannot go below two.
+      2026-09: transcription-cog's first apply failed on exactly the pair
+      this now checks — "MaximumConcurrency: 2 is greater than Function
+      Reserved Concurrency: 1" — and deejay-cog carried the same pair
+      undetected, because its mapping was created before its reservation.
 
   - id: PIPE-019
     title: Trigger cogs start work through the API
@@ -490,3 +507,78 @@ standards:
       and its transcription triggers followed a week later, one request per
       changed file. Nothing it fires reaches Prefect any more.
 
+  - id: PIPE-020
+    title: A run stops before the function timeout, and says so
+    status: requirement
+    dimension: pipeline_reliability
+    severity: WARN
+    applies_to: [pipeline-cog]
+    description: >
+      Lambda kills a timed-out invocation outright. No `finally` runs, the
+      handler returns nothing, and the run's report is never sent — so the
+      message comes back, is retried, and eventually dead-letters with
+      nobody told why. The one signal is a duration equal to the timeout,
+      in a log nobody reads until the alarm.
+
+      A handler therefore stops its own run a margin before that deadline
+      and fails the ordinary way: the flow reports, naming what it was
+      doing, and re-raises, so redelivery is a decision the queue records
+      rather than a silence.
+
+      The margin is whatever the report costs — one API call — with room
+      to return the batch response. The mechanism is the context object's
+      remaining time, and a signal or a check between steps; what matters
+      is that the run ends inside the invocation rather than with it.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Search production source under src/ for `get_remaining_time_in_millis`.
+      Flag the cog when the handler module never reads it, directly or
+      through a helper it imports. A cog whose every job is bounded well
+      under the function timeout still needs it: the case this catches is
+      the job that is not.
+    origin: >
+      2026-09, transcription-cog: one WCS extraction can run minutes, and
+      the shared Anthropic client ignored its configured timeout, so a hung
+      request could outlive a 900-second function. The fix that made the
+      failure legible was `_deadline.py` — SIGALRM 30 seconds early, raising
+      inside the run so the flow's own report still goes out.
+
+  - id: PIPE-021
+    title: One run, one report
+    status: requirement
+    dimension: pipeline_reliability
+    severity: WARN
+    applies_to: [pipeline-cog]
+    description: >
+      A run reports itself, once, however it ends. The flow owns that
+      report — it knows what it was doing — and sends it on the way out of
+      a failure before re-raising.
+
+      The queue consumer reports only what never reached a flow: a message
+      it could not read. A consumer that also reported a failed run would
+      make two findings out of one run, and the channel would show every
+      failure twice, which is how a channel stops being read.
+
+      A message that cannot be read is reported on its first receive and
+      not on its redeliveries. Every later receive fails identically, and
+      where it ends up — the dead-letter queue — has an alarm of its own.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      Trace the handler and the flows it dispatches to. Flag when:
+        (1) the consumer posts a finding for an exception that came out of
+            a flow which reports its own failures;
+        (2) an unprocessable-message report is not gated on the record's
+            `ApproximateReceiveCount`;
+        (3) a flow can raise on a path that sends no report at all — the
+            mirror failure, where nobody says anything.
+      A cog whose flows do not self-report is not flagged by (1): there the
+      consumer is the only witness and should report.
+    origin: >
+      2026-09: the three migrated cogs each landed on this shape from a
+      different direction. deejay-cog's consumer reported every failure
+      because its flows did not; transcription-cog's flows report through
+      `run_report`, so its consumer reporting too was two messages for one
+      run; and a probe message sitting in the queue produced five identical
+      ERROR reports over eighty minutes before dead-lettering.
