@@ -163,35 +163,28 @@ services:
     \ rather than being invisible in every consumer. Consumers pin the moving `v1`\
     \ tag; a breaking change gets `v2` instead. No release automation \u2014 CHANGELOG.md\
     \ is maintained by hand.\n"
-- id: deejaytools-com-api
+- id: deejaytools-api
   type: api-service
   status: active
   dod_type: new_hono_service
   language: typescript
   framework: hono
   host: railway
-  repo: deejaytools-com
-  monorepo: deejaytools-com
-  monorepo_path: apps/api
   description: 'Hono on Node API for deejaytools.com. Manages WCS routine registration,
     floor trial sessions, check-ins, slot assignment, partners, and songs. PostgreSQL
-    on Railway. Clerk auth. Part of the deejaytools-com monorepo.
+    on Railway. Clerk auth. Serves deejaytools-com.
 
     '
-- id: deejaytools-com-app
+- id: deejaytools-com
   type: react-app
   status: active
   dod_type: new_react_app
   language: typescript
   framework: react
   host: cloudflare-pages
-  repo: deejaytools-com
-  monorepo: deejaytools-com
-  monorepo_path: apps/app
   description: "React web application for deejaytools.com. WCS routine management\
     \ platform \u2014 events, sessions, floor trials, check-in queue, partner and\
-    \ song management. Vite + React + Tailwind + shadcn/ui. Part of the deejaytools-com\
-    \ monorepo.\n"
+    \ song management. Vite + React + Tailwind + shadcn/ui. Talks to deejaytools-api.\n"
 - id: website-astro-software
   type: static-site
   status: active
@@ -228,27 +221,6 @@ services:
     \ Freelance build. Events are baked in at build time from a public iCloud feed,\
     \ so a scheduled workflow pings the Cloudflare Pages deploy hook twice daily to\
     \ pick up new events without her touching anything.\n"
-monorepos:
-- id: deejaytools-com
-  repo: deejaytools-com
-  branch: dev
-  package_manager: pnpm
-  workspace_config: pnpm-workspace.yaml
-  description: 'pnpm monorepo containing the deejaytools.com API and web application.
-    Workspace-level deps satisfy per-app shared library requirements (XSTACK-001,
-    XSTACK-003). CI is evaluated at the repo root.
-
-    '
-  apps:
-  - service_id: deejaytools-com-api
-    path: apps/api
-  - service_id: deejaytools-com-app
-    path: apps/app
-  workspace_deps: []
-  evaluator:
-    strategy: per_app
-    workspace_context: true
-    deduplicate_sibling_findings: true
 patterns:
   drive_trigger:
     description: How Drive file drops trigger processor flows

@@ -76,7 +76,6 @@ declared `rule_prefix`.
 | `VER`         | `standards/versioning.yaml`     | Conventional Commits, semantic-release            |
 | `META`        | `standards/meta.yaml`           | Rules governing the standards repo itself         |
 | `EVAL`        | `standards/evaluation.yaml`     | How AI evaluation is performed                    |
-| `MONO`        | `standards/monorepo.yaml`       | pnpm workspace rules                              |
 | `XSTACK`      | `standards/cross-stack.yaml`    | Python/TypeScript parity rules                    |
 
 ### Cross-cutting rules
@@ -200,8 +199,6 @@ Decision guide:
   `cross_repo_coherence`
 - Does it check evaluation version currency or standards drift? →
   `standards_currency`
-- Does it check pnpm workspace behavior (dedup, root CI)? →
-  `monorepo_coherence`
 
 ### severity
 
@@ -229,10 +226,9 @@ Omit `applies_to` entirely if the rule is not a repo-source check —
 i.e. if the check reads the pipeline_evaluations table, the
 evaluator's own check registry, or any other non-per-repo source.
 `check_notes` is then authoritative for what the check reads.
-Current rules that omit `applies_to`: EVAL-003, MONO-003, EVAL-007.
+Current rules that omit `applies_to`: EVAL-003, EVAL-007.
 
-For meta-rules that alter sibling rule behavior (for example monorepo
-rules), add `modifies:` listing the affected rule IDs. Keep the actual
+For meta-rules that alter sibling rule behavior, add `modifies:` listing the affected rule IDs. Keep the actual
 altering logic in `check_notes`.
 
 `standards-repo` is for rules whose source-scan target is this repo

@@ -153,7 +153,10 @@ Copy `.github/workflows/ci.yml` from deejay-cog and change only the
 
 - **security** — `mini-app-polis/.github/.github/workflows/security.yml@v3`
 - **test** — `mini-app-polis/.github/.github/workflows/python-test.yml@v3`
-  (lock check, ruff, format, pytest with coverage)
+  (lock check, ruff, format, pytest with coverage). Pass `typecheck` when
+  the cog declares `[tool.mypy]`, and `terraform-dir: infra` when it has
+  an `infra/` — `fmt -check` and `validate` need neither state nor
+  credentials, and CD-027 wants them run on every push.
 - **release** — semantic-release, recording the tag it cut as a job output
 - **deploy** (pipeline cogs) — `lambda-deploy.yml@v3`, `needs: release`, run
   only when a tag was cut. It is a job rather than an `on: release`
@@ -219,12 +222,26 @@ Pipeline cogs:
 - `worker.py` — `lambda_handler(event, context)` iterates the SQS records,
   runs `process_message(body, run_id=record["messageId"])` for each, and
   returns `{"batchItemFailures": [...]}` naming the records that raised.
-  A malformed message is reported and dropped (never retried). Copy
-  deejay-cog's `worker.py`.
+  A malformed message is reported and dropped (never retried), and
+  reported only on its first receive — gate on the record's
+  `ApproximateReceiveCount`, or five redeliveries become five identical
+  findings for one message (PIPE-021). The flows report their own
+  failures; the consumer reports only what never reached one.
+  Copy deejay-cog's `worker.py`.
+- `_deadline.py` — the handler stops the run a margin before the function
+  timeout and lets the flow fail the ordinary way, so a run that would
+  otherwise be killed mid-flight still reports (PIPE-020). Copy
+  transcription-cog's.
 - `infra/` — copied from deejay-cog: queue and DLQ with a redrive policy,
-  the function, the event source mapping with `ReportBatchItemFailures`
-  and `scaling_config.maximum_concurrency`, a DLQ alarm with an action,
-  and the `tf` wrapper that feeds Doppler secrets in as `TF_VAR_*`.
+  the function, the event source mapping with `ReportBatchItemFailures`,
+  a DLQ alarm with an action, and the `tf` wrapper that feeds Doppler
+  secrets in as `TF_VAR_*`. State the concurrency ceiling once, on one
+  side or the other: `reserved_concurrent_executions` on the function, or
+  `scaling_config.maximum_concurrency` on the mapping. A cog that sweeps
+  a shared resource needs 1, which means the reservation and no
+  `scaling_config` at all — the mapping's maximum cannot go below 2, and
+  AWS refuses a mapping maximum above the function's reservation
+  (PIPE-018).
   Queue names are `<cog>-jobs` in production and `<cog>-dev-jobs`
   elsewhere; api-kaianolevine-com derives them the same way.
 - An API dispatch path in api-kaianolevine-com (`services/<cog>_dispatch.py`

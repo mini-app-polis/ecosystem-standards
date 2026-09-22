@@ -336,9 +336,6 @@ standards:
       in the deploy job. Flag if absent or if migration is run manually.
       TypeScript/Hono (Drizzle): check ci.yml for 'drizzle-kit push' or
       'drizzle-kit migrate' step. Flag if absent.
-      For monorepo services, check the workspace root ci.yml — the migration
-      step may be at root level rather than per-app. Do not flag if found
-      at the monorepo root CI.
 
 # AUTH-* rules moved to standards/auth.yaml.
 

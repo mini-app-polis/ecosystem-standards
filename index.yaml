@@ -21,7 +21,6 @@ dimensions:
   cd_readiness: "Is the repo safe to deploy continuously? Covers Sentry, structured logging, semantic-release, feature flags, and observability connections."
   cross_repo_coherence: "Do similar concepts look similar across repos? Covers naming conventions, response shapes, shared library usage, and API versioning."
   standards_currency: "Is this repo being evaluated against the current version of the standards? Covers version resolution, staleness detection, and standards/evaluator drift."
-  monorepo_coherence: "Do pnpm monorepo workspaces satisfy per-app and root-level rules? Covers workspace_deps, monorepo_path scoping, root CI, and deduplicated findings across sibling apps."
   security_posture: "Does the repo defend its supply chain and its secrets? Covers secret scanning, dependency and static analysis in CI, build provenance, and the declared response to a finding."
   operational_readiness: "Can this service be run, recovered and reasoned about? Covers declared objectives and capacity, proven restore, data classification and retention, credential rotation, and the external surfaces it depends on."
 
@@ -206,7 +205,6 @@ schema:
         source. For those rules, `check_notes` is authoritative for
         what the check reads. Current rules omitting `applies_to`:
         EVAL-003 (reads pipeline_evaluations for finding quality),
-        MONO-003 (reads pipeline_evaluations for monorepo dedup),
         EVAL-007 (reads the standards catalog and evaluator-cog's
         check registry for drift), XSTACK-006 (reads the org repo
         listing and the registry), XSTACK-007 (reads the registry and
@@ -218,8 +216,8 @@ schema:
       type: list of strings
       description: >
         Rule IDs whose evaluation behavior is altered when this rule
-        applies. Used for meta-rules (e.g. monorepo rules that change
-        how sibling source-scan rules are run). The altering logic
+        applies. Used for meta-rules that change how sibling source-scan
+        rules are run. The altering logic
         lives in this rule's `check_notes`; `modifies:` is a
         structural pointer the evaluator uses to resolve rule
         precedence. When a rule in `modifies:` would fire, the
@@ -313,7 +311,7 @@ schema:
       that cog's queue. Examples: watcher-cog.
     api-service: >
       HTTP API service with routes, auth, and a database. FastAPI (Python)
-      or Hono (TypeScript). Examples: api-kaianolevine-com, deejaytools-com-api.
+      or Hono (TypeScript). Examples: api-kaianolevine-com, deejaytools-api.
     shared-library: >
       Published package consumed by other repos. No service entry point,
       no server runtime. Examples: common-python-utils, common-typescript-utils.
@@ -321,8 +319,8 @@ schema:
       Astro or HTML site deployed to Cloudflare Pages. No server-side
       runtime. Examples: website-astro-software, website-astro-wcs.
     react-app: >
-      Vite/React SPA. Client-side only. May live inside a monorepo.
-      Examples: deejaytools-com-app.
+      Vite/React SPA. Client-side only.
+      Examples: deejaytools-com.
     standards-repo: >
       YAML-only definition and tooling repository. Not a deployed service.
       Examples: ecosystem-standards.
@@ -522,26 +520,6 @@ schema:
       standards repos. Retained for backward compatibility with existing
       evaluator-cog versions during the v3.0.0 migration period.
 
-  monorepo_fields:
-    monorepo: >
-      ID of the monorepo this service belongs to. Must match an entry in the
-      top-level `monorepos:` section of ecosystem.yaml. When present, the
-      evaluator clones the full monorepo repo rather than a standalone repo,
-      evaluates the service at `monorepo_path`, and passes workspace-level
-      context to Claude. XSTACK-001 is checked at the workspace root
-      (workspace_deps) rather than per-app package.json.
-    monorepo_path: >
-      Relative path from the monorepo root to this service's directory
-      (e.g. apps/api). Used by evaluator-cog to scope file reads and
-      deterministic checks to the correct subdirectory.
-  ecosystem_sections:
-    monorepos: >
-      Top-level section in ecosystem.yaml listing all monorepos. Each entry
-      defines the workspace package manager, apps (with service_id and path),
-      workspace_deps (checked at root to satisfy XSTACK-001), and evaluator
-      strategy (per_app with workspace_context). Service entries in the
-      `services:` list reference their monorepo via `monorepo: <id>` and
-      `monorepo_path: <path>`.
 
 # Standards files — one per domain.
 # Agents may fetch all files or only the domains relevant to the artifact being evaluated.
@@ -622,14 +600,6 @@ files:
       services, libraries, canonical patterns, and ecosystem terminology.
       Updated on every rename, retirement, new service addition, or
       terminology change.
-
-  - file: standards/monorepo.yaml
-    domain: monorepo
-    description: >
-      Standards for monorepo structure, workspace dependency management,
-      and per-app evaluation rules. Applies to pnpm workspaces containing
-      multiple evaluatable services.
-    rule_prefix: MONO
 
   - file: standards/cross-stack.yaml
     domain: cross-stack
