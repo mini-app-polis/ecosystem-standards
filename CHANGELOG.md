@@ -1,3 +1,10 @@
+# [7.1.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.0.1...v7.1.0) (2026-09-22)
+
+
+### Features
+
+* **standards:** codify the timeout, report and infra-CI lessons from the Lambda migration ([41a222a](https://github.com/mini-app-polis/ecosystem-standards/commit/41a222abda3641d3d03812363987527a4b0acbb5))
+
 ## [7.0.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.0.0...v7.0.1) (2026-09-22)
 
 
