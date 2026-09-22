@@ -1,3 +1,12 @@
+# [7.2.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.1.0...v7.2.0) (2026-09-22)
+
+
+### Features
+
+* **ecosystem:** retire the deejaytools monorepo ([ac7fa7f](https://github.com/mini-app-polis/ecosystem-standards/commit/ac7fa7f73801fec6aee10d05f07e6d10d7c56cc1))
+* **standards:** codify the timeout, report and infra-CI lessons from the Lambda migration ([3adf5f1](https://github.com/mini-app-polis/ecosystem-standards/commit/3adf5f11bd1dfba1c8dbc4651ccfda82627511c0))
+* **standards:** require Terraform state to stay out of git and its versions pinned ([95736d2](https://github.com/mini-app-polis/ecosystem-standards/commit/95736d27b4820f39425a54a22f9ebf6a16588547))
+
 # [7.1.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.0.1...v7.1.0) (2026-09-22)
 
 
