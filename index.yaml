@@ -583,7 +583,7 @@ files:
 
   - file: standards/pipeline.yaml
     domain: pipeline
-    description: Pipeline design and orchestration standards. Prefect patterns, idempotency, and data safety rules.
+    description: Pipeline design and orchestration standards. Queue-and-Lambda patterns, idempotency, and data safety rules.
     rule_prefix: PIPE
 
   - file: standards/frontend.yaml
@@ -593,7 +593,7 @@ files:
 
   - file: standards/delivery.yaml
     domain: delivery
-    description: Continuous delivery and observability standards. Sentry, structured logging, Prefect Cloud, Healthchecks, Doppler, GitHub Actions patterns.
+    description: Continuous delivery and observability standards. Sentry, structured logging, dead-letter alarms, Healthchecks, Doppler, GitHub Actions patterns.
     rule_prefix: CD
 
   - file: standards/versioning.yaml

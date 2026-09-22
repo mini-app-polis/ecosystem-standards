@@ -486,7 +486,7 @@ standards:
           `create_flow_run`, `run_deployment` or `get_client(` from Prefect.
       (2) Fail if production source calls boto3's SQS `send_message`.
     origin: >
-      watcher-cog's deejay trigger moved to POST /v1/deejay/runs in 2026-09;
-      its transcription triggers remain on Prefect until transcription-cog
-      moves, and this rule is what says so.
+      watcher-cog's deejay trigger moved to POST /v1/deejay/runs in 2026-09,
+      and its transcription triggers followed a week later, one request per
+      changed file. Nothing it fires reaches Prefect any more.
 

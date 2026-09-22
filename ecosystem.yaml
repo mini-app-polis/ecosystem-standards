@@ -76,11 +76,20 @@ services:
   language: python
   cog_subtype: pipeline
   host: railway
-  description: "Prefect pipeline cog. Reads structured WCS notes from api-kaianolevine-com\
-    \ and maintains the wcs-wiki markdown knowledge base. Registered here because\
-    \ it already carries an evaluator.yaml declaring itself conformance-managed (type:\
-    \ pipeline-cog) \u2014 until now the fleet-wide run never enumerated it, so it\
-    \ declared itself graded and was graded by nothing.\n"
+  description: 'Reads structured WCS notes from api-kaianolevine-com and maintains
+    the wcs-wiki markdown knowledge base.
+
+    The last cog still on Prefect and Railway, and it is paused: nothing triggers
+    it, and it is not run again before it moves to a Lambda behind its own queue
+    like the other three (ADR-009). Until then it fails the pipeline-cog rules
+    that describe that runtime — PIPE-016 and PIPE-017 — and those findings are
+    the list of what the move involves rather than drift to fix in place.
+
+    Registered here because it already carries an evaluator.yaml declaring itself
+    conformance-managed (type: pipeline-cog) — before that the fleet-wide run
+    never enumerated it, so it declared itself graded and was graded by nothing.
+
+    '
 - id: api-kaianolevine-com
   type: api-service
   status: active

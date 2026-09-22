@@ -207,11 +207,10 @@ standards:
             application code or start pipeline work, it is allowed. Read the
             workflow body to distinguish.
         (2) Flag any scheduled workflow (`on: schedule: - cron:`) whose
-            job body contains HTTP calls to Prefect Cloud API
-            (`api.prefect.cloud`), invocations of prefect CLI commands
-            (`prefect deployment run`, `prefect flow-run create`), or
-            direct imports of application modules as orchestration entry
-            points.
+            job body starts pipeline work: a POST to a cog's runs route on
+            api-kaianolevine-com, an `aws sqs send-message` or equivalent
+            onto a cog's queue, a `lambda invoke`, or direct imports of
+            application modules as orchestration entry points.
             Allowed scheduled workflows: drift-check, dependency update
             (dependabot, renovate), nightly test runs.
         (3) Flag any workflow that POSTs to an internal API endpoint

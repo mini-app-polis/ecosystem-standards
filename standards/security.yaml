@@ -49,7 +49,7 @@ standards:
     origin: >
       BACKLOG Tier 1, drafted as SEC-001 and open across four major
       versions. Recorded there as the largest material-risk gap in the
-      catalog, given Doppler-managed secrets, Clerk keys, Prefect API
+      catalog, given Doppler-managed secrets, Clerk keys, AWS
       keys, Anthropic keys and GitHub tokens present across the fleet.
 
   - id: SEC-002

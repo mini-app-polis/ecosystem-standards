@@ -225,7 +225,7 @@ standards:
   # ─────────────────────────────────────────────
   # These are not checkable rules — they define when evaluation runs.
 
-  # post-pipeline-run: After any Prefect pipeline completes, evaluate whether
+  # post-pipeline-run: After any pipeline run completes, evaluate whether
   #   it behaved consistently with past runs and these standards.
   #   Context: run log, step timings, error counts.
 
@@ -256,6 +256,12 @@ standards:
   # emitted from. The following seven values are canonical. Adding a new
   # source value requires updating this list first.
   #
+  # 2026-09 (ADR-009): `flow_hook` and `prefect_webhook` were replaced by
+  # `queue_consumer`. Both named Prefect mechanisms — an on_failure /
+  # on_crashed hook, and evaluator-cog's webhook on flow-run state events —
+  # and a Lambda cog behind a queue has neither. Rows already carrying them
+  # stay readable; nothing emits them once wiki-curator-cog moves.
+  #
   # External emission origins (set by the emitting cog, must not be
   # overridden downstream):
   #
@@ -264,15 +270,18 @@ standards:
   #                            cog. Represents the cog's own assessment
   #                            of its run outcome.
   #
-  #   flow_hook                Posted from a Prefect on_failure /
-  #                            on_crashed hook. Represents an abnormal-
-  #                            termination finding that the inline
-  #                            evaluation step never got to emit.
+  #   queue_consumer           Posted by a cog's queue consumer about a
+  #                            message, not about a run: one it could not
+  #                            read, or one whose run never reached a flow.
+  #                            A run that started reports itself under
+  #                            flow_inline, including on its way out of a
+  #                            failure, so a consumer that also reported it
+  #                            would be two findings for one run.
   #
-  #   prefect_webhook          Posted by the evaluator-cog webhook
-  #                            handler on Prefect flow run state events.
-  #                            Represents an external-observer finding
-  #                            about a flow that did not self-report.
+  #   flow_hook                Retired 2026-09. Posted from a Prefect
+  #                            on_failure / on_crashed hook — a mechanism
+  #                            that no longer exists. Kept here so old rows
+  #                            can be read.
   #
   # Evaluator-cog internal sources — conformance of a repo against the
   # standards catalog. The `conformance_*` pair mirrors the two paths a
@@ -313,7 +322,7 @@ standards:
   # Rule: the `source` value is authoritative at the point of emission.
   # Downstream code (including the evaluator-cog API client) must not
   # override an externally-set source value when forwarding a finding —
-  # doing so erases the distinction between flow_inline and flow_hook,
+  # doing so erases the distinction between flow_inline and queue_consumer,
   # which is load-bearing for finding deduplication and for interpreting
   # Pipeline Health UI cards.
   # ─────────────────────────────────────────────
