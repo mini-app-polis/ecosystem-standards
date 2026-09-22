@@ -1,3 +1,10 @@
+## [7.0.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.0.0...v7.0.1) (2026-09-22)
+
+
+### Bug Fixes
+
+* **evaluation:** document queue_consumer and retire the Prefect sources ([8f4c2c1](https://github.com/mini-app-polis/ecosystem-standards/commit/8f4c2c161136e36e7405b37c9ef3b575a0daf898))
+
 # [7.0.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v6.18.0...v7.0.0) (2026-09-21)
 
 
