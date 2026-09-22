@@ -7,7 +7,9 @@ services:
   cog_subtype: trigger
   host: railway
   description: 'Config-driven Google Drive folder watcher. Polls Drive API on a 1-minute
-    interval, fires Prefect flow runs when new files are detected.
+    interval and asks api-kaianolevine-com to run the cog that owns a folder when
+    files change — once per folder for deejay-cog, once per changed file for
+    transcription-cog. The API enqueues; watcher holds no queue key.
 
     '
 - id: deejay-cog
@@ -16,7 +18,7 @@ services:
   dod_type: new_cog
   language: python
   cog_subtype: pipeline
-  host: railway
+  host: aws-lambda
   description: 'DJ set CSV processor. Normalizes, validates, and ingests DJ set data
     into PostgreSQL via api-kaianolevine-com.
 
@@ -27,7 +29,7 @@ services:
   dod_type: new_cog
   language: python
   cog_subtype: pipeline
-  host: railway
+  host: aws-lambda
   description: 'Multi-mode AI evaluation cog. Runs post-pipeline behavioral evaluation
     (pipeline_eval, called in-process by other cogs) and structural conformance
     checking on demand — POST /invoke for one repository when it releases, POST /sweep
@@ -43,30 +45,30 @@ services:
   dod_type: new_cog
   language: python
   cog_subtype: pipeline
-  host: railway
-  description: "Two pipelines under one Prefect deployment (transcription-cog) and\
-    \ one Railway service, dispatched by mode via a router flow:\n  * mode=\"wcs-transcripts\"\
-    \ \u2014 WCS lesson transcript ingestion.\n    Triggered by watcher-cog when new\
-    \ transcript files land in\n    the configured Google Drive input folder. Reads\
-    \ transcripts,\n    calls LLM to produce structured notes JSON, stores raw\n \
-    \   transcripts and notes in Postgres via api-kaianolevine-com,\n    and archives\
-    \ processed files. Outputs to wcs_transcripts and\n    wcs_notes tables. Consumed\
-    \ by wcs.kaianolevine.com.\n  * mode=\"voicenotes\" \u2014 Voice sticky-note pipeline.\
-    \ Triggered by\n    watcher-cog when audio files land in the voice-inbox/ Drive\n\
-    \    folder. Per-file pipeline: Whisper transcribes, Claude\n    Sonnet extracts\
-    \ a structured task\n    ({title, summary, due_date, needs_review}), post_task\
-    \ creates\n    the matching task in Todoist with a drive_file_id marker for\n\
-    \    idempotency, then the audio is archived to processed/YYYY-MM/.\n    No database\
-    \ \u2014 the Drive folder location and the Todoist task\n    content are the only\
-    \ state.\n  * mode=\"voicenotes-cleanup\" \u2014 Cron-fired (daily) cleanup mode\n\
-    \    that prunes processed/ older than ARCHIVE_RETENTION_DAYS.\nBoth pipelines\
-    \ self-report under the unified ``transcription-cog`` repo identifier via ``post_run_finding``\
-    \ / ``post_findings`` from ``mini_app_polis.pipeline_status``; the Pipeline Health\
-    \ UI distinguishes them by ``flow_name`` (``process-transcript`` vs. ``voicenotes-ingest``).\
-    \ History: merged from the standalone ``notes-ingest-cog`` and ``voicenotes-cog``\
-    \ repos in May 2026 (docs/decisions/ADR-004-voicenotes-merge.md). Those service\
-    \ identifiers are fully retired; any historical findings labeled ``notes-ingest-cog``\
-    \ or ``voicenotes-cog`` predate the merge and should not be expected to recur.\n"
+  host: aws-lambda
+  description: 'Two pipelines in one Lambda function behind its own SQS queue
+    (transcription-jobs). watcher-cog asks api-kaianolevine-com for one run per
+    changed Drive file, and one message is one file (ADR-007):
+
+    * mode "wcs-transcripts" — a WCS lesson transcript from the notes input
+    folder: an LLM extracts structured notes, raw transcript and extraction are
+    stored through api-kaianolevine-com (wcs_transcripts, wcs_sources), and the
+    file is archived. Consumed by wcs.kaianolevine.com.
+
+    * mode "voicenotes" — a voice note from voice-inbox/: Whisper transcribes,
+    Claude extracts a task, post_task creates it on the Asana board with the
+    Drive file id as its external id for idempotency, the audio is archived to
+    processed/YYYY-MM-DD/, and the retention sweep runs.
+
+    * mode "voicenotes-cleanup" — the retention sweep on its own, for an
+    operator; names no file.
+
+    Both pipelines report under the transcription-cog repo identifier, told
+    apart by flow_name (process-transcript, voicenotes-ingest). Merged from
+    notes-ingest-cog and voicenotes-cog in May 2026 (ADR-004); those
+    identifiers are retired.
+
+    '
 - id: wiki-curator-cog
   type: pipeline-cog
   status: development
