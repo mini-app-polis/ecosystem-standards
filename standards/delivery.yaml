@@ -1181,3 +1181,52 @@ standards:
       the first sign that a `.tf` file was malformed was a plan on a
       workstation. The shared `python-test.yml` grew a `terraform-dir`
       input the same day.
+
+  - id: CD-028
+    title: Terraform versions are pinned, and the lock covers every platform that runs it
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog, api-service]
+    description: >
+      A stack pins the Terraform version and every provider version, and
+      commits `.terraform.lock.hcl` so a second machine resolves the same
+      providers rather than whatever is newest that day.
+
+      The lock records provider checksums per platform, and that is the
+      part that surprises. A lock written on a workstation carries only
+      that workstation's platform. It is correct and complete until
+      something else runs Terraform — and then `init` rejects the
+      provider it just downloaded, because the hash for that platform was
+      never recorded. The error names checksums and sounds like tampering;
+      it means the lock has never seen this operating system.
+
+      So the rule is conditional on where Terraform runs. A stack applied
+      only from one workstation needs one platform. A stack CD-027 checks
+      in CI runs on Linux as well, and the lock must say so:
+      `terraform providers lock -platform=darwin_arm64 -platform=linux_amd64`.
+
+      Committing the lock is not in tension with SEC-008. It holds
+      versions and hashes and no values; it is the one file in `infra/`
+      that belongs in the repository precisely because it is not
+      environment-specific.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Skip the repo when it has no `infra/**/*.tf`. Otherwise:
+      (1) Fail unless some `infra/*.tf` sets `required_version` inside a
+          `terraform` block.
+      (2) Fail for any entry in `required_providers` that declares a
+          `source` without a `version`.
+      (3) Fail when `infra/.terraform.lock.hcl` is absent.
+      (4) When ci.yml runs Terraform (CD-027 — inline, or a
+          `terraform-dir` passed to the shared `python-test.yml`), fail
+          when the lock file carries fewer than two `h1:` hashes. One
+          platform's hashes plus a Linux runner is the failure this
+          catches.
+    origin: >
+      2026-09: CD-027 put `terraform init` in CI, and all three cogs
+      failed it the same day — "the cached package does not match any of
+      the checksums recorded in the dependency lock file." Each lock had
+      been written on a Mac and had never seen linux_amd64. The rule that
+      prevents it belongs beside the rule that exposed it.
