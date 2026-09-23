@@ -887,7 +887,10 @@ standards:
       Parse .github/workflows/*.yml.
         (1) Find a job whose `uses:` is
             `mini-app-polis/.github/.github/workflows/evaluate.yml@<ref>`
-            in a workflow triggered by `push`. Flag if none exists.
+            in a workflow triggered by `push` — or, in the
+            mini-app-polis/.github repo that owns the workflow,
+            `./.github/workflows/evaluate.yml`, its own copy by local path.
+            Flag if none exists.
         (2) Verify that job runs after the release: its `needs:` reaches,
             directly or through other jobs' `needs:`, a job with a step
             that runs `semantic-release`. Flag an evaluate job that can
