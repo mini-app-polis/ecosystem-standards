@@ -56,10 +56,13 @@ standards:
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Check package.json for tailwindcss in dependencies. Check for
-      tailwind.config.js, tailwind.config.ts, OR tailwind.config.mjs (Astro
-      projects use .mjs). For Astro repos, also accept @astrojs/tailwind in
-      astro.config.mjs or astro.config.ts as a valid Tailwind signal. Search
+      Check package.json for tailwindcss in dependencies. Then confirm it is
+      configured, accepting either generation. Tailwind 3: tailwind.config.js,
+      tailwind.config.ts, OR tailwind.config.mjs (Astro projects use .mjs);
+      for Astro repos, @astrojs/tailwind in astro.config.mjs or
+      astro.config.ts. Tailwind 4 has no config file: accept @tailwindcss/vite
+      or @tailwindcss/postcss in package.json, or `@import "tailwindcss"` in a
+      stylesheet under src/. Flag only when neither is present. Search
       source files for className strings containing Tailwind utility classes.
       Flag if styled-components, emotion, CSS modules (.module.css imports), or
       another CSS framework is present alongside or instead of Tailwind.
