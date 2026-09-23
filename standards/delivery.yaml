@@ -860,6 +860,45 @@ standards:
       out 2026-09 so an API with no machine callers can exempt this half
       alone.
 
+  - id: CD-031
+    title: Every release requests its own conformance evaluation
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    applies_to: [all]
+    description: >
+      A repository's conformance changes when the repository changes, so
+      its own release is the event that should evaluate it. Every repo's
+      CI ends its release path with a job that calls the shared
+      `mini-app-polis/.github/.github/workflows/evaluate.yml`, after the
+      release (and after the deploy, where the repo deploys from CI), on
+      pushes to main. ecosystem-standards and evaluator-cog pass
+      `scope: fleet`, because a new catalog or a new evaluator invalidates
+      every repository's last result; every other repo uses the default,
+      `scope: repo`.
+
+      Without the job nothing goes red. The repository's findings simply
+      stay at whatever the last fleet pass recorded while its code moves
+      on, which reads as a healthy record and is a stale one — the
+      silence this rule exists to remove.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Parse .github/workflows/*.yml.
+        (1) Find a job whose `uses:` is
+            `mini-app-polis/.github/.github/workflows/evaluate.yml@<ref>`
+            in a workflow triggered by `push`. Flag if none exists.
+        (2) Verify that job runs after the release: its `needs:` reaches,
+            directly or through other jobs' `needs:`, a job with a step
+            that runs `semantic-release`. Flag an evaluate job that can
+            run before or without the release — it would evaluate the
+            tree the release has not yet produced.
+    origin: >
+      2026-09: splitting deejaytools-com into a website and an API left
+      both repos without the evaluate job every other repo in the fleet
+      carried, and no rule noticed; their records only changed when a
+      standards or evaluator release swept the fleet.
+
   - id: CD-020
 
 
