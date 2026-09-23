@@ -86,12 +86,13 @@ services:
     re-render takes no arguments — every queue message would be identical. See
     wiki-curator-cog ADR-004.
 
-    It therefore still fails the pipeline-cog rules that describe a queue-driven
-    Lambda — PIPE-016, PIPE-017, PIPE-018, PIPE-020, CD-010 and CD-024 — and
-    carries them as deferrals rather than exemptions, because the claim that
-    they should not apply cannot be made until the taxonomy question ADR-009
-    settled for three cogs is reopened for this shape. The Layer 2 polish pass
-    will be the second thing shaped like it.
+    The pipeline-cog rules that describe a queue-driven Lambda — PIPE-016,
+    PIPE-017, PIPE-018, PIPE-020, CD-010 and CD-024 — are exempted in its
+    evaluator.yaml rather than deferred: they are not unmet, they describe a
+    runtime it does not have. Six exemptions for one structural reason is
+    ADR-002's own signal that the taxonomy has fallen behind, and the Layer 2
+    polish pass will be the second thing shaped like this, so ADR-009 is due a
+    revisit for periodic whole-corpus rebuilds.
 
     PIPE-016 and PIPE-019 still fail a repo that declares prefect. That check
     stays: it is now a guard against regression rather than a description of
