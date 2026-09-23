@@ -196,7 +196,7 @@ standards:
       Every data-bearing table is authorization-scoped to a principal, so
       queries can filter by the authenticated identity. The scoping value
       is the principal's subject — a Clerk user ID for a human caller, a
-      machine name for a cog (CD-019) — not a Clerk user ID specifically.
+      machine name for a cog (CD-019, CD-030) — not a Clerk user ID specifically.
       Three patterns satisfy this: (1) direct ownership via an owner_id
       column holding the principal subject; (2) identity tables whose
       primary key is the user_id itself; (3) relationship tables whose

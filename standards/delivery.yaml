@@ -637,7 +637,7 @@ standards:
   - id: CD-019
 
 
-    title: Bearer credential contract — Clerk sessions for humans, named keys for machines
+    title: Bearer credential contract — callers present a named key or a Clerk session
     status: requirement
     dimension: structural_conformance
     severity: ERROR
@@ -675,9 +675,12 @@ standards:
       The principal store holds the machine's name and its grants; the
       secret stays in configuration.
 
-      Required env vars on any API enforcing this rule:
-        - CLERK_ISSUERS, or CLERK_ISSUER + CLERK_JWKS_URL
-        - <MACHINE_NAME>_API_KEY for every machine the service declares
+      This rule is the contract and the caller's side of it. The
+      receiver's side is split by population, so a service can be held
+      to the half it serves: CD-029 (verifying Clerk sessions) and
+      CD-030 (verifying named machine keys). An API with no machine
+      callers exempts CD-030 in its evaluator.yaml; it is still held to
+      CD-029.
 
       Required env vars on any cog or service calling an ecosystem API:
         - its own <MACHINE_NAME>_API_KEY (or KAIANO_API_KEY)
@@ -696,7 +699,8 @@ standards:
     check_notes: >
       DETERMINISTIC CHECK.
 
-      For service/cog repos (callers):
+      Callers — any repo that calls an ecosystem API, including an
+      api-service that makes outbound calls:
         (1) If the repo makes outbound HTTP calls to an ecosystem API,
             require that its client is constructed with a machine name —
             `KaianoApiClient.from_env("<machine-name>")`,
@@ -735,48 +739,11 @@ standards:
             `<MACHINE_NAME>_API_KEY`. Flag any repo that calls an
             ecosystem API and declares no key variable.
 
-      For API repos (receivers):
-        (5) Verify the service consumes the shared `identity` library
-            rather than implementing verification locally: require an
-            import from `identity` (`identity.chain`, `identity.clerk`,
-            `identity.apikey`). Flag any in-repo JWKS fetch, RS256
-            decode, or constant-time credential comparison written
-            outside that library — see XSTACK-005.
-            "Credential" here is what this rule defines above: a Clerk
-            session JWT or a named machine key, presented in the
-            `Authorization` header. A constant-time comparison of
-            anything else is out of scope — a webhook shared secret in
-            its own header, or an HMAC taken over the request body — and
-            must not be flagged. Those callers cannot present either
-            credential type, so the remedy this clause prescribes
-            (`identity.clerk` for sessions, `identity.apikey` for
-            machine keys) does not exist for them, and a finding whose
-            only available fix is to stop comparing in constant time
-            argues for weaker code.
-            Scope the check the way the other two primitives here are
-            already scoped — a JWKS fetch has to look like an HTTP call
-            to a JWKS URL, a decode has to name an asymmetric algorithm.
-            A comparison counts when the Bearer path is visible around
-            it (an `Authorization` header, a machine-key or Clerk
-            lookup, or the token/JWT vocabulary of a local verifier) and
-            does not count when the compared value is computed by
-            HMAC-ing a payload.
-        (6) Verify both populations are configured: a Clerk issuer set
-            built from `CLERK_ISSUERS` or `CLERK_ISSUER` +
-            `CLERK_JWKS_URL`, and a machine-key set built from
-            per-machine environment variables. Flag a service that
-            configures only one.
-        (7) Flag any remote credential verification — an HTTP request to
-            `api.clerk.com`, or any outbound call at all, inside the
-            verification path. Verification is local.
-        (8) Flag any persistence of key material: a model column,
-            migration, or INSERT on a principal, machine, or issuer
-            table whose column name matches `key|secret|token|hash`.
-            (`jwks_url` is a URL, not key material, and is exempt.) The
-            store holds names and grants only.
-        (9) Flag any credential path that reads a machine name from the
-            request — a header, query parameter, or body field naming
-            the caller, machine, or service. The key names the caller.
+      Every repo, callers and receivers alike: clause (2) applies —
+      retired mechanisms are drift wherever they appear.
+
+      Receiver obligations are CD-029 and CD-030. Do not evaluate them
+      here.
     origin: >
       Every cog read the same `CLERK_SECRET_KEY` out of one shared
       Doppler config, so every M2M token resolved to the same subject: a
@@ -791,6 +758,107 @@ standards:
       2026-09 per ADR-008), which itself superseded the
       `X-Internal-API-Key` shared-secret header (retired 2026-04,
       Project Keystone).
+
+  - id: CD-029
+    title: Receivers verify Clerk session JWTs locally, through the shared library
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    applies_to: [api-service]
+    description: >
+      The human half of the CD-019 contract, on the receiving side. An
+      API that accepts Clerk session JWTs verifies them in process: RS256
+      against the issuer's JWKS document, cached, with the token's `iss`
+      checked against a configured issuer set. Verification is consumed
+      from the shared library — `identity` for Python services,
+      `common-typescript-utils` for TypeScript — so there is one
+      implementation across the fleet, and it never calls out to Clerk
+      on the request path.
+
+      Required env vars:
+        - CLERK_ISSUERS, or CLERK_ISSUER + CLERK_JWKS_URL
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+        (1) Verify the service consumes the shared library for session
+            verification rather than implementing it locally. Python:
+            require an import from `identity` (`identity.chain` or
+            `identity.clerk`). TypeScript: require `verifyClerkToken`
+            (or its payload type) imported from `common-typescript-utils`.
+            Flag any in-repo JWKS fetch or asymmetric (RS256-family)
+            token decode written outside that library — see XSTACK-005.
+            A JWKS fetch has to look like an HTTP call to a JWKS URL; a
+            decode has to name an asymmetric algorithm.
+        (2) Verify the Clerk issuer set is configured: `CLERK_ISSUERS`,
+            or `CLERK_ISSUER` together with `CLERK_JWKS_URL`. A JWKS URL
+            alone proves the signature but not who issued the token —
+            the issuer is what the verifier checks `iss` against. Read
+            the variable names from source, Python or TypeScript.
+        (3) Flag any remote credential verification — an HTTP request to
+            `api.clerk.com`, or any outbound call at all, inside the
+            verification path. Verification is local.
+    supersedes: >
+      CD-019 clauses (5) session half, (6) Clerk half, and (7), split
+      out 2026-09 so a receiver is held to the populations it serves.
+
+  - id: CD-030
+    title: Receivers that accept machine callers verify named keys locally
+    status: requirement
+    dimension: structural_conformance
+    severity: ERROR
+    applies_to: [api-service]
+    description: >
+      The machine half of the CD-019 contract, on the receiving side. An
+      API that accepts calls from cogs or services holds the set of
+      machines it trusts in its own environment, one
+      `<MACHINE_NAME>_API_KEY` per machine, and compares a presented key
+      in constant time through `identity.apikey`. The matched key names
+      the caller — no machine name is read from the request — and key
+      material never reaches a database.
+
+      An API with no machine callers is outside this rule and records it
+      as an exemption in its evaluator.yaml, with the reason. It remains
+      bound by CD-029.
+
+      Required env vars:
+        - <MACHINE_NAME>_API_KEY for every machine the service declares
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+        (1) Verify the machine-key set is configured: built from
+            per-machine `<MACHINE_NAME>_API_KEY` environment variables.
+            Flag a service that accepts machine callers and declares no
+            key variable — it rejects every machine.
+        (2) Flag a constant-time credential comparison written outside
+            the shared library — the machine-key comparison belongs to
+            `identity.apikey`.
+            "Credential" here is what CD-019 defines: a Clerk session
+            JWT or a named machine key, presented in the
+            `Authorization` header. A constant-time comparison of
+            anything else is out of scope — a webhook shared secret in
+            its own header, or an HMAC taken over the request body — and
+            must not be flagged. Those callers cannot present either
+            credential type, so the remedy this clause prescribes
+            (`identity.apikey`) does not exist for them, and a finding
+            whose only available fix is to stop comparing in constant time
+            argues for weaker code.
+            A comparison counts when the Bearer path is visible around
+            it (an `Authorization` header, a machine-key or Clerk
+            lookup, or the token/JWT vocabulary of a local verifier) and
+            does not count when the compared value is computed by
+            HMAC-ing a payload.
+        (3) Flag any persistence of key material: a model column,
+            migration, or INSERT on a principal, machine, or issuer
+            table whose column name matches `key|secret|token|hash`.
+            (`jwks_url` is a URL, not key material, and is exempt.) The
+            store holds names and grants only.
+        (4) Flag any credential path that reads a machine name from the
+            request — a header, query parameter, or body field naming
+            the caller, machine, or service. The key names the caller.
+    supersedes: >
+      CD-019 clauses (5) key half, (6) machine half, (8) and (9), split
+      out 2026-09 so an API with no machine callers can exempt this half
+      alone.
 
   - id: CD-020
 
