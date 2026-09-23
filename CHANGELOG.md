@@ -1,3 +1,10 @@
+# [7.5.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.4.2...v7.5.0) (2026-09-23)
+
+
+### Features
+
+* **testing:** TEST-012 applies by repo type, not by opt-in ([8962c3d](https://github.com/mini-app-polis/ecosystem-standards/commit/8962c3d59a788a6d5eafa9d115abc1c7adc8af93))
+
 ## [7.4.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.4.1...v7.4.2) (2026-09-23)
 
 
