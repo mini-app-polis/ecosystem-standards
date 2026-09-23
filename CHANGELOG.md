@@ -1,3 +1,10 @@
+# [7.4.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.3.0...v7.4.0) (2026-09-23)
+
+
+### Features
+
+* **standards:** require every release to request its own evaluation (CD-031) ([91d10c4](https://github.com/mini-app-polis/ecosystem-standards/commit/91d10c48f9524004129fc1445298bf30d42d2b2b))
+
 # [7.3.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.2.1...v7.3.0) (2026-09-23)
 
 
