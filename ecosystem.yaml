@@ -113,7 +113,7 @@ services:
     \ conformance fixtures. Consumed by each enforcement point rather than run as\
     \ a service: one specification, N conformant enforcement points, deliberately\
     \ not a central auth service on the request path. Verifies Clerk session JWTs\
-    \ for humans and named per-machine API keys for cogs. See ADR-008, CD-019, AUTH-004.\n"
+    \ for humans and named per-machine API keys for cogs. See ADR-008, CD-019, CD-029, CD-030, AUTH-004.\n"
 - id: common-python-utils
   type: shared-library
   status: active
