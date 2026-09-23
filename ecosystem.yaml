@@ -79,11 +79,24 @@ services:
   description: 'Reads structured WCS notes from api-kaianolevine-com and maintains
     the wcs-wiki markdown knowledge base.
 
-    The last cog still on Prefect and Railway, and it is paused: nothing triggers
-    it, and it is not run again before it moves to a Lambda behind its own queue
-    like the other three (ADR-009). Until then it fails the pipeline-cog rules
-    that describe that runtime — PIPE-016 and PIPE-017 — and those findings are
-    the list of what the move involves rather than drift to fix in place.
+    Off Prefect as of 2026-09-23, and staying on Railway: a one-shot process,
+    one wake is one run, no resident container and no queue. It did not follow
+    the other three onto Lambda because GitPython needs a git executable the
+    managed python3.11 runtime does not ship, and because a full idempotent
+    re-render takes no arguments — every queue message would be identical. See
+    wiki-curator-cog ADR-004.
+
+    It therefore still fails the pipeline-cog rules that describe a queue-driven
+    Lambda — PIPE-016, PIPE-017, PIPE-018, PIPE-020, CD-010 and CD-024 — and
+    carries them as deferrals rather than exemptions, because the claim that
+    they should not apply cannot be made until the taxonomy question ADR-009
+    settled for three cogs is reopened for this shape. The Layer 2 polish pass
+    will be the second thing shaped like it.
+
+    PIPE-016 and PIPE-019 still fail a repo that declares prefect. That check
+    stays: it is now a guard against regression rather than a description of
+    where the fleet is, and it is deliberately kept rather than retired with
+    the runtime it was written for.
 
     Registered here because it already carries an evaluator.yaml declaring itself
     conformance-managed (type: pipeline-cog) — before that the fleet-wide run
