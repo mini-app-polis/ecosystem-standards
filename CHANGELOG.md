@@ -1,3 +1,10 @@
+## [7.2.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.2.0...v7.2.1) (2026-09-23)
+
+
+### Bug Fixes
+
+* **standards:** accept Tailwind 4 CSS-first setup in FE-003 ([06b7da3](https://github.com/mini-app-polis/ecosystem-standards/commit/06b7da325f2600a9ec5583c9f96b04bb4b956a3d))
+
 # [7.2.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.1.0...v7.2.0) (2026-09-22)
 
 
