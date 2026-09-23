@@ -275,10 +275,11 @@ actionable.
   rate-limiting middleware applied.
 
 - [ ] **Type-checking strictness baseline.** `TEST-012` requires
-  mypy in CI if `[tool.mypy]` is declared, but doesn't specify
-  when that section should be declared or what strictness level
-  it should use. Stronger version: `strict = true` required for
-  new libraries and api-services.
+  every Python repo in scope to declare `[tool.mypy]` and run mypy
+  in CI, but not what strictness level it should use. The fleet
+  runs `strict = false` with `ignore_missing_imports = true`.
+  Stronger version: `strict = true` required for new libraries and
+  api-services.
 
 ### Tier 4 — flaky/operational, only matters at scale
 

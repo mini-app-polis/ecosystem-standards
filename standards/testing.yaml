@@ -270,25 +270,49 @@ standards:
       but have no assertion on the mock object.
 
   - id: TEST-012
-    title: mypy must run in CI if [tool.mypy] is declared
+    title: Every Python repo typechecks in CI, against a declared [tool.mypy]
     status: requirement
     dimension: cd_readiness
     severity: WARN
     applies_to: [pipeline-cog, trigger-cog, api-service, shared-library]
     description: >
-      If a repo declares [tool.mypy] in pyproject.toml, a CI step invoking
-      "uv run mypy src/" (or equivalent) is required. A mypy config that is never
-      run in CI gives false assurance and drifts silently.
-      Exception: mypy may be omitted during initial setup if repo is in a documented
-      "typing: in progress" state. This exception must not persist past first stable release.
+      Every Python repo of these types declares [tool.mypy] in pyproject.toml
+      (python_version at minimum) and runs mypy in CI — "uv run mypy src/" as a
+      step, or as the `typecheck` input to python-test.yml, which skips its
+      type-check step when the input is empty. Both halves are required: a
+      config that CI never runs gives false assurance, and mypy run with no
+      config pins nothing about what is checked, so the result moves with the
+      runner's Python and mypy's defaults.
+      The trigger is the repo type, not the presence of config. The rule used
+      to apply only to a repo that declared [tool.mypy], which made it opt-in:
+      a repo that configured nothing was invisible, and "deliberately untyped"
+      could not be told from "never set up".
+      A repo that deliberately does not typecheck declares a TEST-012
+      exemption in evaluator.yaml, with the reason.
+      Typing in progress: a repo working toward this declares a TEST-012
+      deferral in evaluator.yaml with an `until:` date. The date is what keeps
+      the state time-bounded — once it passes, the finding resurfaces at full
+      severity — and it must not be later than the repo's first stable
+      release.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Check pyproject.toml for [tool.mypy] section. If present, scan
-      .github/workflows/ for a step invoking mypy. Flag if no mypy CI step exists
-      and repo is not in a documented "typing: in progress" state.
-    origin: "api-kaianolevine-com has no mypy CI step. common-python-utils does. Standard aligns them."
-
+      A repo with no pyproject.toml is not a Python repo and passes (applies_to
+      includes shared-library, which TypeScript libraries are too). Otherwise
+      read pyproject.toml for a [tool.mypy] table, parsed as TOML so a
+      commented-out section does not count, and scan .github/workflows/ for a
+      non-comment line invoking mypy. Three findings, each with its own
+      suggestion: nothing typechecks the repo (no config and no CI step);
+      config declared but not run in CI; run in CI with no config.
+      Exemptions and deferrals are applied by the runner from evaluator.yaml
+      before the check is called; the check does not read them.
+    origin: >
+      api-kaianolevine-com had no mypy CI step; common-python-utils did, and
+      the standard aligned them. It was then gated on [tool.mypy], and four of
+      the eight Python repos — api-kaianolevine-com among them — had never
+      typechecked with nothing saying so. evaluator-cog had adopted
+      python-test.yml without its typecheck input and went untyped the same
+      way. The gate was removed on 2026-09-23.
   - id: TEST-013
     title: Operational delays sourced from config, not hardcoded
     status: convention
