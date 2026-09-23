@@ -1,3 +1,10 @@
+## [7.4.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.4.0...v7.4.1) (2026-09-23)
+
+
+### Bug Fixes
+
+* **standards:** accept the owning repo's local evaluate.yml call in CD-031 ([4fa70a3](https://github.com/mini-app-polis/ecosystem-standards/commit/4fa70a33c348ac6cfa52d3a19446376bef2c1886))
+
 # [7.4.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.3.0...v7.4.0) (2026-09-23)
 
 
