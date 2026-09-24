@@ -24,6 +24,7 @@ For the process of writing or superseding an ADR, see
 | ADR-007 | Accepted  | [External Provider Failure — Reporting and Recovery Contract](ADR-007-external-provider-failure-contract.md) |
 | ADR-008 | Accepted  | [Named Machine Keys as the Machine Identity](ADR-008-named-machine-keys.md) |
 | ADR-009 | Accepted  | [Pipeline Cogs Run on Lambda Behind Their Own Queue](ADR-009-pipeline-cogs-on-lambda.md) |
+| ADR-010 | Accepted  | [Infrastructure Lives in One Repository, With Its State Remote](ADR-010-infrastructure-in-one-repository.md) |
 
 ---
 
@@ -127,6 +128,15 @@ own and `trigger-cog` as a loop that starts work through the API. Retires
 the eight rules that encoded Prefect on Railway (PIPE-001/004/006/009/012,
 CD-005/015/016) and adds PIPE-016 to PIPE-019. Cogs not yet moved read as
 backlog rather than being exempted. Supersedes ADR-006.
+
+**ADR-010 — Infrastructure Lives in One Repository, With Its State Remote.**
+Moves every pipeline cog's Terraform out of its repository into
+mini-app-polis/infra: one root, remote state in S3, one `cog-worker`
+module, secrets synced from Doppler to Parameter Store and loaded at cold
+start rather than passed through Terraform. Adds the `infrastructure`
+repo type and splits PIPE-016/017/018, CD-010 and CD-024 between the cog
+and the infra repository, so each evaluation reads only its own. Amends
+ADR-009.
 
 ---
 

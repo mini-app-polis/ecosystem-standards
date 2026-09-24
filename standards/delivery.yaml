@@ -334,7 +334,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog, api-service, react-app]
+    applies_to: [pipeline-cog, trigger-cog, api-service, react-app, infrastructure]
     description: >
       Every production service implements all three observability layers:
         Layer 1 — Liveness:    Healthchecks.io for always-on workers.
@@ -364,8 +364,11 @@ standards:
       Layer 1: HEALTHCHECKS_URL in .env.example + ping call in main loop
                (trigger cogs — HTTP services rely on Railway restart).
                Pipeline cogs: an aws_cloudwatch_metric_alarm on the
-               dead-letter queue with non-empty alarm_actions, in
-               infra/*.tf.
+               dead-letter queue with non-empty alarm_actions — declared
+               once in mini-app-polis/infra's cog module and checked there
+               (type infrastructure), not in the cog (ADR-010). For the
+               infrastructure type, Layer 1 is the whole of the check, and
+               it is skipped when no event source mapping is declared.
       Layer 2: shared library logger imported and used throughout.
       Layer 3: Sentry initialised at entry point, SENTRY_DSN in .env.example.
       Flag any service missing any layer.
@@ -397,11 +400,13 @@ standards:
                         the Doppler → Railway native sync
         GitHub Actions: CI secrets synced via Doppler → GitHub integration
         Cloudflare Pages: secrets synced via Doppler CLI in CI/CD
-        AWS Lambda:     not a sync. Each cog's infra/tf wrapper reads
-                        Doppler at plan/apply time and passes the values
-                        as TF_VAR_*; Terraform sets them on the function.
-                        A rotated secret reaches the function on the next
-                        apply, not automatically.
+        AWS Lambda:     Doppler → SSM Parameter Store native sync, into
+                        /mini-app-polis/prd/. Each worker loads the
+                        parameters its module block names at cold start
+                        (mini_app_polis.ssm_secrets); none pass through
+                        Terraform, so none are in state or in a plan.
+                        A rotated secret reaches a worker at its next
+                        cold start.
 
       Secret management workflow:
         - All secret changes are made in Doppler only
@@ -413,12 +418,13 @@ standards:
           this file is the human-readable contract of what a service needs
 
       Doppler project structure:
-        One Doppler project per service or cog.
-        Environments: development, staging, production (minimum).
+        One project, mini-app-polis-ecosystem, with configs dev and prd.
+        Development runs locally under `doppler run`; only prd is synced.
 
-      The Lambda path is the one place a rotation is not pushed: after
-      rotating a secret a Lambda consumes, run the cog's infra/tf apply.
-      Secrets never live in terraform.tfvars, and Terraform never creates
+      On Lambda, a warm instance keeps the values it loaded until it is
+      recycled: after rotating a secret a worker consumes, a deploy or any
+      configuration change forces the cold start that picks it up.
+      Secrets are never Terraform variables, and Terraform never creates
       access keys — those are minted by hand and stored in Doppler.
     checkable: true
     check_notes: >
@@ -877,6 +883,9 @@ standards:
       every repository's last result; every other repo uses the default,
       `scope: repo`.
 
+      A Terraform root (type `infrastructure`) has no releases: a change
+      ships when it is applied, so its evaluate job runs after the apply.
+
       Without the job nothing goes red. The repository's findings simply
       stay at whatever the last fleet pass recorded while its code moves
       on, which reads as a healthy record and is a stale one — the
@@ -891,11 +900,12 @@ standards:
             mini-app-polis/.github repo that owns the workflow,
             `./.github/workflows/evaluate.yml`, its own copy by local path.
             Flag if none exists.
-        (2) Verify that job runs after the release: its `needs:` reaches,
-            directly or through other jobs' `needs:`, a job with a step
-            that runs `semantic-release`. Flag an evaluate job that can
-            run before or without the release — it would evaluate the
-            tree the release has not yet produced.
+        (2) Verify that job runs after the change ships: its `needs:`
+            reaches, directly or through other jobs' `needs:`, a job with
+            a step that runs `semantic-release` — or, in a Terraform root
+            with no releases, `terraform apply`. Flag an evaluate job that
+            can run before or without it — it would evaluate the tree
+            before the change shipped.
     origin: >
       2026-09: splitting deejaytools-com into a website and an API left
       both repos without the evaluate job every other repo in the fleet
@@ -1130,7 +1140,7 @@ standards:
     status: convention
     dimension: cd_readiness
     severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service]
+    applies_to: [trigger-cog, api-service, infrastructure]
     description: >
       A deployable service states its memory and CPU ceiling in its
       platform descriptor rather than accepting whatever the platform
@@ -1153,18 +1163,20 @@ standards:
       is not yet known, and a requirement to declare a number nobody has
       measured produces confident fiction.
 
-      A pipeline cog's platform descriptor is its `infra/` Terraform, and
-      its ceiling is the Lambda function's `memory_size` and `timeout`.
+      A pipeline cog's platform descriptor is its module block in
+      mini-app-polis/infra (ADR-010), and its ceiling is the Lambda
+      function's `memory_size` and `timeout`.
       Lambda allocates CPU in proportion to memory, so there is no
       separate CPU ceiling to declare; a stated memory size and timeout
       are the whole of the footprint.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Pipeline cogs: (1) read `infra/*.tf`; fail if no
-      `aws_lambda_function` resource is declared there. (2) Fail if that
-      resource does not set both `memory_size` and `timeout`.
-      Other types: (1) read `railway.json` or `railway.toml` at the repo
+      infrastructure: (1) fail for any `aws_lambda_function`, including
+      in modules, that does not set both `memory_size` and `timeout`.
+      (2) Fail for any root `module` block calling the cog-worker module
+      that does not set both `memory_mb` and `timeout_seconds`.
+      trigger-cog and api-service: (1) read `railway.json` or `railway.toml` at the repo
       root. Absent → fail. (2) Fail if memory and CPU limit keys are
       absent or null. Accept either the platform's native limit keys or a
       documented equivalent — the check is that a ceiling is stated, not
@@ -1259,31 +1271,29 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service]
+    applies_to: [trigger-cog, api-service, infrastructure]
     description: >
       A repo that declares infrastructure as code checks it on every push:
-      `terraform fmt -check` and `terraform validate`, in the `test` stage.
-      Neither needs state or credentials — validate reads the providers'
-      schemas — so this is the half of Terraform that CI can own while
-      applying stays on a workstation.
+      `terraform fmt -check` and `terraform validate`. Neither needs state
+      or credentials — validate reads the providers' schemas — so they run
+      before anything is planned.
 
       What it catches is what a plan would have caught a day later: a
       syntax error, a reference to a variable that no longer exists, a
       failed variable validation, a file nobody formatted. What it does not
-      catch is anything the API only rejects at apply time, and it is not
-      an argument for applying in CI — that needs remote state and a role
-      broad enough to rewrite the account, which is a separate decision.
+      catch is anything the API only rejects at apply time.
 
       The version Terraform runs as in CI matches the one that applies it,
       or `fmt` disagrees between the two.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Skip the repo when it has no `infra/**/*.tf`.
-      Otherwise parse `.github/workflows/ci.yml` and fail unless it either
-      runs `terraform fmt` and `terraform validate` itself, or passes a
-      Terraform directory to the shared `python-test.yml` (the
-      `terraform-dir` input).
+      The Terraform root is the repository root for type infrastructure,
+      `infra/` for anything else. Skip the repo when it declares no `.tf`
+      file there. Otherwise fail unless some workflow under
+      `.github/workflows/` runs `terraform fmt` and `terraform validate`,
+      or `ci.yml` passes a Terraform directory to the shared
+      `python-test.yml` (the `terraform-dir` input).
     origin: >
       2026-09: three cogs gained an `infra/` directory within a week, and
       the first sign that a `.tf` file was malformed was a plan on a
@@ -1295,7 +1305,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service]
+    applies_to: [trigger-cog, api-service, infrastructure]
     description: >
       A stack pins the Terraform version and every provider version, and
       commits `.terraform.lock.hcl` so a second machine resolves the same
@@ -1315,19 +1325,21 @@ standards:
       `terraform providers lock -platform=darwin_arm64 -platform=linux_amd64`.
 
       Committing the lock is not in tension with SEC-008. It holds
-      versions and hashes and no values; it is the one file in `infra/`
-      that belongs in the repository precisely because it is not
+      versions and hashes and no values; it is the one generated Terraform
+      file that belongs in the repository precisely because it is not
       environment-specific.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Skip the repo when it has no `infra/**/*.tf`. Otherwise:
-      (1) Fail unless some `infra/*.tf` sets `required_version` inside a
-          `terraform` block.
-      (2) Fail for any entry in `required_providers` that declares a
-          `source` without a `version`.
-      (3) Fail when `infra/.terraform.lock.hcl` is absent.
-      (4) When ci.yml runs Terraform (CD-027 — inline, or a
+      The Terraform root is the repository root for type infrastructure,
+      `infra/` for anything else. Skip the repo when it declares no `.tf`
+      file there. Otherwise:
+      (1) Fail unless some `.tf` file in the root sets `required_version`
+          inside a `terraform` block.
+      (2) Fail for any entry in `required_providers` — in the root or its
+          `modules/` — that declares a `source` without a `version`.
+      (3) Fail when the root's `.terraform.lock.hcl` is absent.
+      (4) When a workflow runs Terraform (CD-027 — inline, or a
           `terraform-dir` passed to the shared `python-test.yml`), fail
           when the lock file carries fewer than two `h1:` hashes. One
           platform's hashes plus a Linux runner is the failure this

@@ -362,10 +362,11 @@ standards:
       Cloud; the fleet's pipeline cogs now hold no resident process.
     description: >
       A pipeline cog is an AWS Lambda function fed by an SQS queue of its
-      own, and its repository owns that infrastructure: `infra/` declares
-      the queue, the function and the event source mapping between them.
-      AWS polls the queue and invokes the function, so nothing of the
-      cog's stays running between jobs.
+      own. The queue, the function and the event source mapping between
+      them are declared in mini-app-polis/infra, one `module` block per cog
+      (ADR-010); the cog's repository owns its code. AWS polls the queue
+      and invokes the function, so nothing of the cog's stays running
+      between jobs.
 
       One queue per cog, because SQS has no selective receive: on a shared
       queue each consumer would take, fail to recognise and dead-letter
@@ -377,12 +378,12 @@ standards:
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      (1) Read `infra/*.tf`. Fail if it does not declare all three of
-          `resource "aws_sqs_queue"`, `resource "aws_lambda_function"`
-          and `resource "aws_lambda_event_source_mapping"`. Name the ones
-          missing; a repo with no `infra/` fails on all three.
-      (2) Fail if `prefect` is declared in pyproject.toml or
-          requirements.txt.
+      Fail if `prefect` is declared in pyproject.toml or requirements.txt.
+      That the runtime is declared is not checked from the cog: it is in
+      another repository, and each evaluation reads only its own
+      (ADR-010). A cog with no module block in mini-app-polis/infra has no
+      function to deploy to, so its deploy job fails — that failure is the
+      check.
     origin: >
       2026-09: evaluator-cog and deejay-cog moved from Prefect on Railway
       to SQS and Lambda (evaluator-cog docs/serverless-migration.md), and
@@ -393,7 +394,7 @@ standards:
     status: requirement
     dimension: pipeline_reliability
     severity: ERROR
-    applies_to: [pipeline-cog]
+    applies_to: [pipeline-cog, infrastructure]
     supersedes: >
       CD-017 (version-controlled Railway restart policy) for pipeline cogs,
       which no longer have a process to restart. The queue's redelivery is
@@ -415,13 +416,18 @@ standards:
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      (1) In `infra/*.tf`, fail unless the `aws_lambda_event_source_mapping`
-          sets `function_response_types` including "ReportBatchItemFailures".
+      Two halves, in the two repositories that own them (ADR-010).
+      infrastructure — the Terraform, including its modules, where the
+      shared cog module declares these once for every cog:
+      (1) Fail unless the `aws_lambda_event_source_mapping` sets
+          `function_response_types` including "ReportBatchItemFailures".
       (2) Fail unless an `aws_sqs_queue` sets a `redrive_policy` naming a
           `deadLetterTargetArn`.
       (3) Fail unless the queue's `visibility_timeout_seconds` is derived
           from the function's timeout (references the same variable) or,
           when both are literals, exceeds it.
+      Skip when no event source mapping is declared.
+      pipeline-cog — the code:
       (4) Fail if no production source file under src/ returns a
           `batchItemFailures` value.
     origin: >
@@ -434,14 +440,15 @@ standards:
     status: requirement
     dimension: pipeline_reliability
     severity: WARN
-    applies_to: [pipeline-cog]
+    applies_to: [infrastructure]
     supersedes: >
       PIPE-004 (Prefect concurrency groups for shared resources) and
       PIPE-009 (named Prefect concurrency slot before scanning a shared
       resource), retired 2026-09 per ADR-009.
     description: >
-      How many jobs may run at once is stated in `infra/`, not left to the
-      account's pool. Lambda will otherwise scale a burst out as wide as
+      How many jobs may run at once is stated for each cog, in its module
+      block in mini-app-polis/infra (ADR-010), not left to the account's
+      pool. Lambda will otherwise scale a burst out as wide as
       the account allows, and every one of those workers writes to the
       same API, the same Drive folders and the same Sheets.
 
@@ -460,15 +467,13 @@ standards:
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      In `infra/*.tf`:
-      (1) Fail unless the `aws_lambda_event_source_mapping` has a
-          `scaling_config` block setting `maximum_concurrency`, or the
-          `aws_lambda_function` sets `reserved_concurrent_executions`.
-      (2) Fail when both are set and the function's
-          `reserved_concurrent_executions` is a literal lower than the
-          mapping's `maximum_concurrency` literal — AWS rejects that pair
-          at create time. Variable defaults count as literals when the
-          value is a `default =` in `variables.tf`.
+      For every `module` block at the root that calls the cog-worker
+      module, fail unless it sets exactly one of `reserved_concurrency`
+      (a reservation: anything but -1 or 0) and `max_concurrency` (the
+      mapping's ceiling). Neither leaves the cog unbounded; both is the
+      pair AWS rejects when the mapping's maximum exceeds the reservation.
+      The module's variable validation refuses the same plan; this makes
+      the statement visible in evaluations.
     origin: >
       The Prefect limits these replace were set in code; deejay-cog's sweep
       needs one run at a time and the mapping cannot go below two.

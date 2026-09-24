@@ -364,41 +364,34 @@ standards:
     status: requirement
     dimension: security_posture
     severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog, api-service]
+    applies_to: [trigger-cog, api-service, infrastructure]
     description: >
-      A repo that applies Terraform from a workstation keeps the state
-      out of version control, along with the variable files and any
-      saved plan.
+      A repo that declares Terraform keeps its state out of version
+      control, along with the variable files and any saved plan.
 
       State is the exposure, not tfvars. `terraform.tfstate` records
-      every attribute Terraform set, and for a Lambda that includes the
-      function's whole environment — which is every Doppler secret the
-      function consumes, in plaintext, in a file that sits in the same
-      directory as the code it configures. `terraform.tfvars` holds the
-      non-secret settings but is the file most likely to acquire a
-      secret by hand, and a saved plan carries the values it was built
-      with, secrets included.
+      every attribute Terraform set, in plaintext. `terraform.tfvars` is
+      the file most likely to acquire a secret by hand, and a saved plan
+      carries the values it was built with.
 
-      Nothing about local state makes this optional. Local state is a
-      deliberate choice on this fleet (CD-011: the `infra/tf` wrapper
-      reads Doppler at apply time, CI never applies), and it is precisely
-      that choice which puts the state file next to a tracked directory.
-      A remote backend would move the problem to a bucket; leaving state
-      local means an explicit `.gitignore` is the whole of the control.
-
-      That control is currently one hand-copied file per repo, which is
-      the kind of thing that survives three copies and fails on the
-      fourth.
+      The fleet's state is remote, in S3 (ADR-010), and no secret passes
+      through Terraform (CD-011), so a committed state file should not
+      exist and would hold less than it once did. The rule stays because
+      a local copy is one `terraform init -migrate-state` away, and a
+      `.gitignore` beside the Terraform root is what keeps a stray one out
+      of the repository.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Skip the repo when it has no `infra/**/*.tf`. Otherwise, against
-      the tracked file list (`git ls-files`):
-      (1) Fail for any tracked path under `infra/` matching
+      The Terraform root is the repository root for type infrastructure,
+      `infra/` for anything else. Skip the repo when it declares no `.tf`
+      file there. Otherwise, against the tracked file list
+      (`git ls-files`):
+      (1) Fail for any tracked path under the root matching
           `*.tfstate`, `*.tfstate.*`, `terraform.tfvars`,
           `*.auto.tfvars`, `tfplan`, `*.tfplan`, or anything under
           `.terraform/`. Report the paths.
-      (2) Fail when `infra/.gitignore` is absent. A repo that is clean
+      (2) Fail when the root's `.gitignore` is absent. A repo that is clean
           today without one is clean by luck.
       `terraform.tfvars.example` is the committed template and is not a
       finding. `.terraform.lock.hcl` is committed on purpose (CD-028)
