@@ -168,12 +168,12 @@ Priority: low — functional but will drift further as UI evolves.
 ## Pipeline concurrency (PIPE-018)
 
 PIPE-009's Prefect concurrency slot is retired (ADR-009); PIPE-018 asks for
-the ceiling in `infra/` instead.
+the ceiling in each cog's module block in mini-app-polis/infra (ADR-010).
 
-- [ ] **deejay-cog** — `reserved_concurrent_executions = 1` once the account's
-  Lambda concurrency quota increase (requested 2026-09-21) is approved; until
-  then `maximum_concurrency = 2` satisfies the rule but allows two sweeps.
-- [x] **evaluator-cog** — `maximum_concurrency = 4` on the mapping.
+- [x] **deejay-cog** — `reserved_concurrency = 1`: the quota increase was
+  approved, and sweeps run one at a time.
+- [x] **evaluator-cog** — `max_concurrency = 4`.
+- [x] **transcription-cog** — `reserved_concurrency = 1`.
 ---
 
 ## Candidate standards — additions considered during 2026-04 audit

@@ -180,6 +180,18 @@ services:
     \ rather than being invisible in every consumer. Consumers pin the moving `v1`\
     \ tag; a breaking change gets `v2` instead. No release automation \u2014 CHANGELOG.md\
     \ is maintained by hand.\n"
+- id: infra
+  type: infrastructure
+  status: active
+  dod_type: null
+  language: hcl
+  host: aws
+  description: 'The AWS account in Terraform: one root, remote state in S3, the
+    account''s shared resources, and every pipeline cog''s runtime through one
+    cog-worker module block per cog (ADR-010). Plans on pull requests from dev and
+    applies on merge to main through a GitHub OIDC role; no releases.
+
+    '
 - id: deejaytools-api
   type: api-service
   status: active

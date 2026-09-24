@@ -300,11 +300,10 @@ schema:
   repo_types:
     pipeline-cog: >
       Queue-driven worker: an AWS Lambda function behind an SQS queue of
-      its own, both declared in the repo's `infra/`. Processes data and
-      holds no resident process between jobs. Examples: deejay-cog,
-      evaluator-cog. (transcription-cog and wiki-curator-cog are this type
-      and have not finished moving; their findings are the backlog —
-      ADR-009.)
+      its own, both declared in mini-app-polis/infra (ADR-010); the
+      repository holds the cog's code. Processes data and holds no
+      resident process between jobs. Examples: deejay-cog, evaluator-cog,
+      transcription-cog.
     trigger-cog: >
       Always-on worker running a plain asyncio loop. Detects events and
       asks api-kaianolevine-com to run the owning cog, which enqueues onto
@@ -346,6 +345,17 @@ schema:
       like a broken workflow. VER-003, VER-009, CD-025 and CD-026 now
       scope to this type.
       Examples: .github.
+    infrastructure: >
+      A Terraform root, at the repository's root: the AWS account's
+      shared resources and, through one `module` block per cog, every
+      pipeline cog's queue, dead-letter queue, alarm, function and deploy
+      role (ADR-010). State is remote. Changes plan on pull requests and
+      apply on merge to main; there are no releases, so release and
+      package rules are out of scope by taxonomy. Rules about the pipeline
+      cogs' runtime (PIPE-017's infrastructure half, PIPE-018, CD-010's
+      dead-letter-queue alarm, CD-024) and about Terraform itself (CD-027,
+      CD-028, SEC-008) are checked here, once.
+      Examples: infra.
 
   # Trait definitions. Each trait has a human-readable `description`
   # and optionally carries structured exemption data:

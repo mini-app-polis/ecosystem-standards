@@ -5,6 +5,7 @@
 **Repo:** ecosystem-standards
 **Depends on:** ADR-002 (type/trait taxonomy)
 **Supersedes:** ADR-006 (startup registration resilience for serve()-based cogs)
+**Amended by:** ADR-010 — the queue and function are declared in mini-app-polis/infra, not the cog's `infra/`
 
 ---
 

@@ -35,11 +35,13 @@ definitions_of_done:
         data is consumed exclusively via common-python-utils wrappers which
         handle validation internally (e.g. Drive API via DriveFacade)
       - "If pipeline cog: worker.lambda_handler consumes SQS records and
-        returns batchItemFailures; infra/ declares the queue, DLQ, function
-        and event source mapping (PIPE-016, PIPE-017)"
+        returns batchItemFailures; a module block in mini-app-polis/infra
+        cogs.tf declares the queue, DLQ, function and event source mapping
+        (PIPE-016, PIPE-017, ADR-010)"
       - "If pipeline cog: deployed by the shared lambda-deploy workflow as a
-        job after release; secrets reach the function through infra/tf, never
-        terraform.tfvars"
+        job after release; secrets are listed by name in its module block and
+        loaded from Parameter Store at cold start (load_secrets in the
+        package __init__), never passed through Terraform"
       - "If trigger cog (e.g. watcher-cog): starts runs by POSTing to
         api-kaianolevine-com — no queue or Prefect client of its own (PIPE-019)"
       - External API calls retried at the call site (PIPE-007)
