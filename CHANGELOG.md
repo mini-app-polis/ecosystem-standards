@@ -1,3 +1,10 @@
+# [7.6.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.5.0...v7.6.0) (2026-09-24)
+
+
+### Features
+
+* infrastructure repo type and ADR-010 ([7048dd5](https://github.com/mini-app-polis/ecosystem-standards/commit/7048dd5eedc9a7bb6d8649f4650383c6124aa1a0))
+
 # [7.5.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.4.2...v7.5.0) (2026-09-23)
 
 
