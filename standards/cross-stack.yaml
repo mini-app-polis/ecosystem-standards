@@ -241,15 +241,16 @@ standards:
     status: convention
     dimension: cross_repo_coherence
     severity: WARN
+    applies_to: [all]
     description: >
-      A consumer's pin to an ecosystem shared library is no more than one
+      A repo's pin to one of the fleet's own libraries is no more than one
       minor version behind that library's latest release.
 
-      "Shared library" means a repo registered in `ecosystem.yaml` with
-      `type: shared-library` — currently common-python-utils,
-      common-typescript-utils and identity. The definition is deliberately
-      the registry rather than a hardcoded list, so a new shared library
-      is covered the day it is registered.
+      "The fleet's own library" means a package whose registry entry
+      (PyPI `project_urls`, npm `repository`) records its source under
+      `github.com/mini-app-polis/`. The registry is the definition rather
+      than a list kept here, so a new library is covered the day it is
+      published, and the catalog carries no inventory of the org.
 
       CD-020 makes a repo's own dependency declaration internally
       consistent: pyproject.toml, the sources table and the lockfile all
@@ -265,6 +266,12 @@ standards:
       v1.1.4 while its only consumer sat on v1.1.2 — honest pinning, and
       still stale. Fixing the first problem does not address the second.
 
+      A per-repo rule. The stale pin is the consuming repo's to fix, so
+      the finding is that repo's, and that repo's own release is what
+      re-evaluates it. It reads nothing of any other repository — the
+      library's latest release comes from the package registry, not from
+      the library's repo.
+
       A `convention` rather than a `requirement`. Staleness is a signal
       to act on, not a defect: there are legitimate reasons to hold a
       version, and the right response to a real one is a dated deferral
@@ -275,18 +282,24 @@ standards:
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      (1) Read `ecosystem.yaml`; collect repos with
-          `type: shared-library` as the set of tracked libraries.
-      (2) For each tracked library, resolve its latest release tag.
-      (3) For each repo in the fleet, read its dependency declarations
-          (`[tool.uv.sources]` and `project.dependencies` for Python,
-          `dependencies` and `devDependencies` for TypeScript) and
-          extract the pinned version for any tracked library.
-      (4) Fail where the pinned minor is more than one behind the
-          library's latest minor. Compare minor versions only — a patch
-          release does not make a consumer stale.
-      (5) A pin to a branch or a bare commit SHA is CD-020's finding,
+      (1) Read this repo's dependency declarations: the root
+          `pyproject.toml` (`project.dependencies`,
+          `project.optional-dependencies`, with a `[tool.uv.sources]`
+          tag or rev taking precedence as the effective pin) and every
+          `package.json` outside `node_modules` and hidden directories
+          (`dependencies`, `devDependencies`).
+      (2) For each versioned pin, ask the registry it is published to
+          (PyPI or npm) for the package's latest version and source
+          repository. Skip packages whose source is not under
+          `github.com/mini-app-polis/`, and the repo's own package.
+      (3) Warn where the pinned minor is more than one behind the
+          latest minor, or the pinned major is behind. Compare
+          MAJOR.MINOR only — a patch release does not make a consumer
+          stale.
+      (4) A pin to a branch or a bare commit SHA is CD-020's finding,
           not this one; skip it here rather than double-reporting.
+      (5) A registry that cannot be reached leaves the pin unjudged —
+          no finding. An outage must never read as a stale pin.
       Version-skew comparison follows the precedent set by EVAL-002,
       which measures a repo's pinned standards version against the
       catalog's current release.
@@ -294,7 +307,10 @@ standards:
       identity v1.1.4 against a v1.1.2 pin in api-kaianolevine-com,
       2026-09, one day after the exact-pin migration removed
       `rev = "main"` from the fleet. Exact pins made the declarations
-      honest; nothing made them current.
+      honest; nothing made them current. Moved from the fleet lane to a
+      per-repo check in 2026-09, after repos that had bumped their pins
+      and passed their own evaluations still showed the warning under
+      ecosystem-standards until the next fleet run.
 
 
   - id: XSTACK-008

@@ -207,9 +207,16 @@ schema:
         EVAL-003 (reads pipeline_evaluations for finding quality),
         EVAL-007 (reads the standards catalog and evaluator-cog's
         check registry for drift), XSTACK-006 (reads the org repo
-        listing and the registry), XSTACK-007 (reads the registry and
-        each repo's dependency declarations), XSTACK-008 (reads the
-        registry and the run's own download results).
+        listing and the registry), XSTACK-008 (reads the registry and
+        the run's own download results).
+
+        A rule without `applies_to` runs once per fleet run, and its
+        findings are filed against the repository that has to act on
+        them — the repo named in the finding where there is one, the
+        evaluator for its own output quality (EVAL-003), and
+        ecosystem-standards only for what is genuinely fleet-wide. A
+        finding that one repo can fix alone is a per-repo rule, not a
+        fleet-lane one.
 
     modifies:
       required: false
