@@ -1,3 +1,10 @@
+# [7.7.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.6.0...v7.7.0) (2026-09-24)
+
+
+### Features
+
+* XSTACK-007 is a per-repo rule ([8b5bdd6](https://github.com/mini-app-polis/ecosystem-standards/commit/8b5bdd6aea762d03e38266829502e7398d7c6ef5))
+
 # [7.6.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.5.0...v7.6.0) (2026-09-24)
 
 
