@@ -1,3 +1,10 @@
+# [7.8.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.7.0...v7.8.0) (2026-09-26)
+
+
+### Features
+
+* trigger cogs run on a schedule, not as a resident process ([d60a11e](https://github.com/mini-app-polis/ecosystem-standards/commit/d60a11e6505e3a3facad5f22de94f7d6e735bb5f))
+
 # [7.7.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.6.0...v7.7.0) (2026-09-24)
 
 
