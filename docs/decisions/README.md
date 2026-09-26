@@ -25,6 +25,7 @@ For the process of writing or superseding an ADR, see
 | ADR-008 | Accepted  | [Named Machine Keys as the Machine Identity](ADR-008-named-machine-keys.md) |
 | ADR-009 | Accepted  | [Pipeline Cogs Run on Lambda Behind Their Own Queue](ADR-009-pipeline-cogs-on-lambda.md) |
 | ADR-010 | Accepted  | [Infrastructure Lives in One Repository, With Its State Remote](ADR-010-infrastructure-in-one-repository.md) |
+| ADR-011 | Accepted  | [Trigger Cogs Run on a Schedule, Not as a Resident Process](ADR-011-trigger-cogs-on-a-schedule.md) |
 
 ---
 
@@ -137,6 +138,13 @@ start rather than passed through Terraform. Adds the `infrastructure`
 repo type and splits PIPE-016/017/018, CD-010 and CD-024 between the cog
 and the infra repository, so each evaluation reads only its own. Amends
 ADR-009.
+
+**ADR-011 — Trigger Cogs Run on a Schedule, Not as a Resident Process.**
+Redefines `trigger-cog` as a Lambda function on an EventBridge schedule,
+declared in mini-app-polis/infra, after watcher-cog stopped keeping state.
+Removes `trigger-cog` from CD-017, CD-024, CD-027, CD-028 and SEC-008,
+whose facts either no longer exist or are checked in the infra
+repository. Amends ADR-009.
 
 ---
 

@@ -312,9 +312,10 @@ schema:
       resident process between jobs. Examples: deejay-cog, evaluator-cog,
       transcription-cog.
     trigger-cog: >
-      Always-on worker running a plain asyncio loop. Detects events and
-      asks api-kaianolevine-com to run the owning cog, which enqueues onto
-      that cog's queue. Examples: watcher-cog.
+      AWS Lambda function on an EventBridge schedule, declared in
+      mini-app-polis/infra. No resident process. Detects that there is work
+      and asks api-kaianolevine-com to run the owning cog, which enqueues
+      onto that cog's queue. Examples: watcher-cog.
     api-service: >
       HTTP API service with routes, auth, and a database. FastAPI (Python)
       or Hono (TypeScript). Examples: api-kaianolevine-com, deejaytools-api.

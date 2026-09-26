@@ -364,7 +364,7 @@ standards:
     status: requirement
     dimension: security_posture
     severity: ERROR
-    applies_to: [trigger-cog, api-service, infrastructure]
+    applies_to: [api-service, infrastructure]
     description: >
       A repo that declares Terraform keeps its state out of version
       control, along with the variable files and any saved plan.
