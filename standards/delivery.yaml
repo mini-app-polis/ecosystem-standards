@@ -464,7 +464,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: ERROR
-    applies_to: [trigger-cog, api-service]
+    applies_to: [api-service]
     description: >
       Every Railway-hosted service declares its restart policy in a
       version-controlled railway.json at the repo root, with
@@ -486,9 +486,9 @@ standards:
       how long an outage the service rides out unattended; a low value
       caps it silently.
 
-      Pipeline cogs are out of scope: they run on Lambda, have no process
-      to restart, and a failed job is retried by its queue instead — see
-      PIPE-017.
+      Pipeline and trigger cogs are out of scope: they run on Lambda and
+      have no process to restart. A failed pipeline job is retried by its
+      queue (PIPE-017); a failed trigger tick by the next tick (ADR-011).
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -1140,7 +1140,7 @@ standards:
     status: convention
     dimension: cd_readiness
     severity: WARN
-    applies_to: [trigger-cog, api-service, infrastructure]
+    applies_to: [api-service, infrastructure]
     description: >
       A deployable service states its memory and CPU ceiling in its
       platform descriptor rather than accepting whatever the platform
@@ -1163,9 +1163,10 @@ standards:
       is not yet known, and a requirement to declare a number nobody has
       measured produces confident fiction.
 
-      A pipeline cog's platform descriptor is its module block in
-      mini-app-polis/infra (ADR-010), and its ceiling is the Lambda
-      function's `memory_size` and `timeout`.
+      A pipeline or trigger cog's platform descriptor is its module block
+      in mini-app-polis/infra (ADR-010, ADR-011), and its ceiling is the
+      Lambda function's `memory_size` and `timeout` — checked there, as
+      `infrastructure`, not in the cog.
       Lambda allocates CPU in proportion to memory, so there is no
       separate CPU ceiling to declare; a stated memory size and timeout
       are the whole of the footprint.
@@ -1176,7 +1177,7 @@ standards:
       in modules, that does not set both `memory_size` and `timeout`.
       (2) Fail for any root `module` block calling the cog-worker module
       that does not set both `memory_mb` and `timeout_seconds`.
-      trigger-cog and api-service: (1) read `railway.json` or `railway.toml` at the repo
+      api-service: (1) read `railway.json` or `railway.toml` at the repo
       root. Absent → fail. (2) Fail if memory and CPU limit keys are
       absent or null. Accept either the platform's native limit keys or a
       documented equivalent — the check is that a ceiling is stated, not
@@ -1271,7 +1272,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [trigger-cog, api-service, infrastructure]
+    applies_to: [api-service, infrastructure]
     description: >
       A repo that declares infrastructure as code checks it on every push:
       `terraform fmt -check` and `terraform validate`. Neither needs state
@@ -1305,7 +1306,7 @@ standards:
     status: requirement
     dimension: cd_readiness
     severity: WARN
-    applies_to: [trigger-cog, api-service, infrastructure]
+    applies_to: [api-service, infrastructure]
     description: >
       A stack pins the Terraform version and every provider version, and
       commits `.terraform.lock.hcl` so a second machine resolves the same
