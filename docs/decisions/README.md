@@ -26,6 +26,7 @@ For the process of writing or superseding an ADR, see
 | ADR-009 | Accepted  | [Pipeline Cogs Run on Lambda Behind Their Own Queue](ADR-009-pipeline-cogs-on-lambda.md) |
 | ADR-010 | Accepted  | [Infrastructure Lives in One Repository, With Its State Remote](ADR-010-infrastructure-in-one-repository.md) |
 | ADR-011 | Accepted  | [Trigger Cogs Run on a Schedule, Not as a Resident Process](ADR-011-trigger-cogs-on-a-schedule.md) |
+| ADR-012 | Accepted  | [Four Test Layers, Each Proving Something the Others Cannot](ADR-012-test-layers.md) |
 
 ---
 
@@ -145,6 +146,25 @@ declared in mini-app-polis/infra, after watcher-cog stopped keeping state.
 Removes `trigger-cog` from CD-017, CD-024, CD-027, CD-028 and SEC-008,
 whose facts either no longer exist or are checked in the infra
 repository. Amends ADR-009.
+
+**ADR-012 — Four Test Layers, Each Proving Something the Others Cannot.**
+The catalog said which tests a pipeline cog needs but not which kinds of
+test any repo must have, so a repo with only unit tests read as fully
+conformant. deejaytools had unit tests and still shipped 500s that only a
+real Postgres exposed, and deploy faults (wrong Clerk key, CORS, bot
+protection) that only a deployed environment exposed. Defines four layers
+by what each proves and runs against — unit (no I/O), integration (the
+production database engine, in CI), contract (consumer-driven, against the
+provider's deployed dev instance, on either side's change) and end-to-end
+(a real browser on the deployed dev site, after each dev deploy) — and
+derives one presence rule each, TEST-014 to TEST-017. Keeps them from
+eroding with TEST-018 (every route exercised, enforced by the suite),
+TEST-019 (a coverage floor that only rises), TEST-020 (tests independent
+of the time of day) and API-012 (unique conflicts are 409s). Tests that
+write run only against dev (CD-033); every deploy, production included,
+gets a read-only smoke check (CD-032); changes reach main only through
+the promotion pull request (CD-034); each commit's checks run once
+(CD-035). Amends TEST-000, which scheduled end-to-end tests nightly.
 
 ---
 
