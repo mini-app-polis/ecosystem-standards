@@ -1351,3 +1351,143 @@ standards:
       the checksums recorded in the dependency lock file." Each lock had
       been written on a Mac and had never seen linux_amd64. The rule that
       prevents it belongs beside the rule that exposed it.
+
+  - id: CD-032
+    title: Every deploy is smoke-checked where it landed
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    applies_to: [api-service, react-app, static-site]
+    description: >
+      After each deploy, in every environment it has — dev and production —
+      a read-only check runs against what was deployed, triggered by the
+      deploy completing rather than by the push that caused it. It proves
+      the running artifact, which CI never sees: configuration baked in at
+      build or deploy time, the platform's routing, and the edge in front
+      of it.
+      An api-service: `/health` answers, and an authenticated route asked
+      without a token refuses with 401 in the error envelope — up but
+      broken reads as a 500 there.
+      A react-app or static-site: the page and a deep link load, and the
+      bundle carries the identity key for its environment (pk_test_ on dev,
+      pk_live_ in production, never the other) and calls that
+      environment's API, which answers.
+      Read-only, so it is safe against production. Test suites that write
+      are CD-033's. See ADR-012.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      (1) [deterministic] Find a workflow triggered by the deploy:
+      `deployment_status` (Railway posts GitHub deployments), or a job that
+      waits for the host's deploy check on the commit (the "Cloudflare
+      Pages" check run). Flag if none.
+      (2) [LLM] Judge whether it covers every environment the repo deploys
+      to, production included, and checks what the description lists for
+      the repo's type. Flag a check that writes data, or one that runs
+      against production anything beyond these reads.
+    origin: >
+      ADR-012, 2026-09-29. deejaytools-api `deployed.yml` and
+      deejaytools-com `site.yml`. The dev site's wrong-environment Clerk
+      key and the bot protection that refused GitHub's runners were found
+      this way and nowhere else.
+
+  - id: CD-033
+    title: Test suites that write run only against dev, with development credentials, one at a time
+    status: requirement
+    dimension: cd_readiness
+    severity: ERROR
+    applies_to: [all]
+    description: >
+      A suite that creates or deletes data in a deployed environment —
+      contract (TEST-016) and end-to-end (TEST-017) suites — runs only
+      against dev and refuses to run otherwise. Three independent guards:
+      the suite refuses credentials that are not development credentials
+      (a Clerk key that is not `sk_test_`); it refuses production
+      hostnames; and a production API rejects the development token
+      anyway, before the first write. Suites that write to the same
+      environment share one concurrency group and never run at once. What
+      each run creates is named so a run that died can be swept at the
+      start of the next. See ADR-012.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      (1) [deterministic] Find suites that call a deployed environment:
+      contract or end-to-end configs, and workflows that pass a deployed
+      base URL to a test command. If none, skip without emitting a finding.
+      (2) [LLM] Flag a suite with no credential guard and no host guard, or
+      whose workflow can point it at production.
+      (3) [deterministic] Flag workflows running such suites against the
+      same environment without a shared `concurrency:` group.
+    origin: >
+      ADR-012, 2026-09-29. deejaytools-com `src/contract/harness.ts` and
+      `e2e/env.ts`; the `contract-dev-api` concurrency group shared by its
+      contract and end-to-end jobs.
+
+  - id: CD-034
+    title: Changes reach main only through the promotion pull request
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    applies_to: [all]
+    description: >
+      Work lands on `dev`, which deploys to the development environment,
+      and reaches `main` — production and releases — only through the
+      promotion pull request, merged by a person. Two shared workflows in
+      mini-app-polis/.github make this the path of least resistance:
+      `promote.yml`, called on every push to `dev`, opens or refreshes the
+      dev→main pull request; `automerge.yml`, called on `workflow_run` of
+      CI, merges pull requests into `dev` once every check on them has
+      passed — in practice Dependabot's — and never into `main`.
+      A repository that must never auto-merge (mini-app-polis/infra, where
+      a merge is an apply) omits the automerge caller and says why in its
+      evaluator.yaml. See PRIN-006.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      (1) [deterministic] Flag if no workflow calls
+      `mini-app-polis/.github/.github/workflows/promote.yml` on push to
+      `dev`.
+      (2) [deterministic] Flag if no workflow calls the shared
+      `automerge.yml` on `workflow_run` of CI, unless the repo declares a
+      CD-034 exemption with its reason.
+      (3) [LLM] Flag any workflow that pushes to or merges into `main`
+      other than semantic-release's own release commit.
+    origin: >
+      2026-09: the promote and automerge callers were rolled out fleet-wide;
+      nothing required a new repository to carry them.
+
+  - id: CD-035
+    title: Each commit's checks run once
+    status: convention
+    dimension: cd_readiness
+    severity: INFO
+    applies_to: [all]
+    description: >
+      A commit is tested once per purpose. CI runs on pushes to `main` and
+      `dev` and on pull requests into them — not on pushes to every branch
+      as well, which runs a pull request's commits twice. Suites that test
+      a deployment (CD-032, TEST-016, TEST-017) run on the push or the
+      deploy, not again on the promotion pull request, whose head is the
+      commit already tested; the pull request shows that run's result,
+      since checks attach to the commit. The one deliberate exception is
+      CI on the promotion pull request itself, where a check can be a hard
+      gate that is only a warning on a push to `dev`.
+      Workflows triggered only to exit — a `workflow_run` listener for
+      runs it will never act on — filter at the trigger
+      (`branches-ignore`) where GitHub allows it. `deployment_status`
+      cannot be filtered, so its early statuses start runs that skip.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      (1) [deterministic] Flag a CI workflow triggered on `push` to all
+      branches (`"**"` or no branch filter) together with `pull_request`.
+      (2) [deterministic] Flag a workflow that tests a deployment and is
+      triggered on `pull_request` to `main` as well as on the push or
+      deploy.
+      (3) [deterministic] Flag an automerge caller on `workflow_run`
+      without `branches-ignore: [main, dev]`.
+    origin: >
+      2026-09-28: deejaytools-com ran its contract and end-to-end suites
+      twice per change to dev — on the push and again on the promotion pull
+      request, for the same commit.
+

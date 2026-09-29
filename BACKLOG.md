@@ -226,7 +226,7 @@ actionable.
   the new code, plus an import smoke test on the entry point so CI
   catches it), not a catalog rule.
 
-- [ ] **HTTP timeouts required (PIPE-016 or TEST-014).** `PIPE-007`
+- [ ] **HTTP timeouts required (a new TEST rule).** `PIPE-007`
   requires retry on external API calls but not timeouts. An `httpx`
   call without a timeout can hang indefinitely, blocking the flow
   and consuming worker slots. Proposed single rule: every

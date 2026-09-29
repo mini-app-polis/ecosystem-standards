@@ -15,10 +15,14 @@ standards:
     description: >
       The goal is the right ratio of test types, not maximum line coverage.
       Unit tests (many): pure functions in isolation, no I/O, no external calls. Fast.
-      Integration tests (some): cog interaction with mocked external dependencies.
-        One per major external integration.
-      E2E tests (few): happy path only, run nightly not on every commit.
-        One per pipeline covering the full flow.
+      Integration tests (some): the repo through its real entry point — for
+        an api-service against the production database engine, for a cog
+        with external dependencies stubbed. One per major external integration.
+      Contract tests (few): a consumer's expectations checked against the
+        deployed dev instance of the API it calls.
+      E2E tests (few): happy path only, against the deployed dev
+        environment, run after each dev deploy.
+      Which layers a repo must have is TEST-014 to TEST-017 (ADR-012).
     checkable: false
 
   # ─────────────────────────────────────────────
@@ -340,6 +344,243 @@ standards:
       any non-zero literal not sourced from process.env.
       Remediation: move the value to Settings/env var with a sensible
       production default. Tests override via environment.
+
+  # ─────────────────────────────────────────────
+  # TEST LAYERS (ADR-012)
+  # Each layer proves something the others cannot. These rules require
+  # the layer to exist and run, not a quantity of it.
+  # ─────────────────────────────────────────────
+
+  - id: TEST-014
+    title: Has unit tests
+    status: requirement
+    dimension: testing_coverage
+    severity: ERROR
+    applies_to: [pipeline-cog, trigger-cog, api-service, shared-library, react-app]
+    description: >
+      The repo has unit tests — tests of its logic in isolation, with no
+      network, database or filesystem beyond temporary files — and CI runs
+      them on every push. They are the fast, numerous base of the pyramid
+      (TEST-000), and the only layer cheap enough to cover edge cases
+      exhaustively. See ADR-012.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      (1) [deterministic] Find test files: Python tests/**/test_*.py or
+      *_test.py; TypeScript src/**/*.test.ts(x), src/**/*.spec.ts(x) or
+      __tests__/**. Flag if there are none.
+      (2) [deterministic] Parse .github/workflows/*.yml (or the reusable
+      workflow a job calls). Flag if no job triggered on push runs the test
+      command (pytest, `uv run pytest`, `pnpm test`, `vitest`, or the
+      shared python-test.yml workflow).
+      (3) [LLM] Judge whether the tests found are unit tests: they call the
+      code under test directly and stub its I/O. A suite made only of
+      integration or end-to-end tests does not satisfy this rule.
+      Remediation: add tests for the repo's pure logic first — parsing,
+      normalisation, decisions — and run them in CI's test job.
+    origin: >
+      ADR-012, 2026-09-29.
+
+  - id: TEST-015
+    title: Has integration tests
+    status: requirement
+    dimension: testing_coverage
+    severity: WARN
+    applies_to: [api-service, pipeline-cog]
+    description: >
+      The repo has integration tests — tests that exercise it through its
+      real entry point with its own parts wired together — and CI runs them
+      on every push.
+      For an api-service: requests through the app, against a database of
+      the production engine (Postgres, not SQLite or a mock), because driver
+      behaviour such as error wrapping, constraint names and type coercion
+      is part of what is tested. External services are stubbed at the
+      boundary. The test database is disposable and never production's
+      (TEST-009).
+      For a pipeline-cog: the handler invoked end to end on a realistic
+      input, with external services stubbed at the HTTP boundary (TEST-007).
+      See ADR-012.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      (1) [deterministic] api-service: flag if no CI workflow provides a
+      database of the production engine to the test job — a `services:`
+      entry (e.g. postgres), a container started in a step, or a documented
+      equivalent — or if no test runs against it (a DATABASE_URL pointed at
+      that service, an integration test config or directory).
+      (2) [deterministic] api-service: flag in-memory SQLite or a mocked
+      database session as the only database the tests use.
+      (3) [LLM] pipeline-cog: judge whether at least one test invokes the
+      handler or flow end to end, stubbing only external services, rather
+      than testing functions one at a time.
+      Remediation, api-service: add a Postgres service to CI, run
+      migrations in the test setup, reset tables between tests, and send
+      real requests through the app.
+    origin: >
+      ADR-012, 2026-09-29. deejaytools-api's unique-conflict handlers
+      returned 500 instead of 409 because Drizzle wraps the Postgres error;
+      unit tests mocked the database and could not see it.
+
+  - id: TEST-016
+    title: Has contract tests against the APIs it calls, when it calls one
+    status: requirement
+    dimension: testing_coverage
+    severity: WARN
+    applies_to: [all]
+    description: >
+      A repo that calls an API owned by another repo in the fleet has a
+      contract suite: its expectations of that API — endpoints, response
+      shapes, access rules — checked against the provider's deployed dev
+      instance. The suite is consumer-driven and lives with the consumer,
+      because the consumer's expectations are the contract. It runs when
+      either side changes: on a push to the consumer, and when the provider
+      reports a successful dev deploy, so it meets the API that is live.
+      A consumer that calls through a shared client library may keep the
+      suite in that library, once, instead of in every consumer.
+      Contract tests write data, so they run only against dev, only with
+      development credentials, and never concurrently with another suite
+      writing to the same environment. A repo that calls no fleet API has
+      no subject for this rule. See ADR-012.
+      Not to be confused with TEST-010, which asks an API to assert its own
+      response envelope.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      (1) [deterministic] Decide whether the repo calls a fleet API: a
+      configured base URL naming a service in ecosystem.yaml (e.g.
+      VITE_API_URL, KAIANO_API_BASE_URL, a hardcoded fleet API host in
+      source), or a dependency on a shared client library for one. If none,
+      skip without emitting a finding.
+      (2) [deterministic] Find the contract suite — in this repo, or in the
+      shared client library it calls through — and a workflow that runs it.
+      Flag if neither exists.
+      (3) [LLM] Judge whether the suite calls a deployed dev instance
+      (not a mock or a local server), guards against running on production,
+      and is triggered by the provider's dev deploys as well as the
+      consumer's pushes.
+    origin: >
+      ADR-012, 2026-09-29. deejaytools-com's contract suite, dispatched by
+      deejaytools-api after each dev deploy.
+
+  - id: TEST-017
+    title: Has end-to-end tests
+    status: requirement
+    dimension: testing_coverage
+    severity: WARN
+    applies_to: [react-app]
+    description: >
+      The app has end-to-end tests: a real browser driving the deployed dev
+      site, signed in through the identity provider's development instance,
+      along the paths people actually use. One or a few — the happy paths.
+      They run after each dev deploy, so a failure lands on the change that
+      caused it; not nightly (TEST-000). Like contract tests they write
+      data, so they run only against dev, with development credentials, one
+      suite at a time. See ADR-012.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      (1) [deterministic] Flag if the repo has no browser test framework
+      configured (playwright.config.*, cypress.config.*) with at least one
+      test file.
+      (2) [deterministic] Flag if no workflow runs those tests, or if the
+      workflow runs them only on a schedule.
+      (3) [LLM] Judge whether the tests target a deployed dev environment
+      rather than a local dev server, and refuse production.
+    origin: >
+      ADR-012, 2026-09-29.
+
+  - id: TEST-018
+    title: Every API route is exercised by an integration test, and the suite enforces it
+    status: requirement
+    dimension: testing_coverage
+    severity: WARN
+    applies_to: [api-service]
+    description: >
+      The integration suite (TEST-015) records every request it makes and,
+      when it finishes, fails if any route the app registers was not called
+      by some test. A route that genuinely cannot be exercised is listed in
+      the suite with a written reason; the suite also fails on a listed
+      route that is now called, or that no longer exists, so exemptions
+      cannot outlive their reason. A new endpoint therefore cannot merge
+      without a test or a stated reason.
+      This is the enforced form of TEST-010's intent: coverage counted by
+      the suite itself, against the routes the app actually registers,
+      rather than by matching decorators to test names. See ADR-012.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      (1) [deterministic] Flag if the repo has no integration suite
+      (TEST-015); this rule then has nothing to add.
+      (2) [LLM] Find the ledger: code that records each request made by the
+      integration tests, reads the app's registered routes (e.g. Hono
+      `app.routes`, FastAPI `app.routes`), and fails the run on routes
+      neither exercised nor listed with a reason. Flag if absent.
+      (3) [LLM] Flag an exemption list whose entries carry no reason, or a
+      ledger that does not fail on stale entries.
+    origin: >
+      ADR-012, 2026-09-29. deejaytools-api
+      `src/test/integration/route-ledger.ts`. Its one exemption, the song
+      upload, was removed once a test stood in for Google Drive.
+
+  - id: TEST-019
+    title: Coverage has a floor that only rises
+    status: convention
+    dimension: testing_coverage
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog, api-service, shared-library, react-app]
+    description: >
+      CI measures coverage and fails when it falls below a floor, and the
+      floor is the repo's own current coverage, raised automatically when
+      coverage rises. There is no target number: a fixed percentage invites
+      tests written to reach it and says nothing about a repo already above
+      it, while a floor that follows the repo upward keeps whatever level
+      it has reached. Lowering the floor is a deliberate, reviewed edit.
+      Vitest: `coverage.thresholds` with `autoUpdate` rounding down
+      (`autoUpdate: (n) => Math.floor(n)`). pytest-cov: `--cov-fail-under`
+      from a committed value updated when coverage rises. See ADR-012.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      (1) [deterministic] Flag if CI does not run tests with coverage
+      (`vitest --coverage`, `pnpm test:coverage`, `pytest --cov`).
+      (2) [deterministic] Flag if no coverage threshold is configured
+      (Vitest `coverage.thresholds`; pytest `--cov-fail-under` or
+      `[tool.coverage.report] fail_under`).
+      (3) [LLM] Judge whether the threshold follows the repo upward
+      (autoUpdate, or a documented update step) rather than being a fixed
+      target set once.
+    origin: >
+      ADR-012, 2026-09-29. Chosen over a fixed percentage and over diff
+      coverage; both deejaytools repos' `vitest.config.ts`.
+
+  - id: TEST-020
+    title: Tests do not depend on the time of day
+    status: convention
+    dimension: testing_coverage
+    severity: INFO
+    applies_to: [all]
+    description: >
+      A test passes at any hour. Tests that create date-bounded data —
+      events, sessions, schedules — compute dates in the timezone the code
+      under test uses, not UTC, and give themselves room either side of
+      midnight when the data spans the current time. Otherwise the suite
+      fails for part of every day: in Chicago, from 19:00 or 18:00, when
+      UTC has already reached tomorrow. Where the code accepts an injected
+      clock, fixing the clock is better still. See ADR-012.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      Look in test files and test fixtures for dates derived from the
+      current time in UTC — e.g. `new Date().toISOString().slice(0, 10)`,
+      `datetime.utcnow().date()`, `date.today()` on a UTC runner — used as
+      calendar dates for data the code then compares in another timezone.
+      Flag each, naming the file and line. Do not flag timestamps (epoch
+      milliseconds, instants), which carry no calendar day.
+    origin: >
+      2026-09-28: UTC dates broke deejaytools-com's contract and end-to-end
+      suites and deejaytools-api's integration suite on the same evening,
+      once UTC had reached the next day. The API checks session times
+      against the event's dates in the event's timezone.
 
   - id: TEST-GAP-001
     title: "GAP: Most existing cogs have import-level tests only"

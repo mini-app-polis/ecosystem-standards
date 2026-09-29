@@ -337,5 +337,42 @@ standards:
       TypeScript/Hono (Drizzle): check ci.yml for 'drizzle-kit push' or
       'drizzle-kit migrate' step. Flag if absent.
 
+  - id: API-012
+    title: A unique-constraint violation is a 409, never a 500
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    applies_to: [api-service]
+    description: >
+      A write that collides with a unique constraint — a duplicate name, a
+      second submission, an email another account holds — answers 409 in
+      the error envelope (API-005), with a code the client can act on. It
+      is the client asking for something that already exists, not a server
+      fault, and a 500 sends it to Sentry as one.
+      Detection must survive the database driver's wrapping. Drizzle wraps
+      the Postgres error and puts `code: "23505"` on `err.cause`, not on the
+      error itself; SQLAlchemy raises `IntegrityError` with the driver's
+      error as `.orig`. Detect through one shared helper that walks the
+      cause chain, optionally matching the constraint name, rather than a
+      check repeated in each route.
+      An integration test against the production database engine
+      (TEST-015) proves it; a unit test with a mocked database cannot,
+      because the wrapping does not happen there.
+    checkable: true
+    check_notes: >
+      LLM CHECK.
+      (1) [deterministic] Find the tables' unique constraints and indexes
+      in the schema (Drizzle `unique()`/`uniqueIndex()`, SQLAlchemy
+      `unique=True`/`UniqueConstraint`, SQL migrations).
+      (2) [LLM] For each insert or update that can hit one, judge whether a
+      violation is caught and mapped to 409, through a helper that reads
+      the wrapped error (Drizzle `err.cause.code`, SQLAlchemy `.orig`)
+      rather than only the top-level error. Flag writes whose violation
+      would surface as a 500, and duplicated per-route detection.
+    origin: >
+      2026-09-28: three deejaytools-api routes returned 500 instead of
+      their intended 409 because each read `err.code` while Drizzle had put
+      it on `err.cause`. Replaced by one `isUniqueViolation` helper.
+
 # AUTH-* rules moved to standards/auth.yaml.
 
