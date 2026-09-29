@@ -1,3 +1,10 @@
+# [7.9.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.8.0...v7.9.0) (2026-09-29)
+
+
+### Features
+
+* **standards:** test layers, deploy checks and promotion flow from ADR-012 ([0063b86](https://github.com/mini-app-polis/ecosystem-standards/commit/0063b86ff5d47123174024913f961be072d6934b))
+
 # [7.8.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.7.0...v7.8.0) (2026-09-26)
 
 
