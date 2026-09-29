@@ -1,3 +1,10 @@
+# [7.10.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.9.0...v7.10.0) (2026-09-29)
+
+
+### Features
+
+* **operations:** OPS-008 requires the shared request-metrics middleware ([f33f360](https://github.com/mini-app-polis/ecosystem-standards/commit/f33f360ce99ab3038ba66986ed766f011b5a312a))
+
 # [7.9.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.8.0...v7.9.0) (2026-09-29)
 
 
