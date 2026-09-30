@@ -238,8 +238,8 @@ standards:
       HEALTHCHECKS_URL is set as an environment variable — never hardcoded.
       Free tier is sufficient.
       Pipeline cogs are out of scope: they run on Lambda and hold no process
-      between jobs, so there is nothing to ping. Their liveness signal is the
-      dead-letter-queue alarm (CD-010, Layer 1).
+      between jobs, so there is nothing to ping. Their liveness signals are
+      the dead-letter and stalled-queue alarms (CD-010, Layer 1).
       The test: if a silent crash would cause work to stop being triggered with
       no external visibility, Healthchecks is required.
     checkable: true
@@ -340,11 +340,13 @@ standards:
       apply to its type:
         Layer 1 — Liveness:    Healthchecks.io for always-on workers.
                                Railway auto-restart for Railway services.
-                               For queue-driven pipeline cogs, an alarm
-                               on the dead-letter queue with an action —
-                               there is no process to be alive between
-                               jobs, and a job that fails every retry is
-                               the event that must reach a person.
+                               For queue-driven pipeline cogs, two alarms
+                               with actions — there is no process to be
+                               alive between jobs. One on the dead-letter
+                               queue: a job failed every retry. One on the
+                               work queue's oldest-message age: nothing is
+                               consuming, so nothing fails and nothing
+                               reaches the dead-letter queue.
         Layer 2 — Structured logs: common-python-utils or common-typescript-utils
                                logger emitting JSON events with standard shape.
                                Queryable in Railway log viewer or Better Stack.
@@ -375,8 +377,11 @@ standards:
       For each production service, verify Layers 1-3 are present.
       Layer 1: HEALTHCHECKS_URL in .env.example + ping call in main loop
                (trigger cogs — HTTP services rely on Railway restart).
-               Pipeline cogs: an aws_cloudwatch_metric_alarm on the
-               dead-letter queue with non-empty alarm_actions — declared
+               Pipeline cogs: two aws_cloudwatch_metric_alarm resources
+               with non-empty alarm_actions — one on a dead-letter queue,
+               and one on ApproximateAgeOfOldestMessage for a work queue
+               (a queue whose redrive policy names a dead-letter queue).
+               The threshold is not checked. Both are declared
                once in mini-app-polis/infra's cog module and checked there
                (type infrastructure), not in the cog (ADR-010). For the
                infrastructure type, Layer 1 is the whole of the check, and
