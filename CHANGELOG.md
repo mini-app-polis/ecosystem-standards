@@ -1,3 +1,11 @@
+# [7.11.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.10.0...v7.11.0) (2026-09-30)
+
+
+### Features
+
+* **delivery:** CD-010 requires the stalled-queue alarm for queue cogs ([2825cdf](https://github.com/mini-app-polis/ecosystem-standards/commit/2825cdf40f02e6e6ee82d8e13a9510548473d6f3))
+* **delivery:** move OPS-008 to CD-036 as CD-010's metrics layer ([6575c7d](https://github.com/mini-app-polis/ecosystem-standards/commit/6575c7ddd401cf18c7767f890a6e87ce23bd6577))
+
 # [7.10.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.9.0...v7.10.0) (2026-09-29)
 
 
