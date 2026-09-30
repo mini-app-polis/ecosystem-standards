@@ -303,7 +303,7 @@ standards:
     description: >
       All Railway-hosted API services expose a GET /health endpoint returning
       {"status": "ok"} with HTTP 200. No authentication required. Used by
-      Railway for health checks and as the liveness layer of the three-layer
+      Railway for health checks and as the liveness layer of the
       observability stack (CD-010). The endpoint must respond even if
       downstream dependencies (database, external APIs) are unavailable —
       it signals process liveness only, not dependency health.

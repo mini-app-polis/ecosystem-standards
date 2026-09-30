@@ -330,13 +330,14 @@ standards:
   - id: CD-010
 
 
-    title: Three-layer observability stack — all production services
+    title: Four-layer observability stack — all production services
     status: requirement
     dimension: cd_readiness
     severity: ERROR
     applies_to: [pipeline-cog, trigger-cog, api-service, react-app, infrastructure]
     description: >
-      Every production service implements all three observability layers:
+      Every production service implements the observability layers that
+      apply to its type:
         Layer 1 — Liveness:    Healthchecks.io for always-on workers.
                                Railway auto-restart for Railway services.
                                For queue-driven pipeline cogs, an alarm
@@ -349,10 +350,21 @@ standards:
                                Queryable in Railway log viewer or Better Stack.
         Layer 3 — Exceptions:  Sentry capturing all unhandled exceptions
                                with full stack trace and context.
-      These three layers are non-overlapping and non-redundant:
+        Layer 4 — Metrics:     rates and latency percentiles, as aggregates
+                               an alarm can fire on. API services register
+                               the shared request-metrics middleware
+                               (CD-036). Lambda pipeline cogs get function
+                               and queue metrics from the platform with
+                               nothing to add in the cog. Not yet defined
+                               for trigger cogs, react-apps or
+                               infrastructure.
+      These layers are non-overlapping and non-redundant:
         Layer 1 catches: process died, service unreachable
-        Layer 2 catches: business logic errors, skipped work, slow operations
+        Layer 2 catches: business logic errors, skipped work, an individual
+                         slow operation
         Layer 3 catches: unhandled exceptions and crashes
+        Layer 4 catches: what no single event shows — p95 latency drifting,
+                         an error rate rising
       A service missing any layer has a blind spot in production.
       Pipelines additionally report every run — and every run that
       raised — to the notification channel under a run id, which is their
@@ -360,7 +372,7 @@ standards:
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      For each production service, verify all three layers are present.
+      For each production service, verify Layers 1-3 are present.
       Layer 1: HEALTHCHECKS_URL in .env.example + ping call in main loop
                (trigger cogs — HTTP services rely on Railway restart).
                Pipeline cogs: an aws_cloudwatch_metric_alarm on the
@@ -371,7 +383,10 @@ standards:
                it is skipped when no event source mapping is declared.
       Layer 2: shared library logger imported and used throughout.
       Layer 3: Sentry initialised at entry point, SENTRY_DSN in .env.example.
-      Flag any service missing any layer.
+      Flag any service missing any of Layers 1-3.
+      Layer 4 is not part of this composite: CD-036 checks it for
+      api-service, the only type with anything to build. It joins this
+      check when a second type has work to do.
 
       SUPERSESSION: When CD-010 fires and flags Layer 2 or Layer 3 as absent,
       do not also raise separate findings for CD-009 (structured logging) or
@@ -380,6 +395,61 @@ standards:
       three produces duplicate findings for one root cause. If CD-010 passes
       (all layers present), CD-002 and CD-009 may still fire independently
       for structural issues not captured by the composite check.
+
+  - id: CD-036
+    title: APIs register the shared request-metrics middleware
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    applies_to: [api-service]
+    description: >
+      An API service registers `RequestMetricsMiddleware` from
+      common-python-utils (`mini_app_polis.request_metrics`), so its
+      request latency and error counts reach CloudWatch under the
+      `MiniAppPolis/Api` namespace with a `Service` dimension. This is
+      Layer 4 of the observability stack (CD-010) for APIs.
+
+      Railway reports an API's CPU and memory and nothing about its
+      requests. Without this there is no latency percentile and no error
+      rate for any API in the fleet, and the fleet dashboard has no row
+      for it. The shared middleware is required rather than any
+      equivalent because the dashboard and alarms address metrics by
+      name and dimension: a hand-rolled copy that names them differently
+      publishes numbers nothing reads.
+
+      The middleware is Python. An API still in another language cannot
+      satisfy this by any correct means and records a deferral until it
+      is rewritten, rather than an exemption.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Scope is production Python under `src/`; `tests/` is not read.
+      (1) Find every module that constructs a `FastAPI(...)` or
+          `Starlette(...)` application, at module level or inside a
+          function (an app factory counts).
+      (2) Pass if, in one of those modules, `RequestMetricsMiddleware`
+          is registered either as the first argument of an
+          `add_middleware(...)` call or as the first argument of a
+          `Middleware(...)` entry in the constructor's `middleware=`
+          list, where the name resolves — directly, through an `as`
+          alias, or as an attribute of an imported module — to
+          `mini_app_polis.request_metrics` or `mini_app_polis`.
+          The name in a comment or string does not count.
+      (3) Fail if no module under `src/` constructs an application (the
+          case a non-Python API is in, which records a deferral), if the
+          middleware is not registered, or if a class named
+          `RequestMetricsMiddleware` is defined under `src/` — a local
+          copy is the drift this rule exists to prevent.
+      Keyword arguments (service name, exclusions, routes) are not
+      checked: they are the service's to choose.
+    origin: >
+      Fleet Metrics Plan, 2026-09. Added alongside the middleware in
+      common-python-utils so the requirement and the only way to meet it
+      ship together.
+    supersedes: >
+      OPS-008 (standards 7.10.0), moved from operational_readiness to sit
+      with the observability rules it extends. No check or deferral was
+      ever written against the old ID.
 
   - id: CD-011
 
