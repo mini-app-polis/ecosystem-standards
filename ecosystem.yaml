@@ -194,14 +194,28 @@ services:
     '
 - id: deejaytools-api
   type: api-service
-  status: active
+  status: transitioning
   dod_type: new_hono_service
   language: typescript
   framework: hono
   host: railway
-  description: 'Hono on Node API for deejaytools.com. Manages WCS routine registration,
-    floor trial sessions, check-ins, slot assignment, partners, and songs. PostgreSQL
-    on Railway. Clerk auth. Serves deejaytools-com.
+  description: 'Hono on Node API for deejaytools.com, replaced by api-deejaytools
+    (its ADR-006). No longer serves traffic; kept deployable as the rollback on the
+    same database until api-deejaytools has run a full event, then retired.
+
+    '
+- id: api-deejaytools
+  type: api-service
+  status: active
+  dod_type: new_fastapi_service
+  language: python
+  framework: fastapi
+  host: railway
+  description: 'FastAPI API for deejaytools.com, replacing deejaytools-api on the same
+    PostgreSQL database with the same wire contract (deejaytools-api ADR-006 to ADR-009).
+    Events, floor trial sessions and their queues, check-ins, partners, teams, songs
+    and their Google Drive files. Clerk auth, scope-based authorization through the
+    identity library. Serves deejaytools-com.
 
     '
 - id: deejaytools-com
@@ -213,7 +227,7 @@ services:
   host: cloudflare-pages
   description: "React web application for deejaytools.com. WCS routine management\
     \ platform \u2014 events, sessions, floor trials, check-in queue, partner and\
-    \ song management. Vite + React + Tailwind + shadcn/ui. Talks to deejaytools-api.\n"
+    \ song management. Vite + React + Tailwind + shadcn/ui. Talks to api-deejaytools.\n"
 - id: website-astro-software
   type: static-site
   status: active
