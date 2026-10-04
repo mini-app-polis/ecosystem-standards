@@ -1,8 +1,8 @@
 # ecosystem-standards / testing.yaml
-# Testing standards for all Python cogs and FastAPI services.
+# Testing standards for the fleet's services, libraries and apps.
 #
-# GAP: Most existing cogs currently have import-level tests only.
-# Per-repo remediation sequencing lives in BACKLOG.md — see TEST-GAP-001.
+# Which test layers a repo must have is TEST-014 to TEST-017 (ADR-012);
+# what an integration test is, per repo type, is TEST-015.
 
 standards:
 
@@ -26,126 +26,6 @@ standards:
     checkable: false
 
   # ─────────────────────────────────────────────
-  # CRITICAL PATH — PYTHON COGS
-  # Four tests required per cog. Not 100% line coverage —
-  # these four specific paths.
-  # ─────────────────────────────────────────────
-
-  - id: TEST-001
-    title: Normalization test required per cog
-    status: requirement
-    dimension: testing_coverage
-    severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service]
-    description: >
-      A test that verifies the normalization/cleaning logic on representative input.
-      Covers the core transformation the cog exists to do.
-    checkable: true
-    check_notes: >
-      LLM CHECK.
-      Scan all files under tests/**/*.py and identify test functions
-      (functions whose name starts with `test_`). Pass if at least one
-      test function satisfies BOTH:
-        (a) Its name or docstring references normalization, cleaning,
-            transformation, parsing, or the cog's core transform verb
-            (e.g. `test_normalize_*`, `test_clean_*`, `test_parse_*`,
-            `test_transform_*`).
-        (b) Its body passes a representative input to the cog's
-            normalization entry point (a function exported from
-            src/**/*.py that performs the transform) and asserts the
-            returned value equals or contains a normalized expected
-            value — i.e. the assertion is about the SHAPE or CONTENT
-            of the transform's output, not just that it did not raise.
-      Flag the repo if no test function meets both (a) and (b).
-      This is LLM-judged because the cog's "core transformation" is
-      not mechanically derivable from the repo alone — it requires
-      reading the cog's purpose (ecosystem.yaml description + README)
-      to know what to look for in tests.
-
-  - id: TEST-002
-    title: Deduplication test required per cog
-    status: requirement
-    dimension: testing_coverage
-    severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service]
-    description: >
-      A test that verifies duplicate inputs are correctly identified and handled —
-      not silently overwritten.
-    checkable: true
-    check_notes: >
-      LLM CHECK.
-      Scan tests/**/*.py for test functions satisfying BOTH:
-        (a) Name or docstring references duplicates, deduplication,
-            duplicate detection, or overwrite prevention (common
-            patterns: `test_duplicate_*`, `test_dedup_*`,
-            `test_no_overwrite_*`, `test_possible_duplicate_*`).
-        (b) Body passes the same input twice (or two inputs with
-            identical canonical content) to the cog and asserts the
-            second invocation produced a dedup outcome appropriate
-            to the cog's chosen strategy (see PY-013) — e.g. a
-            file rename with `possible_duplicate_` prefix, a
-            skip/no-op return value, an `on_conflict_do_nothing`
-            DB outcome, an assertion that the original was not
-            overwritten, or a uniqueness-constraint `IntegrityError`
-            that the cog handles by skipping.
-      Flag the repo if no test function meets both (a) and (b).
-
-  - id: TEST-003
-    title: Failure path test required per cog
-    status: requirement
-    dimension: testing_coverage
-    severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service]
-    description: >
-      A test that verifies the cog handles a bad input correctly — logs the
-      error, marks the file, and continues rather than aborting.
-    checkable: true
-    check_notes: >
-      LLM CHECK.
-      Scan tests/**/*.py for test functions satisfying ALL THREE:
-        (a) Name or docstring references the failure path
-            (e.g. `test_*_failure`, `test_*_invalid`, `test_*_malformed`,
-            `test_*_error_handling`, `test_failed_prefix`).
-        (b) Body passes a malformed, invalid, or incomplete input
-            (e.g. missing required field, bad type, corrupted bytes)
-            to the cog's entry point.
-        (c) Asserts the cog did NOT raise to the caller — either the
-            call completed and returned, OR it wrote a FAILED_ prefix
-            (see PY-012), OR it logged an error and moved on. A test
-            that uses `pytest.raises(...)` WITHOUT also asserting
-            continuation (e.g. that subsequent items in a batch still
-            processed) does not satisfy this rule — that pattern
-            verifies the exception exists, not that the pipeline is
-            resilient.
-      Flag the repo if no test function meets all three.
-
-  - id: TEST-004
-    title: Output shape test required per cog
-    status: requirement
-    dimension: testing_coverage
-    severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service]
-    description: >
-      A test that verifies the output (JSON schema, DB row, or file structure)
-      matches the expected contract.
-    checkable: true
-    check_notes: >
-      LLM CHECK.
-      Scan tests/**/*.py for test functions whose body contains at
-      least one assertion about the SHAPE of the cog's output:
-        - `assert <result>.keys() == {...}` or `assert set(<result>) == {...}`
-          (dict shape).
-        - `assert isinstance(<result>, SomeModel)` where SomeModel is
-          a Pydantic model defined in src/ (typed output shape).
-        - `assert <result> == expected_row` where expected_row matches
-          a DB row dict (DB output shape).
-        - Schema validation via `jsonschema.validate(...)` or
-          `SomeModel.model_validate(<result>)`.
-      Simple `assert result is not None` or `assert len(result) > 0`
-      checks do NOT satisfy this — they verify existence, not shape.
-      Flag the repo if no test function contains a shape assertion.
-
-  # ─────────────────────────────────────────────
   # TOOLING
   # ─────────────────────────────────────────────
 
@@ -162,23 +42,6 @@ standards:
       DETERMINISTIC CHECK.
       Check for [tool.pytest.ini_options] in pyproject.toml. Flag if repo uses
       unittest directly without pytest.
-
-  - id: TEST-006
-    title: pytest-cov for coverage in CI
-    status: requirement
-    dimension: testing_coverage
-    severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service]
-    description: >
-      Coverage measured on every CI run. Report in terminal. Threshold not enforced
-      by number — enforced by critical path coverage (TEST-001 through TEST-004).
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      Check CI workflow for pytest --cov or pytest-cov invocation. A job that
-      calls mini-app-polis/.github's python-test.yml satisfies this unless it
-      passes `pytest-args` without --cov, since that workflow runs pytest with
-      --cov=src by default. Flag if coverage is not measured in CI.
 
   - id: TEST-007
     title: respx/httpx for HTTP mocking — no real external calls
@@ -220,40 +83,47 @@ standards:
       /v1/ and does not reference a TestClient or AsyncClient fixture.
 
   - id: TEST-009
-    title: Database fixtures — no production data in tests
+    title: Tests can only reach a local test database
     status: requirement
     dimension: testing_coverage
     severity: ERROR
     applies_to: [api-service]
     description: >
-      Tests use a separate test database or in-memory SQLite with transaction
-      rollback. Never run against the production database.
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      Search conftest.py for database fixture definitions. Require at least one
-      of the following patterns in conftest.py: (a) DATABASE_URL override to a
-      test-specific URL, (b) in-memory SQLite engine creation, (c) transaction
-      rollback fixture with scope='function' or 'session'. Flag if none are
-      present in a repo containing SQLAlchemy model definitions. Also flag any
-      hardcoded production DATABASE_URL strings in test files.
+      Tests never reach a database that is not a disposable local test
+      database. The control is a guard rather than a convention: the test
+      setup refuses to run unless the database URL's host is localhost and
+      its database name ends in `_test`, and it refuses before the
+      application is imported, so nothing built at import time has already
+      connected somewhere else.
 
-  - id: TEST-010
-    title: Contract test for every API endpoint
-    status: requirement
-    dimension: testing_coverage
-    severity: ERROR
-    applies_to: [api-service]
-    description: >
-      Every API endpoint has a dedicated test asserting the response envelope shape:
-      { data, meta } on success, { error: { code, message } } on failure.
-      One contract test per endpoint minimum. Contract tests run in CI on every push.
+      A guard is required rather than trusted configuration because the
+      fixtures empty the database between tests. Pointed at the wrong URL,
+      a correct suite deletes real data.
+
+      Which engine that database is belongs to TEST-015, not here.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Count FastAPI route decorators. Count test functions asserting response shape.
-      Flag if any endpoint has no corresponding contract test, or if contract tests
-      are absent from CI workflow.
+      Applies to a repo whose code under src/ imports SQLAlchemy; a repo
+      with no database has no subject.
+      (1) The CI test job (the `test` job in .github/workflows/ci.yml) sets
+          an environment variable whose name ends in DATABASE_URL, whose
+          host is localhost or 127.0.0.1 and whose database name ends in
+          `_test`.
+      (2) A conftest.py under tests/ holds the guard: code that raises when
+          the URL's host is not localhost/127.0.0.1 or its database name
+          does not end in `_test`. It must run before the application
+          package is imported — a module-level call or statement above
+          the first import of the package under src/, or inside
+          `pytest_configure`.
+      (3) No string under tests/ is a database URL naming a remote host — a
+          qualified name or an address other than 127.x. Single-label hosts
+          (a compose service name, `h` in a URL-parsing fixture) and
+          templated URLs are not reported.
+      Each failed condition is its own finding.
+    origin: >
+      2026-10-04. api-deejaytools' `_guard` in tests/conftest.py. The rule
+      previously accepted in-memory SQLite, which contradicted TEST-015.
 
   - id: TEST-011
     title: Mock verification required
@@ -391,35 +261,48 @@ standards:
       The repo has integration tests — tests that exercise it through its
       real entry point with its own parts wired together — and CI runs them
       on every push.
-      For an api-service: requests through the app, against a database of
-      the production engine (Postgres, not SQLite or a mock), because driver
-      behaviour such as error wrapping, constraint names and type coercion
-      is part of what is tested. External services are stubbed at the
-      boundary. The test database is disposable and never production's
-      (TEST-009).
-      For a pipeline-cog: the handler invoked end to end on a realistic
-      input, with external services stubbed at the HTTP boundary (TEST-007).
+
+      For an api-service: requests through the app, against a Postgres
+      database provided to the CI test job (a `services:` entry), because
+      driver behaviour such as error wrapping, constraint names and type
+      coercion is part of what is tested. Not SQLite and not a mocked
+      session. External services are stubbed at the boundary. The test
+      database is disposable and guarded (TEST-009).
+
+      For a pipeline-cog: the Lambda handler invoked end to end on a
+      realistic SQS event, with external services stubbed at the HTTP
+      boundary (TEST-007). The suite includes two cases the queue makes
+      essential:
+        Redelivery — SQS delivers at least once, so the same message sent
+          twice produces one effect, not two.
+        A bad record in a batch — the handler reports it as a batch item
+          failure, so it retries and reaches the dead-letter queue, while
+          the rest of the batch completes. Swallowing the error is the
+          wrong behaviour here: it hides the failure from the redrive.
       See ADR-012.
     checkable: true
     check_notes: >
       LLM CHECK.
-      (1) [deterministic] api-service: flag if no CI workflow provides a
-      database of the production engine to the test job — a `services:`
-      entry (e.g. postgres), a container started in a step, or a documented
-      equivalent — or if no test runs against it (a DATABASE_URL pointed at
-      that service, an integration test config or directory).
+      (1) [deterministic] api-service: flag if the CI test job has no
+      Postgres `services:` entry, or if no test uses it (a DATABASE_URL
+      pointed at that service).
       (2) [deterministic] api-service: flag in-memory SQLite or a mocked
-      database session as the only database the tests use.
-      (3) [LLM] pipeline-cog: judge whether at least one test invokes the
-      handler or flow end to end, stubbing only external services, rather
-      than testing functions one at a time.
-      Remediation, api-service: add a Postgres service to CI, run
-      migrations in the test setup, reset tables between tests, and send
-      real requests through the app.
+      database session as the database the tests use.
+      (3) [LLM] pipeline-cog: judge whether a test invokes the handler end
+      to end on an SQS event, stubbing only external services; whether a
+      test sends the same message twice and asserts a single effect; and
+      whether a test sends a batch with one bad record and asserts that
+      record is returned in batchItemFailures while the others succeed.
+      Flag each that is missing.
+      Remediation, api-service: add a Postgres service to the CI test job,
+      apply migrations in the test setup with the real runner, reset tables
+      between tests, and send real requests through the app.
     origin: >
       ADR-012, 2026-09-29. deejaytools-api's unique-conflict handlers
       returned 500 instead of 409 because Drizzle wraps the Postgres error;
-      unit tests mocked the database and could not see it.
+      unit tests mocked the database and could not see it. 2026-10-04: the
+      pipeline-cog cases replace TEST-002 (deduplication) and TEST-003
+      (failure path), written for Drive-era file pipelines.
 
   - id: TEST-016
     title: Has contract tests against the APIs it calls, when it calls one
@@ -447,10 +330,9 @@ standards:
     check_notes: >
       LLM CHECK.
       (1) [deterministic] Decide whether the repo calls a fleet API: a
-      configured base URL naming a service in ecosystem.yaml (e.g.
-      VITE_API_URL, KAIANO_API_BASE_URL, a hardcoded fleet API host in
-      source), or a dependency on a shared client library for one. If none,
-      skip without emitting a finding.
+      configured base URL for one (e.g. KAIANO_API_BASE_URL, VITE_API_URL,
+      a fleet API host in source), or a dependency on a shared client
+      library for one. If none, skip without emitting a finding.
       (2) [deterministic] Find the contract suite — in this repo, or in the
       shared client library it calls through — and a workflow that runs it.
       Flag if neither exists.
@@ -496,62 +378,80 @@ standards:
     severity: WARN
     applies_to: [api-service]
     description: >
-      The integration suite (TEST-015) records every request it makes and,
-      when it finishes, fails if any route the app registers was not called
-      by some test. A route that genuinely cannot be exercised is listed in
-      the suite with a written reason; the suite also fails on a listed
-      route that is now called, or that no longer exists, so exemptions
-      cannot outlive their reason. A new endpoint therefore cannot merge
-      without a test or a stated reason.
-      This is the enforced form of TEST-010's intent: coverage counted by
-      the suite itself, against the routes the app actually registers,
-      rather than by matching decorators to test names. See ADR-012.
+      The integration suite (TEST-015) records the route template of every
+      request its test client makes and, when the run ends, fails if any
+      route the app registers (`app.routes`) was not called by some test.
+      A route that genuinely cannot be exercised is listed with a written
+      reason; the run also fails on a listed route that is now called, or
+      that no longer exists, so exemptions cannot outlive their reason. A
+      new endpoint therefore cannot merge without a test or a stated reason.
+
+      The ledger is the shared pytest plugin in common-python-utils
+      (`mini_app_polis.testing`), not a copy per API: route templates are
+      resolved with their router prefixes, which is the part a local copy
+      gets wrong. See ADR-012.
     checkable: true
     check_notes: >
       LLM CHECK.
       (1) [deterministic] Flag if the repo has no integration suite
       (TEST-015); this rule then has nothing to add.
-      (2) [LLM] Find the ledger: code that records each request made by the
-      integration tests, reads the app's registered routes (e.g. Hono
-      `app.routes`, FastAPI `app.routes`), and fails the run on routes
-      neither exercised nor listed with a reason. Flag if absent.
+      (2) [LLM] Find the ledger: a conftest.py under tests/ that registers
+      the shared plugin from `mini_app_polis.testing`, or, until that
+      plugin ships, code that records each request the tests make, reads
+      `app.routes`, and fails the run on routes neither exercised nor
+      listed with a reason. Flag if absent.
       (3) [LLM] Flag an exemption list whose entries carry no reason, or a
       ledger that does not fail on stale entries.
+      Becomes a deterministic check — the conftest registers the shared
+      plugin — once the plugin is released.
     origin: >
       ADR-012, 2026-09-29. deejaytools-api
-      `src/test/integration/route-ledger.ts`. Its one exemption, the song
-      upload, was removed once a test stood in for Google Drive.
+      `src/test/integration/route-ledger.ts`. 2026-10-04: rewritten for the
+      FastAPI services around a shared plugin, and replaces TEST-010, whose
+      check matched route paths as text anywhere in the tests.
 
   - id: TEST-019
-    title: Coverage has a floor that only rises
+    title: Coverage is measured in CI against a declared floor that only rises
     status: convention
     dimension: testing_coverage
     severity: WARN
     applies_to: [pipeline-cog, trigger-cog, api-service, shared-library, react-app]
     description: >
-      CI measures coverage and fails when it falls below a floor, and the
-      floor is the repo's own current coverage, raised automatically when
+      CI measures coverage on every run and fails when it falls below a
+      floor, and the floor is the repo's own current coverage, raised when
       coverage rises. There is no target number: a fixed percentage invites
       tests written to reach it and says nothing about a repo already above
-      it, while a floor that follows the repo upward keeps whatever level
-      it has reached. Lowering the floor is a deliberate, reviewed edit.
-      Vitest: `coverage.thresholds` with `autoUpdate` rounding down
-      (`autoUpdate: (n) => Math.floor(n)`). pytest-cov: `--cov-fail-under`
-      from a committed value updated when coverage rises. See ADR-012.
+      it, while a floor that follows the repo upward keeps whatever level it
+      has reached. Lowering the floor is a deliberate, reviewed edit.
+
+      Python: `fail_under` in `[tool.coverage.report]` in pyproject.toml,
+      which pytest-cov enforces with no CI change. Vitest:
+      `coverage.thresholds` with `autoUpdate` rounding down
+      (`autoUpdate: (n) => Math.floor(n)`).
+
+      "Only rises" is not checked. Vitest does it itself; pytest-cov has no
+      equivalent, and the intended mechanism is a ratchet in the shared
+      python-test.yml that fails when coverage exceeds the floor by more
+      than a point. Until that exists, raising the floor is by hand.
+      See ADR-012.
     checkable: true
     check_notes: >
-      LLM CHECK.
-      (1) [deterministic] Flag if CI does not run tests with coverage
-      (`vitest --coverage`, `pnpm test:coverage`, `pytest --cov`).
-      (2) [deterministic] Flag if no coverage threshold is configured
-      (Vitest `coverage.thresholds`; pytest `--cov-fail-under` or
-      `[tool.coverage.report] fail_under`).
-      (3) [LLM] Judge whether the threshold follows the repo upward
-      (autoUpdate, or a documented update step) rather than being a fixed
-      target set once.
+      DETERMINISTIC CHECK.
+      (1) CI measures coverage: a workflow step runs pytest with `--cov`,
+          `vitest --coverage` or `pnpm test:coverage`. A job calling
+          mini-app-polis/.github's python-test.yml satisfies this unless it
+          passes `pytest-args` without --cov, since that workflow runs
+          pytest with --cov=src by default.
+      (2) A floor is declared. Python (pyproject.toml present): a numeric
+          `fail_under` greater than zero in `[tool.coverage.report]`,
+          parsed as TOML so a commented-out line does not count.
+          TypeScript: a vitest config declaring `coverage.thresholds`.
+      Each failed condition is its own finding.
     origin: >
       ADR-012, 2026-09-29. Chosen over a fixed percentage and over diff
-      coverage; both deejaytools repos' `vitest.config.ts`.
+      coverage; both deejaytools repos' `vitest.config.ts`. 2026-10-04:
+      absorbed TEST-006 (coverage measured in CI), whose "threshold not
+      enforced by number" contradicted this rule.
 
   - id: TEST-020
     title: Tests do not depend on the time of day
@@ -582,27 +482,3 @@ standards:
       once UTC had reached the next day. The API checks session times
       against the event's dates in the event's timezone.
 
-  - id: TEST-GAP-001
-    title: "GAP: Most existing cogs have import-level tests only"
-    status: gap
-    dimension: testing_coverage
-    severity: INFO
-    applies_to: [pipeline-cog, api-service]
-    description: >
-      Most existing cogs currently have import-level tests only. This is a
-      known gap with active remediation underway. Per-repo remediation
-      sequencing (which cog goes first, priority order) lives in
-      BACKLOG.md — not here — so it can be edited without churning the
-      standards catalog. When a cog is remediated, this gap entry is
-      closed for that cog and it is marked as compliant with TEST-001
-      through TEST-004.
-    checkable: true
-    check_notes: >
-      LLM CHECK.
-      Apply TEST-001 through TEST-004 to this repo in sequence. This
-      rule is the rollup — it fires as INFO when ANY of the four
-      critical-path tests (TEST-001 normalization, TEST-002 dedup,
-      TEST-003 failure path, TEST-004 output shape) is missing. It is
-      LLM-judged because the underlying four rules are LLM-judged (see
-      their check_notes). This GAP rule is closed for a cog when all
-      four underlying rules pass.
