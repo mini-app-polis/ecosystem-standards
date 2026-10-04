@@ -465,6 +465,141 @@ schema:
       - rule_modifier
       - default
 
+  # ─────────────────────────────────────────────
+  # REPOSITORY LAYOUT (LAYOUT-001, LAYOUT-002)
+  # ─────────────────────────────────────────────
+  layouts:
+    purpose: >
+      The written layout of a repository's top level: every entry a repo
+      of a given type may carry, what it is for, and whether it is
+      required. LAYOUT-001 checks the required entries no other rule
+      owns; LAYOUT-002 reports anything tracked at the top level that the
+      layout does not list.
+      This list is meant to grow. When LAYOUT-002 reports an entry, the
+      decision is either to move or delete it, or to add it here — with a
+      purpose — because it is a legitimate kind of thing more than one
+      repo will have. An entry only one repo will ever have is recorded in
+      that repo's evaluator.yaml under `layout_exceptions:` instead; this
+      repo holds no knowledge of individual repos. If two repos carry the
+      same layout exception, it belongs here.
+      Fields: `path` — a name, a trailing `/` for a directory, glob
+      characters allowed; `purpose` — one line; `required` — defaults to
+      false; `rule` — the rule that already requires or governs the entry,
+      which LAYOUT-001 then leaves to that rule; `types` — repo types the
+      entry is for, omitted meaning every type LAYOUT-001/002 apply to.
+      Covers the top level only. src/ is PY-005's and tests/ is TEST-021's.
+    entries:
+      # every repo
+      - path: .github/
+        purpose: CI workflows and Dependabot configuration.
+        required: true
+        rule: CD-026
+      - path: .gitignore
+        purpose: Keeps build output, caches, environments and Terraform state out of git.
+        required: true
+      - path: README.md
+        purpose: What the repo is and how to run it.
+        required: true
+        rule: DOC-001
+      - path: evaluator.yaml
+        purpose: The repo's type, traits and conformance exceptions.
+        required: true
+        rule: EVAL-008
+      - path: LICENSE
+        purpose: The repo's licence, where one is declared.
+
+      # Python services and libraries
+      - path: pyproject.toml
+        purpose: Project metadata, dependencies and tool configuration.
+        required: true
+        rule: PY-007
+        types: [pipeline-cog, trigger-cog, api-service, shared-library]
+      - path: uv.lock
+        purpose: The resolved dependency set.
+        required: true
+        rule: PY-001
+        types: [pipeline-cog, trigger-cog, api-service, shared-library]
+      - path: src/
+        purpose: The package source.
+        required: true
+        rule: PY-005
+        types: [pipeline-cog, trigger-cog, api-service, shared-library]
+      - path: tests/
+        purpose: Tests, one directory per layer.
+        required: true
+        rule: TEST-021
+        types: [pipeline-cog, trigger-cog, api-service, shared-library]
+      - path: docs/
+        purpose: Architecture decision records and longer-form documentation.
+        required: true
+        rule: DOC-005
+        types: [pipeline-cog, trigger-cog, api-service, shared-library]
+      - path: CHANGELOG.md
+        purpose: Release notes, written by semantic-release.
+        required: true
+        rule: DOC-003
+        types: [pipeline-cog, trigger-cog, api-service, shared-library]
+      - path: .releaserc.json
+        purpose: semantic-release configuration.
+        required: true
+        rule: VER-008
+        types: [pipeline-cog, trigger-cog, api-service, shared-library]
+      - path: .env.example
+        purpose: Every environment variable the code reads, with placeholder values.
+        required: true
+        rule: DOC-004
+        types: [pipeline-cog, trigger-cog, api-service, shared-library]
+      - path: .pre-commit-config.yaml
+        purpose: Hooks run before each commit, secret scanning among them.
+        required: true
+        rule: PY-008
+        types: [pipeline-cog, trigger-cog, api-service, shared-library]
+      - path: .gitattributes
+        purpose: Marks lockfiles as never three-way merged.
+        required: true
+        types: [pipeline-cog, trigger-cog, api-service, shared-library]
+      - path: .python-version
+        purpose: The interpreter version uv and local tooling use.
+        types: [pipeline-cog, trigger-cog, api-service, shared-library]
+      - path: .editorconfig
+        purpose: Editor-neutral whitespace and line-ending settings.
+        types: [pipeline-cog, trigger-cog, api-service, shared-library]
+      - path: scripts/
+        purpose: Operational and maintenance scripts, run by hand or from CI.
+        types: [pipeline-cog, trigger-cog, api-service, shared-library]
+      - path: migrations/
+        purpose: Database migrations, applied by the release step.
+        rule: API-011
+        types: [api-service]
+      - path: railway.json
+        purpose: Railway service configuration, for a service Railway hosts.
+        rule: CD-017
+        types: [pipeline-cog, trigger-cog, api-service]
+      - path: railpack.json
+        purpose: Railway build configuration, for a service Railway builds.
+        types: [pipeline-cog, trigger-cog, api-service]
+      - path: Dockerfile
+        purpose: The service's container image.
+        rule: CD-022
+        types: [pipeline-cog, trigger-cog, api-service]
+      - path: .dockerignore
+        purpose: Keeps the image's build context to what the image needs.
+        types: [pipeline-cog, trigger-cog, api-service]
+
+      # infrastructure
+      - path: "*.tf"
+        purpose: The Terraform root.
+        required: true
+        types: [infrastructure]
+      - path: .terraform.lock.hcl
+        purpose: Provider versions and hashes for every platform that runs Terraform.
+        required: true
+        rule: CD-028
+        types: [infrastructure]
+      - path: modules/
+        purpose: Terraform modules the root composes.
+        types: [infrastructure]
+
   evaluator_yaml:
     purpose: >
       Per-repo configuration file (evaluator.yaml at repo root) that declares
@@ -518,6 +653,14 @@ schema:
         Distinct from `deferrals:` (which is "we know we're failing
         and will fix eventually") — a downgrade says the rule itself
         is misfiring against this repo's actual behavior.
+    layout_exceptions:
+      format: "list of {path: string, reason: string} objects"
+      purpose: >
+        Top-level entries this repo carries that the written layout
+        (`schema.layouts`) does not list, each with the reason. LAYOUT-002
+        does not report them. For an entry only this repo will ever have;
+        if a second repo needs the same exception, add the entry to
+        `schema.layouts` instead and remove both exceptions.
 
   service_fields:
     org: >
@@ -633,3 +776,8 @@ files:
     domain: operations
     description: Operational readiness standards for deployable services. Declared objectives, proven recovery, data classification and retention, credential rotation, and external dependency surface.
     rule_prefix: OPS
+
+  - file: standards/layout.yaml
+    domain: layout
+    description: The written layout of a repository's top level, and drift from it.
+    rule_prefix: LAYOUT
