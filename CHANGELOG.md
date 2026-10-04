@@ -1,3 +1,15 @@
+# [7.12.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.11.0...v7.12.0) (2026-10-04)
+
+
+### Bug Fixes
+
+* **versioning:** VER-009 accepts [skip actions] for Cloudflare Pages sites ([c341ad1](https://github.com/mini-app-polis/ecosystem-standards/commit/c341ad1adccae1193da12df43f9a83ef1c1c4bb0))
+
+
+### Features
+
+* **testing:** reconcile test rules with ADR-012 for the FastAPI services ([b625c1b](https://github.com/mini-app-polis/ecosystem-standards/commit/b625c1b9c370eaed8cd3312d73b53fea5c86b8fb))
+
 # [7.11.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.10.0...v7.11.0) (2026-09-30)
 
 
