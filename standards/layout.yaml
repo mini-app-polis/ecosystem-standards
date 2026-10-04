@@ -1,0 +1,63 @@
+# ecosystem-standards / layout.yaml
+# A repository's top level, checked against the written layout in
+# index.yaml `schema.layouts`.
+#
+# The layout is soft by design and grows: an entry LAYOUT-002 reports is a
+# decision, not a defect — move or delete it, or add it to the layout.
+
+standards:
+
+  - id: LAYOUT-001
+    title: The entries the written layout requires are present
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog, api-service, shared-library, infrastructure]
+    description: >
+      Every entry `schema.layouts` marks required for the repo's type is at
+      its top level. An entry that names a `rule` is left to that rule —
+      README.md to DOC-001, evaluator.yaml to EVAL-008 — so one missing
+      file is never two findings. What remains are the requirements only
+      the layout states, such as .gitignore.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      Read `schema.layouts.entries` from the catalog. For the repo's type,
+      take the entries with `required: true` and no `rule`, whose `types`
+      is absent or includes the type. Flag each with no matching top-level
+      entry: a name matches by glob (`*.tf`), and a path ending in `/`
+      matches only a directory. One finding lists every missing entry.
+    origin: >
+      2026-10-04. Repo structure was enforced only where a rule happened
+      to name a file (PY-005, EVAL-008, DOC-001); nothing described a
+      repo's top level as a whole.
+
+  - id: LAYOUT-002
+    title: Every top-level entry is in the written layout
+    status: convention
+    dimension: structural_conformance
+    severity: INFO
+    applies_to: [pipeline-cog, trigger-cog, api-service, shared-library, infrastructure]
+    description: >
+      Everything tracked at a repo's top level is an entry `schema.layouts`
+      lists for its type, or a `layout_exceptions:` entry in its
+      evaluator.yaml with a reason. Each finding asks for a decision, not a
+      fix: move or delete the entry, or — if it is a legitimate kind of
+      thing more than one repo will have — add it to the layout, with a
+      purpose. That second answer is how the layout grows.
+      INFO, because drift here is information: it says the layout and the
+      fleet disagree, and either may be the one that is behind.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      List the repo's tracked top-level entries — files and directories
+      as checked out, `.git` excluded; untracked local files such as
+      `.venv/` are not in the download and never count. Flag each that
+      matches no `schema.layouts` entry whose `types` is absent or
+      includes the repo's type (glob matching; a trailing `/` matches only
+      a directory) and no `layout_exceptions:` path in evaluator.yaml.
+      One finding lists every unlisted entry.
+    origin: >
+      2026-10-04. A survey of ten repos found seven entries no layout
+      would have named — a tracked working-notes directory, a duplicate
+      coverage config, editor settings — each a decision nobody had made.

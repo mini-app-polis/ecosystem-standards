@@ -83,6 +83,7 @@ _SCHEMA_BLOCKS: tuple[str, ...] = (
     "traits",
     "dispatch",
     "evaluator_yaml",
+    "layouts",
 )
 
 #: Top-level ``index.yaml`` blocks carried verbatim. ``files`` is omitted:

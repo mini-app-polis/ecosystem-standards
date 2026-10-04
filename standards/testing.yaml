@@ -236,8 +236,8 @@ standards:
     checkable: true
     check_notes: >
       LLM CHECK.
-      (1) [deterministic] Find test files: Python tests/**/test_*.py or
-      *_test.py; TypeScript src/**/*.test.ts(x), src/**/*.spec.ts(x) or
+      (1) [deterministic] Find test files: Python tests/unit/**/test_*.py
+      (TEST-021); TypeScript src/**/*.test.ts(x), src/**/*.spec.ts(x) or
       __tests__/**. Flag if there are none.
       (2) [deterministic] Parse .github/workflows/*.yml (or the reusable
       workflow a job calls). Flag if no job triggered on push runs the test
@@ -288,7 +288,8 @@ standards:
       pointed at that service).
       (2) [deterministic] api-service: flag in-memory SQLite or a mocked
       database session as the database the tests use.
-      (3) [LLM] pipeline-cog: judge whether a test invokes the handler end
+      (3) [LLM] pipeline-cog: judge, from tests/integration/ (TEST-021),
+      whether a test invokes the handler end
       to end on an SQS event, stubbing only external services; whether a
       test sends the same message twice and asserts a single effect; and
       whether a test sends a batch with one bad record and asserts that
@@ -482,3 +483,46 @@ standards:
       once UTC had reached the next day. The API checks session times
       against the event's dates in the event's timezone.
 
+  - id: TEST-021
+    title: Python tests are split by layer into tests/unit and tests/integration
+    status: requirement
+    dimension: testing_coverage
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog, api-service, shared-library]
+    description: >
+      A Python repo's tests live in a directory per layer: `tests/unit/` for
+      unit tests (TEST-014) and `tests/integration/` for integration tests
+      (TEST-015). Other suites get their own directory named for what they
+      are — `tests/contract/` (TEST-016), `tests/evals/` — and no test file
+      sits loose in `tests/`. Inside a layer, organise freely; mirroring
+      the package is fine.
+
+      The reason is fixture scoping more than tidiness. A database, the
+      TEST-009 guard and an app client belong in
+      `tests/integration/conftest.py`; a root conftest that builds them
+      makes every test need a database, including pure ones. With the
+      split, unit tests run anywhere with nothing provisioned.
+
+      `testpaths = ["tests/unit", "tests/integration"]` in pyproject.toml
+      runs both in that order in one pytest invocation, so CI needs no
+      second job and coverage (TEST-019) is one number.
+
+      tests/integration/ is required for api-service and pipeline-cog —
+      the types TEST-015 applies to — and optional for the others.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      A repo with no pyproject.toml is not a Python repo and passes.
+      (1) tests/unit/ contains at least one test_*.py or *_test.py.
+      (2) api-service and pipeline-cog: tests/integration/ contains at
+          least one test_*.py or *_test.py.
+      (3) No test_*.py or *_test.py sits directly in tests/.
+      (4) tests/conftest.py, if present, holds no database setup: it
+          neither imports sqlalchemy, asyncpg, psycopg or aiosqlite, nor
+          names a database URL. That setup belongs in the integration
+          conftest.
+      Each failed condition is its own finding.
+    origin: >
+      2026-10-04. Eight Python repos in five layouts with no markers;
+      api-deejaytools' root conftest built the Postgres schema for every
+      test, so its pure tests could not run without a database.
