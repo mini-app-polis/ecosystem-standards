@@ -205,3 +205,30 @@ providers.
 
 **Contract and end-to-end tests against production.** Rejected: both
 write data.
+
+---
+
+## Amendment — 2026-10-04
+
+The rules written before this ADR contradicted it in four places, and
+the fleet's APIs are now both FastAPI (api-kaianolevine-com and
+api-deejaytools). Reconciled:
+
+- **Test database.** TEST-009 is now only the guard — tests refuse any
+  database that is not local and named `*_test`, before the app is
+  imported. It no longer accepts in-memory SQLite; the engine is
+  TEST-015's alone (Postgres in the CI test job).
+- **Route coverage.** TEST-010 is retired. Its check matched route paths
+  as text anywhere under `tests/`; its envelope intent is API-005's and
+  its coverage intent is TEST-018's, now written for FastAPI around one
+  shared pytest ledger in common-python-utils.
+- **Coverage threshold.** TEST-006 is retired into TEST-019, which is
+  now checked deterministically: coverage measured in CI, and a
+  `fail_under` floor declared. "Only rises" stays unchecked until a
+  ratchet exists in the shared python-test.yml.
+- **Per-cog tests.** TEST-001 to TEST-004 and TEST-GAP-001 are retired.
+  Normalization is unit testing (TEST-014); output shape is API-005,
+  TEST-018 and the shared API contract. The two that the queue makes
+  essential — a redelivered message produces one effect, and a bad
+  record in a batch is reported as a batch item failure while the rest
+  complete — are now part of TEST-015's definition for pipeline cogs.
