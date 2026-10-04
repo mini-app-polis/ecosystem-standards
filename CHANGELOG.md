@@ -1,3 +1,11 @@
+# [7.13.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.12.0...v7.13.0) (2026-10-04)
+
+
+### Features
+
+* **layout:** written repo layout with LAYOUT-001 and LAYOUT-002 ([7f98ce4](https://github.com/mini-app-polis/ecosystem-standards/commit/7f98ce4b63059b46df73c133e6ecd8d73954776b))
+* **testing:** TEST-021 splits Python tests into unit and integration layers ([de0e0f5](https://github.com/mini-app-polis/ecosystem-standards/commit/de0e0f5cdcadb5cd9e5e32bbc267782dbe9b87a1))
+
 # [7.12.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.11.0...v7.12.0) (2026-10-04)
 
 
