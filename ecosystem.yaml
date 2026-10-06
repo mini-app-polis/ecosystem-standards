@@ -142,19 +142,6 @@ services:
     \ \u2014 the ecosystem API client, which resolves the caller's own named machine\
     \ key from the environment and sets the Authorization header (CD-019, AUTH-002).\
     \ All Python processors and cogs declare this as a dependency.\n"
-- id: common-typescript-utils
-  type: shared-library
-  status: active
-  dod_type: null
-  language: typescript
-  repo: common-typescript-utils
-  package: common-typescript-utils
-  description: 'Shared TypeScript utilities. Clerk auth middleware (verifyClerkToken),
-    response envelope helpers (success, successList, error, CommonErrors), structured
-    logger (createLogger) emitting standard log shape, and shared Zod schemas. Published
-    to npm as common-typescript-utils.
-
-    '
 - id: ecosystem-standards
   type: standards-repo
   status: active
@@ -192,18 +179,6 @@ services:
     applies on merge to main through a GitHub OIDC role; no releases.
 
     '
-- id: deejaytools-api
-  type: api-service
-  status: transitioning
-  dod_type: new_hono_service
-  language: typescript
-  framework: hono
-  host: railway
-  description: 'Hono on Node API for deejaytools.com, replaced by api-deejaytools
-    (its ADR-006). No longer serves traffic; kept deployable as the rollback on the
-    same database until api-deejaytools has run a full event, then retired.
-
-    '
 - id: api-deejaytools
   type: api-service
   status: active
@@ -211,8 +186,8 @@ services:
   language: python
   framework: fastapi
   host: railway
-  description: 'FastAPI API for deejaytools.com, replacing deejaytools-api on the same
-    PostgreSQL database with the same wire contract (deejaytools-api ADR-006 to ADR-009).
+  description: 'FastAPI API for deejaytools.com. Replaced the retired Hono API on the
+    same PostgreSQL database with the same wire contract.
     Events, floor trial sessions and their queues, check-ins, partners, teams, songs
     and their Google Drive files. Clerk auth, scope-based authorization through the
     identity library. Serves deejaytools-com.
@@ -275,9 +250,6 @@ patterns:
   python_shared_library:
     description: Shared Python utility library name
     current: common-python-utils
-  typescript_shared_library:
-    description: Shared TypeScript utility library name
-    current: common-typescript-utils
   api_services:
     description: Active API services
     current: api-kaianolevine-com (sole API for kaianolevine.com ecosystem)
