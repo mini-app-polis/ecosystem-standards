@@ -109,7 +109,7 @@ packages = ["src/{package_name}"]
 Create `.env.example`:
 {description of var}
 {VAR_NAME}=
-SENTRY_DSN=
+SENTRY_DSN_COGS=
 LOG_LEVEL=INFO
 Healthchecks.io ping URL (worker services only)
 HEALTHCHECKS_URL=
@@ -272,7 +272,8 @@ Create `docs/CONFIGURATION.md` — every environment variable documented.
 ## Step 8 — Post-deploy setup
 
 Pipeline cogs:
-1. Sentry — create the project and put its DSN in Doppler
+1. Sentry — no new project: add `SENTRY_DSN_COGS` to the cog's
+   `ssm_optional_parameters` and set the `service` tag after `sentry_sdk.init`
 2. Merge the module block's pull request in mini-app-polis/infra; CI
    applies it. Terraform never creates access keys — mint any by hand
    with `aws iam create-access-key` and put them straight into Doppler.
@@ -283,7 +284,8 @@ Pipeline cogs:
 
 Trigger cogs, after deploying to Railway:
 1. Healthchecks.io — create check, set HEALTHCHECKS_URL in Doppler
-2. Sentry — create project, set SENTRY_DSN in Doppler
+2. Sentry — no new project: read `SENTRY_DSN_COGS` and set the `service`
+   tag after `sentry_sdk.init`
 
 ---
 

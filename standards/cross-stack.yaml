@@ -180,6 +180,10 @@ standards:
       Mixing these leaks server secrets into client bundles or causes builds
       to fail silently. Each repo's .env.example must follow this convention
       for all declared variables.
+      Exception: Sentry DSNs are named for their Sentry project
+      (SENTRY_DSN_<PROJECT>, CD-002). A Vite app maps its one DSN key into
+      the bundle by name in vite.config.ts `define`, so the unprefixed name
+      in .env.example is not a leak.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
