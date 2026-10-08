@@ -237,14 +237,18 @@ standards:
       unevaluated for the whole of its 67-commit history.
 
   - id: XSTACK-007
-    title: Shared-library pins stay within one minor of the library's latest release
+    title: Shared-library versions stay within one minor of the library's latest release
     status: convention
     dimension: cross_repo_coherence
     severity: WARN
     applies_to: [all]
     description: >
-      A repo's pin to one of the fleet's own libraries is no more than one
-      minor version behind that library's latest release.
+      The version of one of the fleet's own libraries that a repo actually
+      runs is no more than one minor behind that library's latest release.
+      Where a lockfile resolves the library, that is the locked version,
+      not the declared floor: consumers declare a wide range on the fleet's
+      own libraries (`>=5,<6`) and let the lock pick the version, so a low
+      floor beneath a current lock is not stale.
 
       "The fleet's own library" means a package whose registry entry
       (PyPI `project_urls`, npm `repository`) records its source under
@@ -287,7 +291,11 @@ standards:
           `project.optional-dependencies`, with a `[tool.uv.sources]`
           tag or rev taking precedence as the effective pin) and every
           `package.json` outside `node_modules` and hidden directories
-          (`dependencies`, `devDependencies`).
+          (`dependencies`, `devDependencies`). A Python dependency that
+          `uv.lock` resolves, and that has no `[tool.uv.sources]`
+          override, is judged at its locked version instead of its
+          declaration; the remedy is `uv lock --upgrade-package`, not a
+          raised floor.
       (2) For each versioned pin, ask the registry it is published to
           (PyPI or npm) for the package's latest version and source
           repository. Skip packages whose source is not under
