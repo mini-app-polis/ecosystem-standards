@@ -1,3 +1,10 @@
+## [7.13.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.13.0...v7.13.1) (2026-10-08)
+
+
+### Bug Fixes
+
+* **cross-stack:** XSTACK-007 judges the locked version of a fleet library ([761e323](https://github.com/mini-app-polis/ecosystem-standards/commit/761e323c1f9faa407c13411e64efe704f897d2b8))
+
 # [7.13.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.12.0...v7.13.0) (2026-10-04)
 
 
