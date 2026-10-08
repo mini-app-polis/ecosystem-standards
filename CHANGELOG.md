@@ -1,3 +1,10 @@
+## [7.13.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.13.1...v7.13.2) (2026-10-08)
+
+
+### Bug Fixes
+
+* **cross-stack:** XSTACK-001 is Python-only now common-typescript-utils is retired ([58ffc89](https://github.com/mini-app-polis/ecosystem-standards/commit/58ffc892e6e0445789800dff8b56ca6fecfac9bc))
+
 ## [7.13.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.13.0...v7.13.1) (2026-10-08)
 
 
