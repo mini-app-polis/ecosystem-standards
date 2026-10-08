@@ -83,9 +83,15 @@ standards:
       tracking. This includes FastAPI services, Hono services, and Python
       cogs (always-on worker services). Free tier is
       sufficient. Sentry is initialised at service entry point before
-      any application logic runs. SENTRY_DSN is set as an environment
-      variable — never hardcoded. The same Sentry project may be shared
-      across related services or a dedicated project used per service.
+      any application logic runs. The DSN is set as an environment
+      variable — never hardcoded. There is one Sentry project per service
+      class, and one DSN secret per project, named for it: SENTRY_DSN_APIS
+      (API services), SENTRY_DSN_COGS (cogs), SENTRY_DSN_DEEJAYTOOLS
+      (deejaytools-com's own project). A React app maps its key into the
+      bundle by name in vite.config.ts `define`, never by widening envPrefix. The name is the same in Doppler, SSM and the
+      code that reads it. A service in a shared project sets a `service`
+      tag on Sentry's global scope, so its events can be told apart.
+      Static sites have no project (CD-002 is out of their scope).
       Sentry covers Layer 3 observability (unhandled exceptions). It does
       not replace structured logging (Layer 2) or liveness monitoring (Layer 1).
     checkable: true
