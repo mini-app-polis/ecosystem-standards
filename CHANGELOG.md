@@ -1,3 +1,10 @@
+# [7.14.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.13.2...v7.14.0) (2026-10-08)
+
+
+### Features
+
+* **standards:** name Sentry DSN secrets per project ([01c2fc2](https://github.com/mini-app-polis/ecosystem-standards/commit/01c2fc25165aac634059ba69ef98cfc49927da18))
+
 ## [7.13.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.13.1...v7.13.2) (2026-10-08)
 
 
