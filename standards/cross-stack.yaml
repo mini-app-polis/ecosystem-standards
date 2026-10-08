@@ -27,13 +27,19 @@ standards:
     status: requirement
     dimension: cross_repo_coherence
     severity: ERROR
-    applies_to: [pipeline-cog, trigger-cog, api-service, react-app, shared-library]
+    applies_to: [pipeline-cog, trigger-cog, api-service, shared-library]
     description: >
       Python services declare `common-python-utils` as a dependency.
-      TypeScript services declare `common-typescript-utils` as a
-      dependency. This rule is the concrete dep-presence check. The
+      This rule is the concrete dep-presence check. The
       anti-reimplementation concern (don't reimplement shared helpers
       even if the library is installed) lives in XSTACK-005.
+
+      Python only. The TypeScript half required `common-typescript-utils`
+      and was retired with that package in 2026-10: its last consumer
+      after `deejaytools-api` was `deejaytools-com`, which used two
+      response-envelope types and now defines them itself. A shared
+      library with one consumer is overhead, not sharing, so there is no
+      TypeScript library to require.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -41,13 +47,11 @@ standards:
         Python (language: python): `common-python-utils` appears in
           pyproject.toml [project.dependencies] OR
           [tool.poetry.dependencies]. Flag if absent.
-        TypeScript (language: typescript): `common-typescript-utils`
-          appears in package.json `dependencies` or `devDependencies`.
-          Flag if absent.
+        TypeScript: not checked — see the description.
       STATIC-SITE EXCEPTION: Do not flag static-site repos — they
         contain no server-side logic.
       SELF-EXEMPTION: The shared library itself
-        (common-python-utils, common-typescript-utils) is not
+        (common-python-utils) is not
         required to depend on itself. Skip this check for repos with
         trait `logger-primitive`.
 
