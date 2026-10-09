@@ -480,14 +480,17 @@ standards:
         Railway:        all API services and cogs receive secrets via
                         the Doppler → Railway native sync
         GitHub Actions: CI secrets synced via Doppler → GitHub integration
-        Cloudflare Pages: secrets synced via Doppler CLI in CI/CD
+        Cloudflare Pages: build variables are set on the Pages project —
+                        by a Doppler → Cloudflare Pages sync where one
+                        exists; nothing in CI runs Doppler. Public build
+                        values may sit in wrangler.toml [vars].
         AWS Lambda:     Doppler → SSM Parameter Store native sync, into
                         /mini-app-polis/prd/. Each worker loads the
-                        parameters its module block names at cold start
-                        (mini_app_polis.ssm_secrets); none pass through
-                        Terraform, so none are in state or in a plan.
-                        A rotated secret reaches a worker at its next
-                        cold start.
+                        parameters its module block names
+                        (mini_app_polis.ssm_secrets) at cold start and
+                        again at the start of every invocation; none pass
+                        through Terraform, so none are in state or in a
+                        plan.
 
       Secret management workflow:
         - All secret changes are made in Doppler only
@@ -527,9 +530,11 @@ standards:
           credentials on disk.
         - Tests need no Doppler: `uv run pytest` passes with no secrets.
 
-      On Lambda, a warm instance keeps the values it loaded until it is
-      recycled: after rotating a secret a worker consumes, a deploy or any
-      configuration change forces the cold start that picks it up.
+      On Lambda, a rotated secret reaches a worker at its next invocation
+      once the sync has updated Parameter Store — no deploy or cold start —
+      because every worker calls load_secrets(refresh=True) at the top of
+      each invocation. Only values a module reads at import (the Sentry
+      DSN, at sentry_sdk.init) still wait for a cold start.
       Secrets are never Terraform variables, and Terraform never creates
       access keys — those are minted by hand and stored in Doppler.
     checkable: true
@@ -537,12 +542,16 @@ standards:
       DETERMINISTIC CHECK.
       Flag committed .env files and secrets hardcoded in source (ERROR).
       For a repo with both .env.example and pyproject.toml (WARN each):
-      flag a missing doppler.yaml, or one not naming
-      mini-app-polis-ecosystem; flag python-dotenv in
-      [project].dependencies; flag any module under src/ that imports
-      dotenv, calls load_dotenv, or passes env_file to SettingsConfigDict.
-      The source test is structural (AST), so a module that only quotes
-      those names is not flagged. Manually set Railway variables are not
+      flag a doppler.yaml that is missing, not valid YAML, or does not
+      pin project mini-app-polis-ecosystem with config dev; flag
+      python-dotenv (PEP 503-normalized) in [project].dependencies; flag
+      any module under src/ that imports dotenv, calls load_dotenv, or
+      sets env_file to anything but None — SettingsConfigDict or dict
+      keyword, a dict literal key, a v1 class Config attribute, or
+      _env_file at construction. The source test is structural (AST), so
+      a module that only quotes those names is not flagged, and a
+      relative import of a module the package itself calls dotenv is
+      allowed. An unreadable file is skipped, never fatal to the rule. Manually set Railway variables are not
       visible to the checker.
 
   - id: CD-014

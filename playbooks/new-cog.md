@@ -67,9 +67,8 @@ description = "{one line description}"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "common-python-utils",
+    "miniapppolis-common-utils>=5.24,<6",
     "httpx",
-    "python-dotenv",
 ]
 
 [dependency-groups]
@@ -80,9 +79,6 @@ dev = [
     "pytest-cov",
     "ruff",
 ]
-
-[tool.uv.sources]
-common-python-utils = { git = "https://github.com/mini-app-polis/common-python-utils.git", rev = "main" }
 
 [build-system]
 requires = ["hatchling"]
@@ -132,8 +128,8 @@ name `dev` is missing:
 {VAR_NAME}=
 # SENTRY_DSN_COGS=
 # LOGGING_LEVEL=INFO
-# Healthchecks.io ping URL (trigger cogs only)
-# HEALTHCHECKS_URL_{COG}=
+# Healthchecks.io ping URL (trigger cogs only, where it is required: CD-007)
+HEALTHCHECKS_URL_{COG}=
 ```
 
 Nothing reads a `.env` file: no `python-dotenv`, no `load_dotenv()`, and no
@@ -269,7 +265,9 @@ Pipeline cogs:
   Doppler's `prd` config, which syncs to Parameter Store.
   The cog's package `__init__.py` calls `mini_app_polis.load_secrets()`
   before anything else, so they are in the environment before any module
-  reads it.
+  reads it, and the handler calls `load_secrets(refresh=True)` at the top
+  of every invocation, so a value changed in Doppler applies to the next
+  run without a deploy.
   A repository created now presents GitHub's id-based OIDC subject
   (`repo:mini-app-polis@<id>/<name>@<id>`); the module's deploy-role trust
   must match it (see ADR-010, Negative).
@@ -309,7 +307,7 @@ Pipeline cogs:
    mini-app-polis/infra
 
 Trigger cogs, after deploying to Railway:
-1. Healthchecks.io — create check, set HEALTHCHECKS_URL in Doppler
+1. Healthchecks.io — create check, set `HEALTHCHECKS_URL_{COG}` in Doppler
 2. Sentry — no new project: read `SENTRY_DSN_COGS` and set the `service`
    tag after `sentry_sdk.init`
 
