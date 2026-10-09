@@ -1,3 +1,10 @@
+# [7.15.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.14.0...v7.15.0) (2026-10-09)
+
+
+### Features
+
+* **standards:** CD-011 covers local development (doppler.yaml, no .env reading) and the naming convention ([cfd345d](https://github.com/mini-app-polis/ecosystem-standards/commit/cfd345d9d1a5ee2b71200f6643621e8137c28491))
+
 # [7.14.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.13.2...v7.14.0) (2026-10-08)
 
 
