@@ -1,3 +1,10 @@
+## [7.15.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.15.0...v7.15.1) (2026-10-09)
+
+
+### Bug Fixes
+
+* **standards:** CD-011 describes per-invocation refresh; playbook pyproject uses miniapppolis-common-utils ([c14f2f7](https://github.com/mini-app-polis/ecosystem-standards/commit/c14f2f7b8d6f0c1665ba4674235734f6596eca2c))
+
 # [7.15.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.14.0...v7.15.0) (2026-10-09)
 
 
