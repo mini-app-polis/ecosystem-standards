@@ -16,7 +16,9 @@ A cog is a Python service. This playbook covers both subtypes:
 - Python 3.11+
 - uv installed (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
 - Access to the mini-app-polis GitHub org
-- Doppler access to the mini-app-polis-ecosystem project
+- Doppler access to the mini-app-polis-ecosystem project, and the Doppler CLI:
+  `brew install gnupg dopplerhq/cli/doppler`, then `doppler login` (once per
+  machine)
 - Sentry account (free tier)
 - Pipeline cogs: write access to mini-app-polis/infra
 - Trigger cogs: Railway access to the ecosystem project, Healthchecks.io
@@ -37,7 +39,7 @@ A cog is a Python service. This playbook covers both subtypes:
 Run in the repo root:
 ```bash
 uv init --lib
-uv add common-python-utils httpx python-dotenv
+uv add miniapppolis-common-utils httpx
 uv add --dev pre-commit pytest pytest-asyncio pytest-cov ruff
 ```
 
@@ -106,13 +108,37 @@ packages = ["src/{package_name}"]
 
 ## Step 4 — Standard files
 
-Create `.env.example`:
-{description of var}
+Create `doppler.yaml`, which pins the repo to the shared config so
+`doppler setup` asks nothing and `doppler run` injects `dev` (CD-011):
+```yaml
+# Pins this repo to the shared Doppler config for local development.
+# `doppler setup` reads it; `doppler run -- …` then injects the dev secrets.
+# Local runs use dev only — prd is synced to the platforms, never run.
+setup:
+  - project: mini-app-polis-ecosystem
+    config: dev
+```
+
+Create `.env.example` — the names the cog reads, never values. Uncommented
+names are required in Doppler's `dev` config; commented ones are optional
+(the code has a default). `uv run check-doppler-keys` lists any required
+name `dev` is missing:
+```bash
+# {cog} — the names this cog reads. Names only: the values live in Doppler
+# (mini-app-polis-ecosystem / dev locally, prd deployed). Run under
+# `doppler run -- …`; do not copy this to .env — nothing reads it.
+
+# {description of var}
 {VAR_NAME}=
-SENTRY_DSN_COGS=
-LOG_LEVEL=INFO
-Healthchecks.io ping URL (worker services only)
-HEALTHCHECKS_URL=
+# SENTRY_DSN_COGS=
+# LOGGING_LEVEL=INFO
+# Healthchecks.io ping URL (trigger cogs only)
+# HEALTHCHECKS_URL_{COG}=
+```
+
+Nothing reads a `.env` file: no `python-dotenv`, no `load_dotenv()`, and no
+`env_file` on a pydantic-settings config. Secrets come from the process
+environment — `doppler run` locally, SSM or the Railway sync deployed.
 
 Create `.pre-commit-config.yaml`:
 ```yaml
@@ -291,11 +317,15 @@ Trigger cogs, after deploying to Railway:
 
 ## Step 9 — Install pre-commit and verify
 ```bash
+doppler setup                 # reads doppler.yaml
 uv sync
 uv run pre-commit install
 uv run pre-commit run --all-files
-uv run pytest
+uv run pytest                 # needs no Doppler and no secrets
+uv run check-doppler-keys     # every required .env.example name is in dev
 ```
+
+Run the cog itself under Doppler: `doppler run -- uv run python -m {package_name}.main`.
 
 All checks must pass before first commit to main.
 

@@ -495,12 +495,37 @@ standards:
         - Never manually set secrets in Railway, GitHub, or Cloudflare
           when Doppler manages that service — manual overrides must not
           diverge from Doppler as the source of truth
-        - .env.example lists all required secret keys with no values —
-          this file is the human-readable contract of what a service needs
+        - .env.example lists the names a service reads, never values —
+          the human-readable contract of what it needs. Uncommented names
+          are required in Doppler's dev config, commented ones optional
+          (the code has a default); `uv run check-doppler-keys` (from
+          miniapppolis-common-utils) lists any required name dev lacks
 
       Doppler project structure:
         One project, mini-app-polis-ecosystem, with configs dev and prd.
-        Development runs locally under `doppler run`; only prd is synced.
+        prd syncs to SSM and to Railway's production environment; dev
+        feeds local runs and Railway's development environment. Each
+        environment's own values, ENVIRONMENT included, live in its
+        config — never hand-set on a platform, where a copied value
+        silently labels one environment as the other.
+
+      Naming in the shared config: a value that differs per service takes
+      the service as a suffix (<NAME>_<MACHINE>, e.g. DEEJAY_COG_API_KEY);
+      a value per Sentry project or tenant takes that as a prefix or
+      suffix (SENTRY_DSN_COGS, DEEJAYTOOLS_CLERK_ISSUER). Bare names are
+      only for values genuinely shared. Collisions are designed out, not
+      found later.
+
+      Local development (Python repos that declare .env.example):
+        - doppler.yaml at the root pins the repo to mini-app-polis-ecosystem
+          / dev, so `doppler setup` asks nothing and `doppler run -- …`
+          injects dev. Local runs never use prd.
+        - Nothing reads a .env file: no python-dotenv dependency, no
+          dotenv import or load_dotenv() call, no env_file on a
+          pydantic-settings config. A stray .env takes effect silently,
+          with no sign of where a value came from, and keeps real
+          credentials on disk.
+        - Tests need no Doppler: `uv run pytest` passes with no secrets.
 
       On Lambda, a warm instance keeps the values it loaded until it is
       recycled: after rotating a secret a worker consumes, a deploy or any
@@ -510,10 +535,15 @@ standards:
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Check that .env.example exists and lists all required secret keys.
-      Flag any service with secrets hardcoded in source or committed
-      .env files.       Flag any service manually setting Railway env vars
-      that must be Doppler-managed.
+      Flag committed .env files and secrets hardcoded in source (ERROR).
+      For a repo with both .env.example and pyproject.toml (WARN each):
+      flag a missing doppler.yaml, or one not naming
+      mini-app-polis-ecosystem; flag python-dotenv in
+      [project].dependencies; flag any module under src/ that imports
+      dotenv, calls load_dotenv, or passes env_file to SettingsConfigDict.
+      The source test is structural (AST), so a module that only quotes
+      those names is not flagged. Manually set Railway variables are not
+      visible to the checker.
 
   - id: CD-014
 
