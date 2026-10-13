@@ -1,0 +1,70 @@
+name: Contract
+
+# The live contract suite (tests/contract): the one outbound call this repo
+# makes — scripts/publish_catalog.py's POST /v1/standards/catalog on
+# api-kaianolevine-com — checked against the development API (TEST-016,
+# ADR-012). The publish itself only runs from the release job on main, after
+# semantic-release has tagged, so drift found there leaves a released version
+# with no catalog. This finds it on dev instead.
+#
+# Read-only — see tests/contract/test_publish_contract.py. Both posts are
+# refused before the handler (authentication, then validation), so no
+# version is ever stored; it refuses any production host, and does not share
+# the contract-dev-kaiano-api concurrency group with the suites that write
+# (CD-033).
+#
+# Configuration:
+#   - repository variable CONTRACT_API_URL (optional). Defaults to
+#     https://dev-api.kaianolevine.com.
+#   - repository secret ECOSYSTEM_STANDARDS_API_KEY_DEV (optional). The
+#     publisher machine's key on the dev API; without it the key-and-
+#     validation test skips and the rest still run.
+#
+# When it runs — whenever either side of the contract changes:
+#   - a push to dev here: the compiler or the publisher may have changed;
+#   - `dev-api-deployed`: api-kaianolevine-com's deployed workflow sends this
+#     once Railway reports a successful dev deploy, so the suite checks the
+#     API that is actually live rather than the one it replaced;
+#   - by hand.
+# Not on the promotion pull request to main: its head is dev's latest
+# commit, already checked by the push run, whose result the pull request
+# shows (CD-035).
+# A repository_dispatch always runs this file from main, so that run checks
+# out dev explicitly: it is dev's suite that should meet dev's API.
+
+on:
+  push:
+    branches: [dev]
+  repository_dispatch:
+    types: [dev-api-deployed]
+  workflow_dispatch:
+
+concurrency:
+  group: contract-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CONTRACT_API_URL: ${{ vars.CONTRACT_API_URL || 'https://dev-api.kaianolevine.com' }}
+      ECOSYSTEM_STANDARDS_API_KEY_DEV: ${{ secrets.ECOSYSTEM_STANDARDS_API_KEY_DEV }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'repository_dispatch' && 'dev' || '' }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Run the publish contract suite
+        run: python3 -m unittest discover -s tests/contract -v
