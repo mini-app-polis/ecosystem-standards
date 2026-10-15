@@ -107,6 +107,29 @@ services:
     enumerated by nothing.
 
     '
+- id: db-ops
+  type: pipeline-cog
+  status: development
+  dod_type: new_cog
+  language: python
+  cog_subtype: pipeline
+  host: railway
+  description: 'Postgres operations for the two production databases on Railway
+    (Postgres and Postgres-deejaytools). One repository, three Railway cron
+    services in production, each with its own start command so a failure in one
+    cannot hide in another: db-poller publishes metrics to CloudWatch, db-backup
+    takes a nightly pg_dump of both databases to S3 (the copy that is not on
+    Railway), and db-drill restores from PITR and from the S3 dump and verifies
+    the result. All three reach the databases over Railway private networking,
+    which is why they are not Lambda functions (db-ops ADR-001).
+
+    Registered as pipeline-cog rather than a new type; the queue- and
+    Lambda-shaped rules are deferrals in its evaluator.yaml.
+
+    status: development while the services are stubs, so the fleet sweep
+    skips it and its own release-time evaluation is the only grading.
+
+    '
 - id: api-kaianolevine-com
   type: api-service
   status: active
