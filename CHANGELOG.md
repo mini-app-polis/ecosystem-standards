@@ -1,3 +1,10 @@
+# [7.16.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.15.1...v7.16.0) (2026-10-15)
+
+
+### Features
+
+* **containers:** check CD-021 ([941affc](https://github.com/mini-app-polis/ecosystem-standards/commit/941affcca20c51fd102c90b279f39757286cf646))
+
 ## [7.15.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.15.0...v7.15.1) (2026-10-09)
 
 
