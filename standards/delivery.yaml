@@ -1136,51 +1136,56 @@ standards:
   - id: CD-021
 
 
-    title: Deployable services define their runtime image explicitly
-    status: gap
+    title: Railway-hosted services define their runtime image explicitly
+    status: convention
     dimension: cd_readiness
     severity: WARN
-    applies_to: []
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
-      A deployable service ships an image definition in its repository,
+      A service Railway builds ships an image definition in its
+      repository — a root Dockerfile, selected by its Railway descriptor —
       so the runtime it executes in is reproducible from source rather
       than inferred at build time.
 
-      Every service currently deploys via buildpack inference. That is a
-      defensible choice at this scale — it is less to maintain, and the
-      platform does it well — but it has a specific cost that is worth
-      naming rather than absorbing: the runtime is not derivable from
-      the repository. Base image, interpreter patch version, and system
-      packages are decided by the builder at build time and are not
-      recorded anywhere a reader or a checker can see them.
+      Under buildpack inference (Railpack) the runtime is not derivable
+      from the repository: base image, interpreter patch version and
+      system packages are decided by the builder at build time and
+      recorded nowhere a reader or a checker can see them. That is a
+      defensible trade at this scale, which is why this is a convention
+      and not a requirement: a repo that keeps Railpack on purpose says
+      so with an exemption in its evaluator.yaml.
 
-      This is `status: gap` because that is exactly what it is: a known,
-      accepted, unclosed gap rather than a violation anyone is expected
-      to fix this quarter. The rule exists so the gap is measured and
-      visible instead of being an unstated assumption, and so that CD-022
-      through CD-024 have a documented subject when an image appears.
+      Promoted from `gap` on 2026-10-15, when db-ops became the first
+      service with a Dockerfile (db-ops ADR-002: it needed the PostgreSQL
+      18 client, which Railpack cannot install). What one costs is now
+      known rather than estimated: two digest pins to move by hand, and
+      a larger image to build.
 
-      Promote to `convention` or `requirement` when the first service
-      carries a Dockerfile and the cost of maintaining one is known
-      rather than estimated.
-
-      Scoped to no repo type while no service carries a Dockerfile. With
-      the gap universal, a check could only restate it once per service
-      per run, and those rows read as open violations beside the real
-      ones. The gap is stated here instead.
-    checkable: false
+      The subject is a Railway-hosted repository: one with a Railway
+      descriptor (`railway.json`, `railway.toml`, or Infrastructure as
+      Code under `.railway/`). A pipeline cog on Lambda deploys a zip
+      onto a runtime its infra module pins and has no image to define,
+      so it is not in violation here. Scope stays on repo type; which
+      repositories Railway builds is inferred by the check, not declared
+      in the catalog.
+    checkable: true
     check_notes: >
-      NOT CHECKABLE while no service carries an image definition — every
-      deployable repo would fail identically, so the finding carries no
-      information the description does not.
-
-      Becomes checkable when the first service adds a Dockerfile. Restore
-      `applies_to: [pipeline-cog, trigger-cog, api-service]` and a
-      deterministic check: pass if a `Dockerfile` exists at the repo root
-      and the platform descriptor (`railway.json` / `railway.toml`)
-      selects the dockerfile builder rather than leaving the builder
-      unset. A Dockerfile the platform does not use is not a runtime
-      definition.
+      DETERMINISTIC CHECK.
+      (1) If the repository has none of `railway.json`, `railway.toml`,
+          `.railway/railway.ts`, `.railway/railway.py` or
+          `.railway/railway.go`, it is not Railway-hosted — skip without
+          emitting a finding.
+      (2) Otherwise fail if no `Dockerfile` exists at the repository root,
+          and stop: naming the builder as well would report one gap twice.
+      (3) Otherwise fail unless the descriptor selects it: `build.builder`
+          equal to `DOCKERFILE` (any case) in railway.json / railway.toml,
+          or a `builder: "DOCKERFILE"` setting in the IaC file, which is
+          code and is matched as text rather than evaluated. Railway would
+          use a root Dockerfile unasked, but then the choice is the
+          platform's default rather than the repository's declaration.
+      CD-022 and CD-023 skip silently without a Dockerfile, so a
+      Railway-hosted repo without one shows this finding and no other
+      container finding.
 
   - id: CD-022
 
