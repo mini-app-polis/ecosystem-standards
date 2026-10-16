@@ -5,9 +5,10 @@ services:
   dod_type: new_cog
   language: python
   cog_subtype: trigger
-  host: railway
-  description: 'Config-driven Google Drive folder watcher. Polls Drive API on a 1-minute
-    interval and asks api-kaianolevine-com to run the cog that owns a folder when
+  host: aws-lambda
+  description: 'Config-driven Google Drive folder watcher. An AWS Lambda function
+    on a 1-minute EventBridge schedule (ADR-011), declared in mini-app-polis/infra
+    (modules/scheduled-worker): each tick polls the Drive API and asks api-kaianolevine-com to run the cog that owns a folder when
     files change — once per folder for deejay-cog, once per changed file for
     transcription-cog. The API enqueues; watcher holds no queue key.
 
@@ -30,11 +31,12 @@ services:
   language: python
   cog_subtype: pipeline
   host: aws-lambda
-  description: 'Multi-mode AI evaluation cog. Runs post-pipeline behavioral evaluation
-    (pipeline_eval, called in-process by other cogs) and structural conformance
-    checking on demand — POST /invoke for one repository when it releases, POST /sweep
-    for the whole registry when the standards catalog or the evaluator releases. No
-    schedule and no Prefect deployment (ADR-0004). Reads the compiled rule catalog
+  description: 'AI evaluation cog. Structural conformance checking on demand, as
+    an AWS Lambda function behind its own SQS queue (evaluator-jobs):
+    api-kaianolevine-com enqueues one job per repository — POST
+    /v1/evaluations/runs for one repository when it releases, POST
+    /v1/evaluations/fleet for the whole registry when the standards catalog or
+    the evaluator releases. No schedule (evaluator-cog ADR-0004). Reads the compiled rule catalog
     from the API rather than checking out ecosystem-standards. All findings written to pipeline_evaluations table via api-kaianolevine-com
     with source field distinguishing evaluation type.
 
@@ -46,8 +48,8 @@ services:
   language: python
   cog_subtype: pipeline
   host: aws-lambda
-  description: 'Two pipelines in one Lambda function behind its own SQS queue
-    (transcription-jobs). watcher-cog asks api-kaianolevine-com for one run per
+  description: 'Two pipelines in one Lambda function behind its own FIFO SQS queue
+    (transcription-jobs.fifo). watcher-cog asks api-kaianolevine-com for one run per
     changed Drive file, and one message is one file (ADR-007):
 
     * mode "wcs-transcripts" — a WCS lesson transcript from the notes input
@@ -79,20 +81,19 @@ services:
   description: 'Reads structured WCS notes from api-kaianolevine-com and maintains
     the wcs-wiki markdown knowledge base.
 
-    Off Prefect as of 2026-09-23, and staying on Railway: a one-shot process,
+    Off Prefect as of 2026-09-23 and, for now, on Railway: a one-shot process,
     one wake is one run, no resident container and no queue. It did not follow
     the other three onto Lambda because GitPython needs a git executable the
     managed python3.11 runtime does not ship, and because a full idempotent
     re-render takes no arguments — every queue message would be identical. See
     wiki-curator-cog ADR-004.
 
-    The pipeline-cog rules that describe a queue-driven Lambda — PIPE-016,
-    PIPE-017, PIPE-018, PIPE-020, CD-010 and CD-024 — are exempted in its
-    evaluator.yaml rather than deferred: they are not unmet, they describe a
-    runtime it does not have. Six exemptions for one structural reason is
-    ADR-002''s own signal that the taxonomy has fallen behind, and the Layer 2
-    polish pass will be the second thing shaped like this, so ADR-009 is due a
-    revisit for periodic whole-corpus rebuilds.
+    It is moving to Lambda (decided 2026-10-14) once that design is finished.
+    Until then the pipeline-cog rules that describe a queue-driven Lambda —
+    PIPE-016, PIPE-017, PIPE-018, PIPE-020, CD-010 and CD-024 — are exempted
+    in its evaluator.yaml rather than deferred: they describe a runtime it
+    does not have yet. ADR-013 records this, and db-ops, as the exceptions
+    to ADR-009.
 
     PIPE-016 and PIPE-019 still fail a repo that declares prefect. That check
     stays: it is now a guard against regression rather than a description of
@@ -109,7 +110,7 @@ services:
     '
 - id: db-ops
   type: pipeline-cog
-  status: development
+  status: active
   dod_type: new_cog
   language: python
   cog_subtype: pipeline
@@ -124,10 +125,7 @@ services:
     which is why they are not Lambda functions (db-ops ADR-001).
 
     Registered as pipeline-cog rather than a new type; the queue- and
-    Lambda-shaped rules are deferrals in its evaluator.yaml.
-
-    status: development while the services are stubs, so the fleet sweep
-    skips it and its own release-time evaluation is the only grading.
+    Lambda-shaped rules are exemptions in its evaluator.yaml (ADR-013).
 
     '
 - id: api-kaianolevine-com
@@ -182,13 +180,14 @@ services:
   dod_type: null
   language: yaml
   host: github
-  description: "The org-wide GitHub configuration repo. Holds the fleet's shared security\
-    \ workflow (.github/workflows/security.yml), a reusable workflow that runs secret\
-    \ scanning, a dependency audit, static analysis and SBOM generation. SEC-002 through\
+  description: "The org-wide GitHub configuration repo. Holds the fleet's reusable\
+    \ workflows: security.yml (secret scanning, a dependency audit, static analysis\
+    \ and SBOM generation), python-test.yml, lambda-deploy.yml, evaluate.yml, promote.yml,\
+    \ automerge.yml, railway-plan.yml and railway-apply.yml. SEC-002 through\
     \ SEC-005 accept a job delegating to it in place of inline steps; registering\
     \ it here is what makes that honest, because the steps are then evaluated once\
-    \ rather than being invisible in every consumer. Consumers pin the moving `v1`\
-    \ tag; a breaking change gets `v2` instead. No release automation \u2014 CHANGELOG.md\
+    \ rather than being invisible in every consumer. Consumers pin the moving `v3`\
+    \ tag; a breaking change gets `v4` instead. No release automation \u2014 CHANGELOG.md\
     \ is maintained by hand.\n"
 - id: infra
   type: infrastructure
@@ -265,11 +264,15 @@ services:
 patterns:
   drive_trigger:
     description: How Drive file drops trigger processor flows
-    current: "watcher-cog polls Drive API \u2192 fires Prefect create_flow_run"
+    current: 'watcher-cog (a scheduled Lambda, 1-minute tick) polls the Drive API
+      → POSTs to api-kaianolevine-com (/v1/deejay/runs, /v1/transcription/runs) →
+      the API enqueues onto the owning cog''s SQS queue'
   orchestration:
     description: How pipelines are scheduled and executed
-    current: "Prefect Cloud deployments \u2014 watcher-cog fires triggers, Prefect\
-      \ executes flows"
+    current: 'SQS + Lambda (ADR-009, ADR-010). api-kaianolevine-com is the only
+      producer; each pipeline cog is a Lambda function behind its own queue,
+      declared in mini-app-polis/infra. wiki-curator-cog and db-ops run as
+      one-shot Railway processes instead.'
   python_shared_library:
     description: Shared Python utility library name
     current: common-python-utils
@@ -293,30 +296,34 @@ patterns:
       '
 terminology:
   cog:
-    definition: 'An always-on Python worker service deployed on Railway. Runs a continuous
-      loop or event-driven task. No HTTP server, no port binding. The canonical service
-      type for all automation, processing, and evaluation work in the ecosystem.
+    definition: 'A Python worker with no HTTP server and no port binding. Pipeline
+      cogs are AWS Lambda functions behind their own SQS queue (ADR-009); trigger
+      cogs are Lambda functions on an EventBridge schedule (ADR-011); wiki-curator-cog
+      and db-ops run as one-shot Railway processes. The canonical service type for
+      all automation, processing, and evaluation work in the ecosystem.
 
       '
     examples:
-    - "watcher-cog \u2014 Drive folder watcher, fires Prefect flow runs"
+    - "watcher-cog \u2014 Drive folder watcher, asks the API to enqueue runs"
     - "deejay-cog \u2014 DJ set CSV processor and ingestion"
-    - "evaluator-cog \u2014 post-pipeline AI evaluation"
+    - "evaluator-cog \u2014 on-demand conformance evaluation"
     subtypes:
-      pipeline_cog: 'Runs a Prefect @flow to process data. Examples: deejay-cog, evaluator-cog.
+      pipeline_cog: 'A Lambda worker that processes one job per queue message. Examples:
+        deejay-cog, evaluator-cog.
 
         '
-      trigger_cog: 'Detects events and fires Prefect flow runs via API. No @flow decorator.
-        Examples: watcher-cog.
+      trigger_cog: 'Detects events and asks api-kaianolevine-com to run the owning cog,
+        which enqueues; never writes to a queue itself (PIPE-019). Examples: watcher-cog.
 
         '
   pipeline:
-    definition: "The Prefect flow and task logic inside a cog. A cog runs a pipeline.\
+    definition: "The flow logic a cog runs for one job. A cog runs a pipeline.\
       \ The terms are related but distinct \u2014 the cog is the service, the pipeline\
       \ is the execution logic within it.\n"
   trigger:
-    definition: 'The mechanism that causes a Prefect flow run to be created. Triggers
-      are fired by watcher-cog (Drive events), Prefect schedules (time-based), or
-      the Prefect UI/API (manual). GitHub Actions is not a trigger mechanism.
+    definition: 'The mechanism that causes a pipeline run: a job api-kaianolevine-com
+      enqueues onto the cog''s queue, asked for by watcher-cog (Drive events), by a
+      release job''s evaluate request (conformance), or by an operator. GitHub Actions
+      is not a trigger mechanism beyond that evaluate request (CD-006).
 
       '

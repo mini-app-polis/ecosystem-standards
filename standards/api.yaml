@@ -178,11 +178,8 @@ standards:
       TypeScript/Hono services:
         (1) Every route handler registered via `app.get`, `app.post`,
             `app.put`, `app.patch`, `app.delete`, `router.get` (etc.) in
-            src/**/*.ts must return either:
-              - a call to `success(...)` or `error(...)` from
-                `common-typescript-utils`, OR
-              - a literal object with top-level keys exactly matching
-                either `{ data, meta }` or `{ error }`.
+            src/**/*.ts must return a literal object with top-level
+            keys exactly matching either `{ data, meta }` or `{ error }`.
             Flag any handler returning `c.json(someArray)`,
             `c.json({ items: [...] })`, or any other shape that does not
             match the two permitted literals.
@@ -242,8 +239,8 @@ standards:
       `clerk` / JWKS verification import — and that `CLERK_ISSUERS` (or
       `CLERK_ISSUER` + `CLERK_JWKS_URL`) is configured. TypeScript
       services: check package.json for @clerk/clerk-sdk-node or
-      equivalent, and for verifyClerkToken from common-typescript-utils
-      on human-facing routes.
+      equivalent, and for a Clerk session-verification call on
+      human-facing routes.
       Flag a service with human-facing authenticated endpoints and no
       Clerk path. Flag any second human identity provider: a password
       column, a local session or refresh-token table, an OAuth callback

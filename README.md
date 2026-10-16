@@ -85,12 +85,18 @@ ecosystem-standards/
 │   ├── versioning.yaml             ← VER — Conventional Commits, semantic-release
 │   ├── meta.yaml                   ← META — rules governing this repo itself
 │   ├── evaluation.yaml             ← EVAL — how AI evaluation is performed
-│   └── cross-stack.yaml            ← XSTACK — Python/TypeScript parity rules
+│   ├── cross-stack.yaml            ← XSTACK — Python/TypeScript parity rules
+│   ├── security.yaml               ← SEC — secret scanning, supply chain, vulnerability response
+│   ├── operations.yaml             ← OPS — objectives, recovery, retention, rotation
+│   └── layout.yaml                 ← LAYOUT — a repo's top-level layout, and drift from it
 ├── scripts/                        ← catalog tooling (PyYAML only; stdlib otherwise)
 │   ├── catalog_sources.py          ← shared loading, so validator and compiler agree
 │   ├── validate_catalog.py         ← every CI check; runnable by hand before pushing
+│   ├── check_release_type.py       ← a catalog change must cut a version
 │   ├── compile_catalog.py          ← emits the catalog (build artifact, never committed)
 │   └── publish_catalog.py          ← posts it, from the release job only
+├── tests/
+│   └── contract/                   ← publish contract suite, against the dev API
 ├── docs/
 │   └── decisions/                  ← ADRs (ADR-NNN-slug.md)
 │       └── README.md               ← ADR index
@@ -156,6 +162,8 @@ Evaluation dimensions map directly to the `pipeline_evaluations` table. Every ru
 | `cd_readiness` | Safe to deploy continuously — Sentry, structured logging, semantic-release, feature flags. |
 | `cross_repo_coherence` | Similar concepts look similar across repos — naming, response shapes, shared library usage. |
 | `standards_currency` | Evaluated against current standards version — version resolution, staleness, evaluator/standards drift. |
+| `security_posture` | Supply chain and secrets — secret scanning, dependency and static analysis, build provenance, vulnerability response. |
+| `operational_readiness` | Can be run, recovered and reasoned about — objectives, proven restore, data retention, credential rotation. |
 
 Canonical definitions live in `index.yaml` `dimensions:` — edit there, not here.
 

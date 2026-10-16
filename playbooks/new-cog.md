@@ -5,9 +5,10 @@ A cog is a Python service. This playbook covers both subtypes:
 - **Pipeline cog** — a Lambda function behind its own SQS queue that
   processes one job per message (e.g. deejay-cog, evaluator-cog). Nothing
   runs between jobs. See ADR-009.
-- **Trigger cog** — an always-on worker on Railway that detects events and
-  asks api-kaianolevine-com to run a job (e.g. watcher-cog). The API is the
-  only producer to any queue.
+- **Trigger cog** — a Lambda function on an EventBridge schedule that
+  detects events and asks api-kaianolevine-com to run a job (e.g.
+  watcher-cog). Nothing runs between ticks. The API is the only producer to
+  any queue. See ADR-011.
 
 ---
 
@@ -20,8 +21,8 @@ A cog is a Python service. This playbook covers both subtypes:
   `brew install gnupg dopplerhq/cli/doppler`, then `doppler login` (once per
   machine)
 - Sentry account (free tier)
-- Pipeline cogs: write access to mini-app-polis/infra
-- Trigger cogs: Railway access to the ecosystem project, Healthchecks.io
+- Write access to mini-app-polis/infra
+- Trigger cogs: Healthchecks.io
 
 ---
 
@@ -62,7 +63,7 @@ Replace the generated pyproject.toml with this structure:
 ```toml
 [project]
 name = "{repo-name}"
-version = "0.1.0"
+dynamic = ["version"]
 description = "{one line description}"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -96,9 +97,15 @@ pythonpath = ["src"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
 
+[tool.hatch.version]
+path = "src/{package_name}/_version.py"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/{package_name}"]
 ```
+
+The version lives in `src/{package_name}/_version.py` (`__version__ = "0.0.0"`),
+which the release writes (PY-017).
 
 ---
 
@@ -145,6 +152,11 @@ repos:
       - id: ruff
         args: [--fix]
       - id: ruff-format
+  # SEC-001
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.28.0
+    hooks:
+      - id: gitleaks
 ```
 
 Create `.releaserc.json`:
@@ -155,8 +167,11 @@ Create `.releaserc.json`:
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     ["@semantic-release/changelog", { "changelogFile": "CHANGELOG.md" }],
+    ["@semantic-release/exec", {
+      "prepareCmd": "printf '__version__ = \"%s\"\\n' \"${nextRelease.version}\" > src/{package_name}/_version.py"
+    }],
     ["@semantic-release/git", {
-      "assets": ["CHANGELOG.md"],
+      "assets": ["CHANGELOG.md", "src/{package_name}/_version.py"],
       "message": "chore(release): ${nextRelease.version} [skip ci]"
     }],
     "@semantic-release/github"
@@ -179,8 +194,8 @@ Copy `.github/workflows/ci.yml` from deejay-cog and change only the
   the cog declares `[tool.mypy]`. No `terraform-dir`: a cog has no
   Terraform (ADR-010).
 - **release** — semantic-release, recording the tag it cut as a job output
-- **deploy** (pipeline cogs) — `lambda-deploy.yml@v3`, `needs: release`, run
-  only when a tag was cut. It is a job rather than an `on: release`
+- **deploy** — `lambda-deploy.yml@v3`, `needs: release`, run
+  only when a tag was cut. A trigger cog passes `trigger: schedule`. It is a job rather than an `on: release`
   workflow because a release published with `GITHUB_TOKEN` starts no
   workflows. `handler`, `architecture` and `python-version` must match
   the cog's module block in mini-app-polis/infra `cogs.tf`.
@@ -191,7 +206,7 @@ The release job, for reference:
 ```yaml
   release:
     name: Release
-    needs: test
+    needs: [test, security]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
@@ -211,6 +226,7 @@ The release job, for reference:
           npm install --no-save \
             semantic-release \
             @semantic-release/changelog \
+            @semantic-release/exec \
             @semantic-release/git \
             @semantic-release/github \
             @semantic-release/commit-analyzer \
@@ -232,7 +248,7 @@ Use the watcher-cog repo as the reference implementation for trigger
 cogs. Use deejay-cog as the reference implementation for pipeline cogs.
 
 All cogs must include:
-- Logging through `mini_app_polis.logging` — no `basicConfig` (the Lambda
+- Logging through `mini_app_polis.logger` — no `basicConfig` (the Lambda
   runtime has already configured the root logger, so it would do nothing)
 - Sentry init before any application logic
 - External API calls retried at the call site (PIPE-007): a
@@ -278,9 +294,13 @@ Pipeline cogs:
 - An ADR recording the move, if the cog existed before.
 
 Trigger cogs:
-- `main.py` — entry point, loads env, initialises Sentry, starts the loop
+- `handler.py` — `lambda_handler(event, context)` runs one tick;
+  Sentry is initialised at import
+- `main.py` — runs a tick outside Lambda (`--once`), for local runs
 - `config.py` — config dataclass, empty config list by default
-- Healthchecks.io ping on every work cycle
+- Healthchecks.io ping after every tick
+- A `module "<cog>"` block in mini-app-polis/infra `cogs.tf` calling
+  `modules/scheduled-worker` (ADR-011)
 - Runs are started with a POST to api-kaianolevine-com through
   `KaianoApiClient`, never by sending to a queue (PIPE-019)
 
@@ -306,7 +326,7 @@ Pipeline cogs:
    `AWS_REGION`, `AWS_FUNCTION_NAME`) from `terraform output cogs` in
    mini-app-polis/infra
 
-Trigger cogs, after deploying to Railway:
+Trigger cogs, after the module block is applied:
 1. Healthchecks.io — create check, set `HEALTHCHECKS_URL_{COG}` in Doppler
 2. Sentry — no new project: read `SENTRY_DSN_COGS` and set the `service`
    tag after `sentry_sdk.init`

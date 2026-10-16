@@ -4,6 +4,29 @@
 **Status:** Accepted
 **Repo:** ecosystem-standards
 **Depends on:** ADR-006 (startup registration resilience)
+**Amended by:** ADR-009, ADR-011, ADR-013 — see the note below
+
+> **Current state (2026-10-16).** Sections 1 to 3 stand: the two error
+> classes (PY-016), the reporting contract and the telemetry exemption
+> (CD-018). Two sections no longer describe the system:
+>
+> - **§4, the recovery contract, now covers Railway API services only.**
+>   It rested on ADR-006's in-process retry (CD-016, retired with Prefect)
+>   multiplied by CD-017's restart budget. Lambda pipeline cogs have no
+>   process to restart: a failed job is redelivered and dead-lettered behind
+>   an alarm (PIPE-017, CD-010, ADR-009). A trigger cog's failed tick is
+>   retried by the next tick, with Healthchecks catching silence (CD-007,
+>   ADR-011). The Railway-hosted one-shot cogs retry on their next run and
+>   declare their own liveness (ADR-013). CD-017's bounded budget still
+>   applies to the API services, and the monitoring gap after it is spent
+>   is in `BACKLOG.md`.
+> - **§5, the `external_providers:` registry, was never created.**
+>   `ecosystem.yaml` has no such section, and no rule reads one. `provider=`
+>   values are free text chosen at the call site, so the aggregation this
+>   section promised depends on call sites agreeing on spelling.
+>
+> The `source="startup"` value referred to throughout was emitted only by
+> `serve_with_retry`, which was retired with Prefect.
 
 ---
 

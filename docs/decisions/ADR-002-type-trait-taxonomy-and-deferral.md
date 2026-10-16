@@ -3,7 +3,14 @@
 **Date:** 2026-04-06  
 **Status:** Accepted  
 **Repo:** ecosystem-standards  
-**Depends on:** ADR-001 (Federated Evaluation Configuration)
+**Depends on:** ADR-001 (Federated Evaluation Configuration)  
+**Amended by:** ADR-009, ADR-010, ADR-011 — the `pipeline-cog` and
+`trigger-cog` definitions below (an always-on Railway worker running
+Prefect) no longer hold: a pipeline cog is a Lambda function behind its own
+queue and a trigger cog a scheduled Lambda function, with the exceptions in
+ADR-013. The `multi-flow` trait was retired with CD-015 (ADR-009).
+`index.yaml` `schema.repo_types` and `schema.traits` are the current
+definitions.
 
 ---
 

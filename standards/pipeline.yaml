@@ -72,7 +72,7 @@ standards:
       in the same function body. The signal for (b) is: iterating over
       a full input listing (glob, list_directory, full-table SELECT) in
       a task whose declared purpose is per-item processing.
-      Remediation: split into two `@task` functions — one parameterized
+      Remediation: split into two functions — one parameterized
       on the single item, one parameterized on the full collection —
       and invoke them as separate flow steps. This rule is LLM-judged
       because the distinction between "touching multiple related
@@ -213,27 +213,27 @@ standards:
     severity: WARN
     applies_to: [pipeline-cog]
     description: >
-      All production pipeline cogs include a behavioral evaluation step as the
-      final task in the flow. The step calls evaluate_pipeline_run() from
-      evaluator-cog, summarising what the run did (items processed, failures,
-      skips) and posts a structured finding to pipeline_evaluations. This ensures
-      every run — successful or not — is visible in pipeline health. Crash and
-      failure hooks (on_crashed, on_failure) are separate and complementary —
-      they cover the case where the flow body never reaches the evaluation step.
-      Both patterns must be present: the inline evaluation step for successful
-      runs, and the crash/failure hooks for abnormal termination.
+      All production pipeline cogs report every run as the final step of the
+      flow, through common-python-utils' mini_app_polis.pipeline_status
+      (`run_report` / `RunReport`, or `post_run_finding`), summarising what
+      the run did (items processed, failures, skips). This ensures every
+      run — successful or not — is visible. A run that raises reports
+      itself on its way out of the failure, and the queue consumer reports
+      only messages that never reached a flow (PIPE-021). A graded finding
+      goes to /v1/evaluations through the shared client's
+      `create_evaluation`.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Search the main flow file for a final @task call that references
-      evaluation, pipeline_eval, or writes to pipeline_evaluations. Check
-      for imports of the evaluation client from common-python-utils or direct
-      POST to /v1/evaluations. Flag if no evaluation task is found as the
-      last substantive task in the flow. Exempt evaluator-cog itself.
+      Search production source under src/ for a run report through
+      mini_app_polis.pipeline_status (`run_report`, `RunReport`,
+      `post_run_finding`) or a graded finding (`create_evaluation`, or a
+      POST to /v1/evaluations). Flag if none is found. Exempt evaluator-cog
+      itself.
 
       COG SUBTYPE: This rule applies to pipeline cogs (cog_subtype: pipeline)
-      only. Do not flag trigger cogs (cog_subtype: trigger) — they fire flow
-      runs but do not run pipelines themselves and have no evaluation step.
+      only. Do not flag trigger cogs (cog_subtype: trigger) — they ask the API
+      to start runs but do not run pipelines themselves and have no run report.
       Skip this check for any cog with cog_subtype: trigger.
 
   - id: PIPE-013

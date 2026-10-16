@@ -3,7 +3,27 @@
 **Date:** 2026-03  
 **Status:** Accepted  
 **Repo:** ecosystem-standards  
-**Supersedes:** `docs/standards-checker-decisions.md`
+**Supersedes:** `docs/standards-checker-decisions.md`  
+**Superseded in part by:** ADR-009 and evaluator-cog ADR-0004 — see the note
+below
+
+> **Current state (2026-10-16).** The structural half of this ADR stands:
+> conformance checking lives in evaluator-cog, mixes deterministic and LLM
+> checks split by the `check_notes` marker, writes to `pipeline_evaluations`,
+> and owns drift detection (EVAL-007). Three parts no longer describe the
+> system:
+>
+> - **The `pipeline_eval` flow is gone.** evaluator-cog's behavioral
+>   evaluation was deleted; cogs report their own runs through
+>   `mini_app_polis.pipeline_status` (PIPE-011, PIPE-021).
+> - **Invocation is on demand, not a Prefect schedule.** evaluator-cog is a
+>   Lambda function behind its own queue; api-kaianolevine-com enqueues one
+>   job per repository on a release, or the whole registry on a standards or
+>   evaluator release (CD-031, ADR-009, evaluator-cog ADR-0004).
+> - **The `source` values have changed.** Conformance findings post as
+>   `conformance_deterministic` / `conformance_llm`, not
+>   `conformance_check`, and `flow_hook` and `prefect_webhook` are retired.
+>   The canonical list is in `standards/evaluation.yaml`.
 
 ---
 

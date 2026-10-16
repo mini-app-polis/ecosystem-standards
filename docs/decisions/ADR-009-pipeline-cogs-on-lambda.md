@@ -6,6 +6,17 @@
 **Depends on:** ADR-002 (type/trait taxonomy)
 **Supersedes:** ADR-006 (startup registration resilience for serve()-based cogs)
 **Amended by:** ADR-010 — the queue and function are declared in mini-app-polis/infra, not the cog's `infra/`
+**Amended by:** ADR-011 — `trigger-cog` is a Lambda function on an EventBridge schedule, not an always-on asyncio loop
+**Amended by:** ADR-013 — `pipeline-cog` is not Lambda "for every cog of that type": wiki-curator-cog (until it moves to Lambda) and db-ops run on Railway and exempt the queue- and Lambda-shaped rules
+
+> **Current state (2026-10-16).** Prefect is retired fleet-wide.
+> evaluator-cog, deejay-cog and transcription-cog run on Lambda behind
+> their own queues, declared in mini-app-polis/infra (ADR-010); watcher-cog
+> is a scheduled Lambda function (ADR-011). The Negative consequences below
+> describe the transition and no longer hold: transcription-cog moved, and
+> watcher-cog's triggers all go through the API. wiki-curator-cog left
+> Prefect for a one-shot Railway process and db-ops was built on Railway;
+> both are recorded exceptions to this decision (ADR-013).
 
 ---
 

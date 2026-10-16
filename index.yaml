@@ -1,10 +1,11 @@
 # ecosystem-standards / index.yaml
 # Manifest file — agents fetch this first to discover available standards files.
 #
-# Fetch pattern:
-#   1. GET index.yaml  → discover files and current version
-#   2. GET standards/<file>.yaml  → fetch relevant domain(s)
-#   3. Pin standards_version in evaluation output for auditability
+# Consumers do not fetch this file directly. On release, CI compiles it and
+# every standards/*.yaml file into one catalog and publishes it to the API
+# (see README):
+#   1. GET https://api.kaianolevine.com/v1/standards/catalog → the resolved catalog
+#   2. Pin its `version` as standards_version in evaluation output for auditability
 #
 
 # Dimensions used across all standards files.
@@ -310,7 +311,9 @@ schema:
       its own, both declared in mini-app-polis/infra (ADR-010); the
       repository holds the cog's code. Processes data and holds no
       resident process between jobs. Examples: deejay-cog, evaluator-cog,
-      transcription-cog.
+      transcription-cog. wiki-curator-cog and db-ops are this type but run
+      on Railway, exempting the queue- and Lambda-shaped rules in their own
+      evaluator.yaml (ADR-013).
     trigger-cog: >
       AWS Lambda function on an EventBridge schedule, declared in
       mini-app-polis/infra. No resident process. Detects that there is work
@@ -318,10 +321,10 @@ schema:
       onto that cog's queue. Examples: watcher-cog.
     api-service: >
       HTTP API service with routes, auth, and a database. FastAPI (Python)
-      or Hono (TypeScript). Examples: api-kaianolevine-com, deejaytools-api.
+      or Hono (TypeScript). Examples: api-kaianolevine-com, api-deejaytools.
     shared-library: >
       Published package consumed by other repos. No service entry point,
-      no server runtime. Examples: common-python-utils, common-typescript-utils.
+      no server runtime. Examples: common-python-utils, identity.
     static-site: >
       Astro or HTML site deployed to Cloudflare Pages. No server-side
       runtime. Examples: website-astro-software, website-astro-wcs.
@@ -359,7 +362,9 @@ schema:
       pipeline cog's queue, dead-letter queue, alarm, function and deploy
       role (ADR-010). State is remote. Changes plan on pull requests and
       apply on merge to main; there are no releases, so release and
-      package rules are out of scope by taxonomy. Rules about the pipeline
+      package rules are out of scope by taxonomy. Each trigger cog's
+      scheduled function comes from a second module, `scheduled-worker`
+      (ADR-011). Rules about the pipeline
       cogs' runtime (PIPE-017's infrastructure half, PIPE-018, CD-010's
       dead-letter-queue alarm, CD-024) and about Terraform itself (CD-027,
       CD-028, SEC-008) are checked here, once.
@@ -382,9 +387,8 @@ schema:
         This repo IS the shared library implementation — rules that
         require the repo to declare or use the shared library as a
         dependency cannot apply to the library itself. Applies to
-        common-python-utils and common-typescript-utils (the shared
-        libraries themselves) and to logger wrapper modules within
-        services. CD-009 is exempted for logger wrapper modules;
+        common-python-utils (the shared library itself) and to logger
+        wrapper modules within services. CD-009 is exempted for logger wrapper modules;
         XSTACK-001 is exempted for the shared libraries themselves
         (circular dependency — the repo cannot declare itself as a
         dependency).

@@ -9,8 +9,9 @@ definitions_of_done:
     note: >
       Two cog subtypes exist. Pipeline cogs (e.g. deejay-cog) are Lambda
       functions behind their own SQS queue and process data. Trigger cogs
-      (e.g. watcher-cog) detect events and ask api-kaianolevine-com to run
-      a job, which enqueues it (ADR-009). Some checklist items apply only
+      (e.g. watcher-cog) are Lambda functions on a schedule that detect
+      events and ask api-kaianolevine-com to run a job, which enqueues it
+      (ADR-009, ADR-011). Some checklist items apply only
       to one subtype — see inline notes.
     checklist:
       - Bootstrapped following playbooks/new-cog.md in this repo
@@ -43,9 +44,9 @@ definitions_of_done:
         loaded from Parameter Store at cold start (load_secrets in the
         package __init__), never passed through Terraform"
       - "If trigger cog (e.g. watcher-cog): starts runs by POSTing to
-        api-kaianolevine-com — no queue or Prefect client of its own (PIPE-019)"
+        api-kaianolevine-com — never sends to a queue itself (PIPE-019)"
       - External API calls retried at the call site (PIPE-007)
-      - "Sentry integration configured — sentry_sdk.init() at entry point, SENTRY_DSN in .env.example"
+      - "Sentry integration configured — sentry_sdk.init() at entry point, SENTRY_DSN_COGS in .env.example (CD-002)"
       - Structured logging via common-python-utils logger — not inline logging configuration
 
   new_fastapi_service:
@@ -79,7 +80,7 @@ definitions_of_done:
       - Run report delivered under the run id (the SQS messageId)
       - Log events use standard shape — category, event, context fields present on all INFO and above
       - Idempotent steps — safe to re-run
-      - AI evaluation step included as final task
+      - Run reported as the final step, through mini_app_polis.pipeline_status (PIPE-011)
       - Concurrency bounded on the event source mapping or the function (PIPE-018)
       - Pipeline flow documented in docs/PIPELINE.md
       - Deprecation plan documented if workflow is temporary
@@ -115,11 +116,10 @@ definitions_of_done:
     label: New Hono API Service (TypeScript)
     checklist:
       - Hono on Node — not Cloudflare Workers runtime
-      - common-typescript-utils declared as dependency — do not reimplement logging, auth, or response helpers
       - "Versioned routes: /v1/<resource>"
       - "Response envelope on all endpoints — { data, meta } / { error: { code, message } }"
       - Drizzle ORM for database access — schema defined in TypeScript, migrations via Drizzle Kit
-      - Clerk auth middleware from common-typescript-utils — not hand-rolled
+      - Clerk session JWTs verified locally against JWKS — never by a call to Clerk (CD-029)
       - Zod schemas for all request validation
       - Contract test for every endpoint — response shape verified
       - Deployed to Railway — not Cloudflare Workers
