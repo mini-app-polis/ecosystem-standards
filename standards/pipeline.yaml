@@ -554,34 +554,39 @@ standards:
     status: gap
     dimension: pipeline_reliability
     severity: WARN
-    applies_to: [pipeline-cog]
+    applies_to: [infrastructure]
     description: >
-      A pipeline cog on Lambda declares the longest one job can
-      legitimately take, and its function timeout leaves room for that job
-      plus the margin PIPE-020's handler stops at.
+      The cog-worker module in the infrastructure repository refuses a
+      plan whose function timeout cannot hold the cog's worst-case job:
+      it takes a required `worst_case_job_seconds` and enforces
+      `timeout_seconds >= worst_case_job_seconds + deadline_margin_seconds`.
+      Every pipeline cog's module block declares `worst_case_job_seconds`,
+      derived from that cog's own configuration.
 
       PIPE-020 makes a run that hits the deadline fail legibly. It cannot
       tell a hung job from a slow healthy one: a timeout below the cog's
       own worst case kills good jobs every time they are slow, each one
       reported, retried, and eventually dead-lettered — correct behaviour
       for a fault, applied to work that had none. The worst case is
-      knowable in advance, because it is the sum of the timeouts and
-      retries the code already sets on its slowest path; it only has to be
-      written down where the timeout can be compared against it.
+      knowable in advance, because it is the sum of the per-request
+      timeouts, attempts and back-offs the code already sets on the
+      longest path one job takes, plus any fixed overhead the code
+      declares. It is not the slowest run observed.
 
-      The two numbers live with their owners. The worst case is declared
-      in the cog's own `evaluator.yaml` under `job_budget`
-      (`index.yaml` `schema.evaluator_yaml.job_budget`), with the basis it
-      was derived from; the timeout is the `timeout_seconds` of the cog's
-      module block in the infrastructure repository (ADR-010). The margin
-      is the cog's declared `deadline_margin_seconds`, or the default
-      documented with `job_budget` when it declares none.
+      Both numbers live in the cog's module block, so the comparison is
+      made in one repository at `terraform plan` (ADR-010). The block's
+      comment beside `worst_case_job_seconds` says how it was derived and
+      names the files that set its inputs, so a change to a timeout or a
+      retry in the cog is a visible reason to revisit it. The margin is
+      the module's `deadline_margin_seconds`, whose default is the margin
+      the cogs' handlers stop at (PIPE-020); a cog whose handler uses a
+      different one sets it.
 
-      A cog not on Lambda — no module block names its repository — has
-      no function timeout and is out of scope; the check skips it.
-      Keeping the declared worst case true when the code's timeouts
-      change is the author's job, and the declaration's `basis` is what a
-      reviewer reads to catch it.
+      A job the code puts no bound on — a loop over however many items a
+      folder or a response holds, or an external call with no timeout —
+      has no worst case to declare. It is bounded in the cog first: a cap
+      on items per run, with the remainder left for the next run, or a
+      timeout on the call.
 
       `status: gap` until evaluator-cog registers the check (EVAL-007).
     checkable: false
@@ -591,26 +596,27 @@ standards:
       registers it, with this as the check:
 
       DETERMINISTIC CHECK.
-      (1) In the infrastructure repository (the registry's repo of type
-          `infrastructure`), find the root `module` block whose
-          `github_repo` equals this repo's `<org>/<repo>`. None → the cog
-          is not on Lambda; skip without a finding.
-      (2) Read that block's `timeout_seconds`. Fail if it is not a literal
-          number — the comparison cannot be made.
-      (3) Read this repo's evaluator.yaml `job_budget`. Fail if it is
-          absent, or `worst_case_seconds` is not a positive integer, or
-          `basis` is empty.
-      (4) margin = `job_budget.deadline_margin_seconds` if present,
-          otherwise the default stated in `index.yaml`
-          `schema.evaluator_yaml.job_budget`.
-      (5) Fail if worst_case_seconds + margin > timeout_seconds, naming
-          all three numbers and both files.
+      (1) In `modules/cog-worker`, fail unless a variable
+          `worst_case_job_seconds` is declared with no default, and a
+          validation on `timeout_seconds` (or a precondition on the
+          function resource) compares `timeout_seconds` with
+          `worst_case_job_seconds` plus `deadline_margin_seconds`.
+      (2) For every root `module` block that calls the cog-worker module,
+          fail unless it sets `worst_case_job_seconds` to a literal
+          positive number.
+      Whether the declared number is true to the cog's code is a review
+      question, not this check's; the comment beside it is what a
+      reviewer reads.
     origin: >
       2026-10, transcription-cog: the voice-note path's own configuration
       budgeted more time for one note than the function's timeout allowed,
       so a slow but healthy note would have been killed mid-run and
       retried. The timeout was raised once someone compared the two by
-      hand; nothing compared them otherwise.
+      hand; nothing compared them otherwise. A first draft had the
+      evaluator read the worst case from each cog's evaluator.yaml and the
+      timeout from the infrastructure repository — a cross-repository
+      check ADR-010 avoids — and was replaced by the module enforcing it
+      at plan time.
 
   - id: PIPE-021
     title: One run, one report

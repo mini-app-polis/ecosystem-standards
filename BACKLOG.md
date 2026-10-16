@@ -36,9 +36,10 @@ registers the check in evaluator-cog.
   - [ ] **DOC-014** — living docs do not describe a `retired:` entry as
         current. Reads the catalog's `retired` block.
   - [ ] **DOC-015** — ADR status and supersession links agree.
-  - [ ] **PIPE-022** — worst-case job fits the timeout less the margin.
-        Needs `job_budget` in each Lambda pipeline cog's evaluator.yaml
-        before promotion, or every one of them fails on the first run.
+  - [ ] **PIPE-022** — the cog-worker module enforces the worst-case job
+        against the timeout, and every module block declares it. Reads
+        only the infrastructure repo. Needs `worst_case_job_seconds` in
+        mini-app-polis/infra first, which needs each cog's jobs bounded.
 
 ---
 
