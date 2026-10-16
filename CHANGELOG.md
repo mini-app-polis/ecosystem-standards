@@ -1,3 +1,11 @@
+# [7.19.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.18.0...v7.19.0) (2026-10-16)
+
+
+### Features
+
+* **standards:** add CD-037, CD-038, CD-039, DOC-014, DOC-015 and PIPE-022 as gap rules ([f9af33a](https://github.com/mini-app-polis/ecosystem-standards/commit/f9af33acccca339f7a652d348c67eaa6fb0d1039))
+* **standards:** retire PY-012 — failure visibility is the queue's job (PIPE-017) ([5acf2cd](https://github.com/mini-app-polis/ecosystem-standards/commit/5acf2cd98f894e3b1b28508bb66983a633cf8ac5))
+
 # [7.18.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.17.2...v7.18.0) (2026-10-16)
 
 
