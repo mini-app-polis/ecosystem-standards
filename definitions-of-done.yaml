@@ -31,7 +31,7 @@ definitions_of_done:
       - .env.example present and current
       - docs/PIPELINE.md describes where this cog fits in the broader flow
       - docs/CONFIGURATION.md documents every environment variable
-      - Error handling follows python.yaml PY-012/PY-013/PY-014 patterns
+      - Error handling follows python.yaml PY-013/PY-014 patterns
       - Pydantic models used for all external data validation unless external
         data is consumed exclusively via common-python-utils wrappers which
         handle validation internally (e.g. Drive API via DriveFacade)

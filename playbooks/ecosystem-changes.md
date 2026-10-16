@@ -281,7 +281,7 @@ Each key is a `dod_type` referenced from `ecosystem.yaml`.
    one-line criteria strings).
 3. Each checklist item should be independently checkable — if two
    criteria always fail together, collapse them into one.
-4. Reference specific rule IDs where applicable (e.g. "see PY-012"
+4. Reference specific rule IDs where applicable (e.g. "see PY-013"
    or "per DOC-013"). This keeps the checklist honest and links it to
    the enforceable rules.
 
