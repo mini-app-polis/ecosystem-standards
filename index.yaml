@@ -723,23 +723,6 @@ schema:
         does not report them. For an entry only this repo will ever have;
         if a second repo needs the same exception, add the entry to
         `schema.layouts` instead and remove both exceptions.
-    job_budget:
-      format: "{worst_case_seconds: integer, basis: string, deadline_margin_seconds: integer (optional)} object"
-      required: false
-      purpose: >
-        A pipeline cog's declared worst case for one job, which PIPE-022
-        compares with the function timeout in its module block in the
-        infrastructure repository. Required in practice of every pipeline
-        cog on Lambda — PIPE-022 fails one that omits it — and meaningless
-        elsewhere.
-        `worst_case_seconds` is the longest one job can legitimately run:
-        the sum of the timeouts, retries and back-offs the code sets on its
-        slowest path, not the slowest run observed. `basis` says how the
-        number was reached — the settings and the files they live in — so
-        a reviewer changing one of them can see the declaration has to
-        move too.
-        `deadline_margin_seconds` is how far before the deadline the
-        handler stops the run (PIPE-020). Omitted, it defaults to 30.
 
   service_fields:
     org: >

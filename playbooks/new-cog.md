@@ -269,14 +269,16 @@ Pipeline cogs:
   timeout and lets the flow fail the ordinary way, so a run that would
   otherwise be killed mid-flight still reports (PIPE-020). Copy
   transcription-cog's.
-- `job_budget` in `evaluator.yaml` — the longest one job can legitimately
-  take, added up from the timeouts and retries on the slowest path, with
-  the basis. Set the module block's `timeout_seconds` to at least that plus
-  the deadline margin (PIPE-022).
 - A `module "<cog>"` block in mini-app-polis/infra `cogs.tf` (ADR-010),
   through a pull request there — the queue and DLQ with a redrive policy,
   the function, the event source mapping with `ReportBatchItemFailures`,
   the DLQ alarm and the deploy role all come from `modules/cog-worker`.
+  Set `worst_case_job_seconds` to the longest one job can legitimately
+  take — the per-request timeouts, attempts and back-offs on the longest
+  path, added up — with a comment naming the files they come from.
+  `timeout_seconds` must be at least that plus the deadline margin
+  (PIPE-022). A job with no bound (a loop over every item a folder holds)
+  is bounded first.
   State the concurrency ceiling once: `reserved_concurrency = 1` for a cog
   that sweeps a shared resource and must run alone, otherwise
   `max_concurrency = N` (at least 2) — the module refuses both or neither
