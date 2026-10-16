@@ -587,9 +587,10 @@ standards:
     applies_to: [api-service]
     description: >
       Every Railway-hosted service declares its restart policy in a
-      version-controlled railway.json at the repo root, with
-      restartPolicyType "ON_FAILURE" and a restartPolicyMaxRetries of at
-      least 10.
+      version-controlled descriptor — Infrastructure as Code under
+      `.railway/`, or a railway.json / railway.toml at the repo root until
+      Railway stops reading those on 2026-12-01 — with restartPolicyType
+      "ON_FAILURE" and a restartPolicyMaxRetries of at least 10.
 
       Version-controlled rather than dashboard-configured so the setting is
       reviewable in a PR, diffable over time, and reproduced automatically
@@ -612,15 +613,31 @@ standards:
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      (1) Confirm railway.json exists at the repo root and parses as JSON.
-          Flag if absent or malformed.
-      (2) Confirm deploy.restartPolicyType == "ON_FAILURE". Flag "NEVER",
+      The descriptor is `.railway/railway.ts` (or `.py` / `.go`) when one
+      exists, otherwise `railway.json`, otherwise `railway.toml`. A
+      repository with both kinds is a migration in progress, and
+      `.railway/` is what it is moving to, so that is what is read.
+      (1) Confirm a descriptor exists and can be read (railway.json /
+          railway.toml must parse). Flag if absent or malformed.
+      (2) Confirm the restart policy type is "ON_FAILURE". Flag "NEVER",
           "ALWAYS", null, or a missing key.
-      (3) Confirm deploy.restartPolicyMaxRetries is an integer >= 10. Flag
-          a lower value, null, or a missing key.
-      (4) Confirm deploy.startCommand is present and non-empty. Flag if
-          absent — a railway.json that omits it leaves the effective start
+      (3) Confirm the restart policy's max retries is an integer >= 10.
+          Flag a lower value, null, or a missing key.
+      (4) Confirm a start command is declared and non-empty. Flag if
+          absent — a descriptor that omits it leaves the effective start
           command dashboard-owned, which defeats the purpose of the file.
+          Where the descriptor selects the root Dockerfile (builder
+          DOCKERFILE), a CMD or ENTRYPOINT in its final stage is the start
+          command, also version-controlled, and satisfies this; declare it
+          in one place, not both.
+      In railway.json / railway.toml these are deploy.restartPolicyType,
+      deploy.restartPolicyMaxRetries and deploy.startCommand. The IaC file
+      is code and is not evaluated: the settings are matched as text, as
+      CD-021 matches the builder (restartPolicyType, restartPolicyMaxRetries,
+      startCommand / start / command, in camel or snake case), with
+      whole-line comments ignored. One file may declare several services,
+      so every restart policy it states must be "ON_FAILURE" and every
+      retry count a literal integer of at least 10.
     origin: >
       2026-07-22: after a transient Prefect Cloud 503 crashed all four
       serve()-based cogs, none of them came back. Railway restart policy was
@@ -1302,11 +1319,16 @@ standards:
       in modules, that does not set both `memory_size` and `timeout`.
       (2) Fail for any root `module` block calling the cog-worker module
       that does not set both `memory_mb` and `timeout_seconds`.
-      api-service: (1) read `railway.json` or `railway.toml` at the repo
-      root. Absent → fail. (2) Fail if memory and CPU limit keys are
-      absent or null. Accept either the platform's native limit keys or a
-      documented equivalent — the check is that a ceiling is stated, not
-      which spelling states it.
+      api-service: (1) read `.railway/railway.{ts,py,go}` if present,
+      otherwise `railway.json` or `railway.toml` at the repo root (the
+      same preference as CD-017). None → fail. (2) Fail if memory and CPU
+      limit keys are absent or null. Accept either the platform's native
+      limit keys (deploy.limitOverride.containers.memoryBytes and .cpu) or
+      a documented equivalent — the check is that a ceiling is stated, not
+      which spelling states it. The IaC file is code and is matched as
+      text: any setting whose name contains "memory", and any whose name
+      contains "cpu", with a value other than null, ignoring whole-line
+      comments.
 
 
   - id: CD-025
