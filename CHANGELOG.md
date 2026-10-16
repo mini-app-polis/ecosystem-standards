@@ -1,3 +1,10 @@
+# [7.21.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.20.0...v7.21.0) (2026-10-16)
+
+
+### Features
+
+* **standards:** redefine PIPE-022 as a cog-worker duration alarm, drop worst_case_job_seconds ([ea521bd](https://github.com/mini-app-polis/ecosystem-standards/commit/ea521bd481e204db088851a7ab579a98638dcfbd))
+
 # [7.20.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.19.0...v7.20.0) (2026-10-16)
 
 
