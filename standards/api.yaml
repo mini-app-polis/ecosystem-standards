@@ -22,9 +22,12 @@ standards:
     check_notes: >
       DETERMINISTIC CHECK.
       Verify the repo targets Railway as its deploy host:
-        (1) A Railway config file exists at repo root: one of
-            `nixpacks.toml`, `railway.toml`, or `Procfile`. Flag if none
-            are present.
+        (1) A Railway deployment descriptor exists: Infrastructure as
+            Code at `.railway/railway.ts` (or `.py` / `.go`, the same file
+            CD-017 and CD-024 read), or one of `railway.toml`,
+            `railway.json` or `nixpacks.toml` at the repo root. Flag if
+            none are present. Railway stops reading railway.json /
+            railway.toml on 2026-12-01; `.railway/` is what replaces them.
         (2) The matching service entry in ecosystem.yaml has
             `host: railway`. Flag if `host` is any other value
             (cloudflare-workers, vercel, etc.) on an active service.
