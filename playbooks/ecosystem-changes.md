@@ -54,10 +54,11 @@ role.
    ```yaml
    - id: <repo-name>              # canonical kebab-case repo name
      type: <type>                 # one of the types in index.yaml
-     status: active               # active | transitioning | retired
+     status: active               # active | development | transitioning | retired
+                                  # (only active is enumerated by the fleet sweep)
      dod_type: <dod_key>          # key in definitions-of-done.yaml, or null
      language: python             # python | typescript | astro | yaml | ...
-     host: railway                # or cloudflare-pages, etc.
+     host: railway                # or aws-lambda, cloudflare-pages, etc.
      description: >
        One-paragraph description — what the service does, what it
        consumes, what it produces.

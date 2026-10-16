@@ -27,6 +27,7 @@ For the process of writing or superseding an ADR, see
 | ADR-010 | Accepted  | [Infrastructure Lives in One Repository, With Its State Remote](ADR-010-infrastructure-in-one-repository.md) |
 | ADR-011 | Accepted  | [Trigger Cogs Run on a Schedule, Not as a Resident Process](ADR-011-trigger-cogs-on-a-schedule.md) |
 | ADR-012 | Accepted  | [Four Test Layers, Each Proving Something the Others Cannot](ADR-012-test-layers.md) |
+| ADR-013 | Accepted  | [Railway-Hosted Cogs Are Recorded Exceptions to ADR-009](ADR-013-railway-cogs-as-recorded-exceptions.md) |
 
 ---
 
@@ -47,12 +48,14 @@ Builds on ADR-001. Defines seven canonical repo types
 Reduces per-repo exception count from 62 to ~3.
 
 **ADR-003 — Conformance Checker Architecture.**
-`evaluator-cog` runs two flows: `pipeline_eval` (behavioral) and
-`conformance` (structural). Findings land in `pipeline_evaluations`
-with a `source` field distinguishing them. Deterministic checks for
-structural rules, LLM checks for soft rules, with the split tagged
-in each rule's `check_notes` via the `DETERMINISTIC CHECK.` /
-`LLM CHECK.` prefix (see META-005).
+Conformance checking lives in `evaluator-cog`. Findings land in
+`pipeline_evaluations` with a `source` field distinguishing them.
+Deterministic checks for structural rules, LLM checks for soft rules,
+with the split tagged in each rule's `check_notes` via the
+`DETERMINISTIC CHECK.` / `LLM CHECK.` prefix (see META-005). Superseded
+in part: the behavioral `pipeline_eval` flow was deleted, and
+evaluation runs on demand from evaluator-cog's queue rather than on a
+Prefect schedule (ADR-009, evaluator-cog ADR-0004).
 
 **ADR-004 — `applies_to` Has a Single Meaning.**
 `applies_to` is optional and means exactly "repo types the
@@ -104,6 +107,9 @@ that application's purpose, which the catalog cannot know. Adds an
 obligations are data rather than rule prose. Telemetry providers
 (Sentry, and the finding-posting path itself) are exempt and fail
 silently — a finding saying "we cannot post findings" cannot be posted.
+Amended: the recovery contract now covers only the Railway API services,
+since cogs recover through their queue or schedule (ADR-009, ADR-011,
+ADR-013), and the `external_providers:` registry was never created.
 
 **ADR-008 — Named Machine Keys as the Machine Identity.**
 Machines authenticated with Clerk M2M opaque tokens minted from a
@@ -129,7 +135,8 @@ Redefines `pipeline-cog` as a Lambda function behind an SQS queue of its
 own and `trigger-cog` as a loop that starts work through the API. Retires
 the eight rules that encoded Prefect on Railway (PIPE-001/004/006/009/012,
 CD-005/015/016) and adds PIPE-016 to PIPE-019. Cogs not yet moved read as
-backlog rather than being exempted. Supersedes ADR-006.
+backlog rather than being exempted. Supersedes ADR-006. Amended by
+ADR-013 for the cogs that run on Railway.
 
 **ADR-010 — Infrastructure Lives in One Repository, With Its State Remote.**
 Moves every pipeline cog's Terraform out of its repository into
@@ -165,6 +172,14 @@ write run only against dev (CD-033); every deploy, production included,
 gets a read-only smoke check (CD-032); changes reach main only through
 the promotion pull request (CD-034); each commit's checks run once
 (CD-035). Amends TEST-000, which scheduled end-to-end tests nightly.
+
+**ADR-013 — Railway-Hosted Cogs Are Recorded Exceptions to ADR-009.**
+wiki-curator-cog (a one-shot Railway process until it moves to Lambda,
+decided 2026-10-14) and db-ops (three Railway crons on private
+networking) stay `pipeline-cog` and exempt the queue- and Lambda-shaped
+rules in their own `evaluator.yaml`, each declaring its own liveness
+signal. No new repo type while db-ops is the only permanent member.
+Railway cogs share `SENTRY_DSN_COGS`. Amends ADR-009.
 
 ---
 

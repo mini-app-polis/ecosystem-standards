@@ -7,101 +7,42 @@ that need to be built, decided, or documented when the time is right.
 
 ## pipeline-eval-deprecation — retire evaluator-cog's pipeline_eval path
 
-`evaluator_cog/flows/pipeline_eval.py` exists for two reasons that the
-May 2026 self-report refactor made redundant:
+**Mostly done.** `evaluator_cog/flows/pipeline_eval.py` has been deleted;
+cogs report their own runs through `mini_app_polis.pipeline_status`.
+What remains:
 
-  1. `evaluate_pipeline_run` — LLM-scores CSV / collection runs by
-     calling Claude with a structured prompt. Cogs now self-report
-     SUCCESS/WARN/ERROR with concrete counters via
-     `mini_app_polis.pipeline_status.post_run_finding`. The LLM's
-     output adds latency, cost, and an extra place the payload shape
-     can drift; the cog itself is the authoritative source.
-  2. `handle_prefect_flow_run_event` — Prefect Cloud webhook fallback
-     for flow-run state changes the cog never reported on. With the
-     failure hooks (`make_failure_hook` in
-     `mini_app_polis.pipeline_status`) wired into every production
-     flow's `on_failure` / `on_crashed`, this webhook is also
-     redundant for any cog using the library.
-
-Plan:
-
-  - [x] Confirm every production flow (deejay-cog, transcription-cog)
-        is wired through the library shim with a failure hook.
-        (deejay-cog: done. transcription-cog: done. evaluator-cog:
-        retains for conformance_check_flow only.)
-  - [ ] Stand the Prefect Cloud webhook automation down (or repoint at
-        a no-op endpoint) so `handle_prefect_flow_run_event` stops
-        receiving traffic.
-  - [ ] Delete `evaluate_pipeline_run`, `handle_prefect_flow_run_event`,
-        `_FLOW_REPO_MAP`, `_flow_name_to_repo`, related helpers, and
-        the corresponding test files (`test_webhook.py`,
-        `test_llm.py::test_flow_name_to_repo_*`, related
-        `_build_prompt_*` test scaffolding).
-  - [ ] Drop unused `evaluator_cog.engine.llm._build_prompt_csv` /
-        `_build_prompt_collection` if no other caller remains.
-  - [ ] Remove evaluator-cog as a runtime dependency of any cog that
-        no longer needs it (the conformance-checking flow stays;
-        pipeline_eval comes out).
-
-See the module-level TODO in
-`evaluator-cog/src/evaluator_cog/flows/pipeline_eval.py` for the
-inline plan.
-
-**Coverage note before deleting the webhook path.** The argument above
-is that failure hooks make `handle_prefect_flow_run_event` redundant.
-That holds for *flow-run* state changes, which is all the webhook ever
-covered. It does not extend to the pre-flow window: a cog that dies
-during `prefect.serve()` deployment registration has no flow run, so
-neither the hooks nor the webhook ever fired. That window is now
-covered separately by `serve_with_retry`
-(`mini_app_polis.serve_resilience`, CD-016, ADR-006), which emits a
-`source="startup"` CRITICAL finding. Recording it here so the webhook
-deletion isn't later blamed for a gap it never filled.
+  - [ ] Drop `evaluator_cog.engine.llm._build_prompt_csv` /
+        `_build_prompt_collection`, which nothing in `src/` calls any
+        more, and the stale `evaluate_pipeline_run` / `_flow_name_to_repo`
+        section comments left in `tests/unit/test_llm.py`.
 
 ---
 
-## Nobody notices a service that exhausted its restart budget
+## Nobody notices a Railway service that exhausted its restart budget
 
 Deferred from ADR-007's recovery contract, recorded here rather than
 solved there.
 
-CD-016 (in-process retry ceiling) times CD-017 (`ON_FAILURE`, max
-retries 10) gives roughly five hours of unattended coverage for a
-service that cannot start. After that the service stays down until a
-human redeploys it, and **nothing in the ecosystem observes that**.
+The cogs no longer have this problem: a Lambda pipeline cog's failed job
+is redelivered and dead-lettered behind an alarm (PIPE-017, CD-010), a
+trigger cog's missed tick is caught by its Healthchecks ping (CD-007),
+and the Railway one-shot cogs declare their own liveness signal in their
+CD-010 exemption (ADR-013). What is left is an API service on Railway:
+CD-017 (`ON_FAILURE`, max retries 10) restarts it, and once that budget
+is spent it stays down until a human redeploys it, and **nothing in the
+ecosystem observes that**.
 
 The gap is monitoring, not restart policy — deliberately so. Unbounded
 restarts would erase the distinction between "the world is broken" and
 "we shipped a broken build", and the second is the case that needs to
-stop churning (see deejay-cog's 2026-08-19 `ModuleNotFoundError`
-crash-loop). More restarts is the wrong fix.
+stop churning. More restarts is the wrong fix.
 
-What is actually needed is something watching from *outside* the
-failing service, which does not exist today. Sketch of the options:
-
-  - [ ] **Silence detection in evaluator-cog's conformance flow.** It
-        already runs daily against every repo. It could assert that
-        each active cog has posted *some* finding within its expected
-        window and raise one when a cog has gone quiet. Cheapest —
-        reuses a scheduled component that already exists. Weak for
-        deejay-cog specifically, which is exempt from CD-010 precisely
-        because it has no expected cadence (ADR-003) — silence there
-        is normal.
   - [ ] **Railway deployment-status polling.** Query the Railway API
-        for services in a crashed/stopped state. Direct and
-        unambiguous — it observes the actual condition rather than
-        inferring it from absence — but adds a Railway API dependency
-        and a place to run the poll.
-  - [ ] **External uptime check.** Third-party pinger against a
-        liveness surface. Cogs bind no port (they are not HTTP
-        services), so this needs a heartbeat push rather than a pull,
-        which is CD-010/Healthchecks.io — already exempted for
-        on-demand cogs for the same cadence reason.
-
-Note the recurring obstacle: every option that infers liveness from
-*activity* breaks on cogs that are legitimately idle for weeks. The
-Railway-status option is the only one that observes the condition
-directly, which is probably the tell.
+        for services in a crashed/stopped state. Observes the condition
+        directly rather than inferring it from absence, but adds a
+        Railway API dependency and a place to run the poll.
+  - [ ] **External uptime check** against each API's `/health`
+        (API-010). An API binds a port, so a pull check works.
 
 ---
 
@@ -172,7 +113,7 @@ the ceiling in each cog's module block in mini-app-polis/infra (ADR-010).
 
 - [x] **deejay-cog** — `reserved_concurrency = 1`: the quota increase was
   approved, and sweeps run one at a time.
-- [x] **evaluator-cog** — `max_concurrency = 4`.
+- [x] **evaluator-cog** — `max_concurrency = 20`.
 - [x] **transcription-cog** — `reserved_concurrency = 1`.
 ---
 
@@ -194,7 +135,7 @@ actionable.
 
 - [ ] **Secret scanning (SEC-001, SEC-002).** No rule currently
   requires secret scanning anywhere in the ecosystem. Given Doppler-
-  managed secrets, Clerk keys, Prefect API keys, Anthropic keys, and
+  managed secrets, Clerk keys, Anthropic keys, and
   GitHub tokens all present across repos, this is the biggest
   material-risk gap in the catalog. Proposed:
   - SEC-001: pre-commit hook for secret scanning (gitleaks,

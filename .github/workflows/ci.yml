@@ -129,8 +129,8 @@ jobs:
 
   # A fleet sweep, not a single repository. Every repo's last result was
   # graded against the catalog this release just replaced, so all of them
-  # are stale at once — and the three checks that scope to no repository
-  # (EVAL-003, EVAL-007) have nowhere else to run.
+  # are stale at once — and the four checks that scope to no repository
+  # (EVAL-003, XSTACK-006, XSTACK-008, EVAL-007) have nowhere else to run.
   #
   # needs: release is load-bearing. The catalog is published inside that
   # job, so sweeping before it finishes would grade the fleet against the

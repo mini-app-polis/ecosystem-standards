@@ -70,13 +70,16 @@ declared `rule_prefix`.
 | `API`         | `standards/api.yaml`            | Service structure, routing, response envelopes    |
 | `AUTH`        | `standards/auth.yaml`           | Credential verification, route coverage, parity   |
 | `CFG`         | `standards/config.yaml`         | pydantic-settings and .env.example contracts      |
-| `PIPE`        | `standards/pipeline.yaml`       | Prefect patterns, idempotency, data safety        |
+| `PIPE`        | `standards/pipeline.yaml`       | Queue-and-Lambda patterns, idempotency, data safety |
 | `FE`          | `standards/frontend.yaml`       | Astro sites, React apps                           |
 | `CD`          | `standards/delivery.yaml`       | CI/CD, observability, secrets, auth conventions   |
 | `VER`         | `standards/versioning.yaml`     | Conventional Commits, semantic-release            |
 | `META`        | `standards/meta.yaml`           | Rules governing the standards repo itself         |
 | `EVAL`        | `standards/evaluation.yaml`     | How AI evaluation is performed                    |
 | `XSTACK`      | `standards/cross-stack.yaml`    | Python/TypeScript parity rules                    |
+| `SEC`         | `standards/security.yaml`       | Secret scanning, supply chain, vulnerability response |
+| `OPS`         | `standards/operations.yaml`     | Objectives, recovery, retention, rotation         |
+| `LAYOUT`      | `standards/layout.yaml`         | A repo's top-level layout, and drift from it      |
 
 ### Cross-cutting rules
 
