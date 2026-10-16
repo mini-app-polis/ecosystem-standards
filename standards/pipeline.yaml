@@ -550,43 +550,32 @@ standards:
       inside the run so the flow's own report still goes out.
 
   - id: PIPE-022
-    title: The worst-case job fits inside the function timeout, less the deadline margin
+    title: Pipeline cogs alarm before a job reaches the function timeout
     status: gap
     dimension: pipeline_reliability
     severity: WARN
     applies_to: [infrastructure]
     description: >
-      The cog-worker module in the infrastructure repository refuses a
-      plan whose function timeout cannot hold the cog's worst-case job:
-      it takes a required `worst_case_job_seconds` and enforces
-      `timeout_seconds >= worst_case_job_seconds + deadline_margin_seconds`.
-      Every pipeline cog's module block declares `worst_case_job_seconds`,
-      derived from that cog's own configuration.
+      The cog-worker module in the infrastructure repository defines an
+      alarm on the function's `Duration` metric (Maximum) at
+      `duration_alarm_ratio` × `timeout_seconds`, notifying the same topic
+      as the module's other alarms, and every pipeline cog's runtime comes
+      from that module (ADR-010).
 
-      PIPE-020 makes a run that hits the deadline fail legibly. It cannot
-      tell a hung job from a slow healthy one: a timeout below the cog's
-      own worst case kills good jobs every time they are slow, each one
-      reported, retried, and eventually dead-lettered — correct behaviour
-      for a fault, applied to work that had none. The worst case is
-      knowable in advance, because it is the sum of the per-request
-      timeouts, attempts and back-offs the code already sets on the
-      longest path one job takes, plus any fixed overhead the code
-      declares. It is not the slowest run observed.
+      PIPE-020 covers the run that reaches the deadline: it stops itself
+      and reports. It cannot tell a hung job from a slow healthy one, so a
+      timeout the cog's work has grown into kills good jobs every time
+      they are slow — each one reported, retried, and eventually
+      dead-lettered, correct behaviour for a fault applied to work that
+      had none. This rule is the warning before that: the longest job in
+      a period crossing a share of the timeout is the signal to raise the
+      timeout, or bound the job, while slow jobs still finish.
 
-      Both numbers live in the cog's module block, so the comparison is
-      made in one repository at `terraform plan` (ADR-010). The block's
-      comment beside `worst_case_job_seconds` says how it was derived and
-      names the files that set its inputs, so a change to a timeout or a
-      retry in the cog is a visible reason to revisit it. The margin is
-      the module's `deadline_margin_seconds`, whose default is the margin
-      the cogs' handlers stop at (PIPE-020); a cog whose handler uses a
-      different one sets it.
-
-      A job the code puts no bound on — a loop over however many items a
-      folder or a response holds, or an external call with no timeout —
-      has no worst case to declare. It is bounded in the cog first: a cap
-      on items per run, with the remainder left for the next run, or a
-      timeout on the call.
+      The threshold is derived from `timeout_seconds` in the module, so it
+      moves with every timeout change and no cog declares a second number
+      to keep true by hand. The ratio is the module variable's default; a
+      cog that needs a different one sets `duration_alarm_ratio` in its
+      module block.
 
       `status: gap` until evaluator-cog registers the check (EVAL-007).
     checkable: false
@@ -596,27 +585,29 @@ standards:
       registers it, with this as the check:
 
       DETERMINISTIC CHECK.
-      (1) In `modules/cog-worker`, fail unless a variable
-          `worst_case_job_seconds` is declared with no default, and a
-          validation on `timeout_seconds` (or a precondition on the
-          function resource) compares `timeout_seconds` with
-          `worst_case_job_seconds` plus `deadline_margin_seconds`.
-      (2) For every root `module` block that calls the cog-worker module,
-          fail unless it sets `worst_case_job_seconds` to a literal
-          positive number.
-      Whether the declared number is true to the cog's code is a review
-      question, not this check's; the comment beside it is what a
-      reviewer reads.
+      Reads only the infrastructure repository.
+      (1) In `modules/cog-worker`, fail unless an
+          `aws_cloudwatch_metric_alarm` has namespace `AWS/Lambda`,
+          metric_name `Duration`, statistic `Maximum`, a `FunctionName`
+          dimension referring to the module's function, a threshold
+          expression referring to both `var.timeout_seconds` and
+          `var.duration_alarm_ratio`, and `alarm_actions` naming the
+          module's alerts topic.
+      (2) Fail unless the module declares a variable
+          `duration_alarm_ratio`.
+      (3) Fail if any `aws_lambda_event_source_mapping` is declared
+          outside `modules/cog-worker`: a queue-fed function built
+          elsewhere is a pipeline cog without this alarm. A cog not on
+          Lambda has no mapping here and is out of scope.
     origin: >
       2026-10, transcription-cog: the voice-note path's own configuration
       budgeted more time for one note than the function's timeout allowed,
       so a slow but healthy note would have been killed mid-run and
       retried. The timeout was raised once someone compared the two by
-      hand; nothing compared them otherwise. A first draft had the
-      evaluator read the worst case from each cog's evaluator.yaml and the
-      timeout from the infrastructure repository — a cross-repository
-      check ADR-010 avoids — and was replaced by the module enforcing it
-      at plan time.
+      hand; nothing compared them otherwise. Drafts of this rule had each
+      cog declare its worst-case job and compared that with the timeout —
+      a hand-maintained number nothing kept true to the code — and were
+      replaced by an alarm on the duration the function actually reports.
 
   - id: PIPE-021
     title: One run, one report
