@@ -177,20 +177,38 @@ When writing a new ADR that replaces an older one:
 3. If rules in `standards/*.yaml` were derived from the old ADR and
    need to change, make those edits in the same commit. Reference
    both the old and new ADR in the commit message.
+4. Update the old ADR's row in `docs/decisions/README.md` to
+   Superseded, in the same commit.
 
 ---
 
-## Step 7 — Partial supersession
+## Step 7 — Partial supersession and amendment
 
 Occasionally a later ADR replaces part of an earlier one but leaves
 other parts intact. In that case:
 
 - Do not flip the old ADR to `Superseded` — its still-active parts
   need to read as Accepted.
-- In the new ADR, name which sub-sections of the old ADR it replaces.
-- In the old ADR, add a note near the affected section pointing at
-  the new ADR: `> Superseded in part by ADR-NNN — see that ADR's
-  Decision section for the updated rule.`
+- In the new ADR, add `**Supersedes, in part:** ADR-NNN` to the header
+  and name which sub-sections of the old ADR it replaces.
+- In the old ADR, add `**Superseded in part by:** ADR-NNN` to the
+  header, and a note near the affected section pointing at the new
+  ADR: `> Superseded in part by ADR-NNN — see that ADR's Decision
+  section for the updated rule.`
+
+An ADR that changes a clause of an earlier one without replacing any
+section of it amends it: `**Amends:** ADR-NNN` in the new ADR's header,
+`**Amended by:** ADR-NNN` in the old one's. The old ADR stays Accepted.
+
+Every relation is written at both ends, in the header, with the ADR IDs
+first on the line and any explanation after an em dash. DOC-015 checks
+the pairs, and that the Status line, the index row and any banner agree:
+
+| In the new ADR              | In the old ADR                 | Old ADR's status |
+|-----------------------------|--------------------------------|------------------|
+| `**Supersedes:**`           | `**Superseded by:**`           | Superseded       |
+| `**Supersedes, in part:**`  | `**Superseded in part by:**`   | Accepted         |
+| `**Amends:**`               | `**Amended by:**`              | Accepted         |
 
 This is rare. If an ADR is being partially superseded more than once,
 consider rewriting it as a single replacement ADR for clarity.

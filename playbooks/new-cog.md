@@ -269,6 +269,10 @@ Pipeline cogs:
   timeout and lets the flow fail the ordinary way, so a run that would
   otherwise be killed mid-flight still reports (PIPE-020). Copy
   transcription-cog's.
+- `job_budget` in `evaluator.yaml` — the longest one job can legitimately
+  take, added up from the timeouts and retries on the slowest path, with
+  the basis. Set the module block's `timeout_seconds` to at least that plus
+  the deadline margin (PIPE-022).
 - A `module "<cog>"` block in mini-app-polis/infra `cogs.tf` (ADR-010),
   through a pull request there — the queue and DLQ with a redrive policy,
   the function, the event source mapping with `ReportBatchItemFailures`,
@@ -277,8 +281,10 @@ Pipeline cogs:
   that sweeps a shared resource and must run alone, otherwise
   `max_concurrency = N` (at least 2) — the module refuses both or neither
   (PIPE-018). List the secrets the worker needs by name in
-  `ssm_parameters` / `ssm_optional_parameters`; their values go in
-  Doppler's `prd` config, which syncs to Parameter Store.
+  `ssm_parameters` / `ssm_optional_parameters` — every uncommented
+  `.env.example` name, and the Sentry DSN and any Healthchecks URL the code
+  reads (CD-037); their values go in Doppler's `prd` config, which syncs to
+  Parameter Store.
   The cog's package `__init__.py` calls `mini_app_polis.load_secrets()`
   before anything else, so they are in the environment before any module
   reads it, and the handler calls `load_secrets(refresh=True)` at the top
