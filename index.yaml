@@ -116,6 +116,64 @@ statuses:
       Gap rules are the roadmap — promote to `requirement` when the
       check is ready.
 
+# ─────────────────────────────────────────────
+# CONTEXT CONTRACT — retired
+#
+# The canonical list of retired components, mechanisms and terms: things
+# the ecosystem used to run on and no longer does. DOC-014 reads it to
+# find living documentation that still describes one of them as current;
+# it is the rule's only list, so a retirement extends the check by adding
+# an entry here and nowhere else. Carried in the published catalog.
+#
+# Keys are the retired name as it is written in prose and code. DOC-014
+# matches a key case-insensitively, bounded by anything that is not a
+# letter or digit, so one entry covers `Prefect`, `prefect.serve` and
+# `PREFECT_API_KEY`. Every entry carries three non-empty strings:
+#
+#   what         One line: what the retired thing was, for a reader who
+#                never met it.
+#   replaced_by  What does the job now, with the ADR or rule that records
+#                the change — or, where nothing replaced it, why not.
+#                DOC-014 quotes it in its finding as the fix.
+#   when         YYYY-MM of the retirement.
+#
+# This is not a tombstone for the inventory. Retired services are still
+# deleted from ecosystem.yaml (playbooks/ecosystem-changes.md §1) and
+# retired rules from standards/; an entry here exists so their names can
+# be recognised as stale, and is added in the same change that retires
+# them. Retired authentication mechanisms are CD-019's and are not listed.
+# Remove an entry only when the name has been reused for something live.
+# ─────────────────────────────────────────────
+retired:
+  Prefect:
+    what: Workflow orchestrator that ran the pipeline cogs as resident Railway workers (flows, serve(), Prefect Cloud deployments).
+    replaced_by: Pipeline cogs as AWS Lambda functions behind their own SQS queue, declared in the infrastructure repository; trigger cogs as scheduled Lambda functions (ADR-009, ADR-010, ADR-011).
+    when: "2026-09"
+  common-typescript-utils:
+    what: Shared TypeScript library — Clerk middleware, response envelope helpers, a logger and shared Zod schemas.
+    replaced_by: Nothing shared. Its last consumer defines the envelope types it used; a library with one consumer is overhead (XSTACK-001).
+    when: "2026-10"
+  deejaytools-api:
+    what: The Hono on Node API behind deejaytools.com.
+    replaced_by: api-deejaytools (FastAPI), on the same database with the same wire contract.
+    when: "2026-10"
+  notes-ingest-cog:
+    what: Cog that extracted structured notes from WCS lesson transcripts.
+    replaced_by: transcription-cog, mode wcs-transcripts.
+    when: "2026-05"
+  voicenotes-cog:
+    what: Cog that turned voice notes into Asana tasks.
+    replaced_by: transcription-cog, mode voicenotes.
+    when: "2026-05"
+  google-app-script-trigger:
+    what: Apps Script relay that fired GitHub repository_dispatch events to start pipeline runs.
+    replaced_by: watcher-cog asking api-kaianolevine-com to enqueue the owning cog's job (PIPE-008).
+    when: "2026-03"
+  python-project-template:
+    what: Template repository new Python services were created from.
+    replaced_by: The bootstrap playbooks in ecosystem-standards playbooks/, starting with new-cog.md.
+    when: "2026-03"
+
 schema:
   rule_fields:
     id:
@@ -665,6 +723,23 @@ schema:
         does not report them. For an entry only this repo will ever have;
         if a second repo needs the same exception, add the entry to
         `schema.layouts` instead and remove both exceptions.
+    job_budget:
+      format: "{worst_case_seconds: integer, basis: string, deadline_margin_seconds: integer (optional)} object"
+      required: false
+      purpose: >
+        A pipeline cog's declared worst case for one job, which PIPE-022
+        compares with the function timeout in its module block in the
+        infrastructure repository. Required in practice of every pipeline
+        cog on Lambda — PIPE-022 fails one that omits it — and meaningless
+        elsewhere.
+        `worst_case_seconds` is the longest one job can legitimately run:
+        the sum of the timeouts, retries and back-offs the code sets on its
+        slowest path, not the slowest run observed. `basis` says how the
+        number was reached — the settings and the files they live in — so
+        a reviewer changing one of them can see the declaration has to
+        move too.
+        `deadline_margin_seconds` is how far before the deadline the
+        handler stops the run (PIPE-020). Omitted, it defaults to 30.
 
   service_fields:
     org: >

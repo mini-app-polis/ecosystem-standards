@@ -43,10 +43,17 @@ definitions_of_done:
         job after release; secrets are listed by name in its module block and
         loaded from Parameter Store at cold start (load_secrets in the
         package __init__), never passed through Terraform"
+      - "Every name the code needs — each uncommented .env.example key, the
+        Sentry DSN, any Healthchecks URL — is named in the deploy config: the
+        module block in mini-app-polis/infra, or .railway/railway.ts (CD-037)"
+      - "If pipeline cog on Lambda: evaluator.yaml declares job_budget, and
+        the module block's timeout_seconds covers it plus the deadline
+        margin (PIPE-022)"
+      - "Default branch is main and a dev branch exists (CD-039)"
       - "If trigger cog (e.g. watcher-cog): starts runs by POSTing to
         api-kaianolevine-com — never sends to a queue itself (PIPE-019)"
       - External API calls retried at the call site (PIPE-007)
-      - "Sentry integration configured — sentry_sdk.init() at entry point, SENTRY_DSN_COGS in .env.example (CD-002)"
+      - "Sentry integration configured — sentry_sdk.init() at entry point, SENTRY_DSN_COGS in .env.example (CD-002); an empty DSN in production logs an ERROR rather than skipping silently (CD-038)"
       - Structured logging via common-python-utils logger — not inline logging configuration
 
   new_fastapi_service:
@@ -58,7 +65,9 @@ definitions_of_done:
       - Mock verification in all tests — no vacuous passes
       - Test database fixture — no production data in tests
       - owner_id on all tables
-      - Sentry integration configured
+      - Sentry integration configured; an empty DSN in production logs an ERROR rather than skipping silently (CD-038)
+      - Every name the code needs — each uncommented .env.example key and the Sentry DSN — is declared in .railway/railway.ts (CD-037)
+      - Default branch is main and a dev branch exists (CD-039)
       - CORS configured — CORS_ORIGINS env var, not hardcoded
       - Feature flags table seeded with initial flags
       - Clerk auth requirement explicitly decided and documented

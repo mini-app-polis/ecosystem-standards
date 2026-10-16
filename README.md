@@ -39,6 +39,7 @@ What the catalog carries, in one document:
 ```
 version, compiled_at, rule_count
 dimensions, severities, statuses, vulnerability_severities, vulnerability_response
+retired: names the ecosystem no longer runs on, what replaced each (DOC-014)
 schema: repo_types, traits, dispatch, evaluator_yaml
 rules: every rule, each with its domain, applies_to, modifies, status,
        dimension, severity, checkable, check_notes, and a resolved

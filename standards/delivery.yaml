@@ -102,6 +102,69 @@ standards:
       call at service entry point. Check for SENTRY_DSN in .env.example.
       Flag any production service missing any of these three.
 
+  - id: CD-038
+    title: A production service with no Sentry DSN says so
+    status: gap
+    dimension: cd_readiness
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog, api-service]
+    description: >
+      In production, a service whose Sentry DSN is missing or empty writes
+      an ERROR-level log line through the shared logger (CD-009) at
+      startup, naming the variable it read. It does not skip Sentry
+      initialisation silently.
+
+      sentry_sdk.init() with no DSN is a documented no-op, and the usual
+      guard — `if not dsn: return` — is the same no-op written out. Either
+      way the service runs, every exception it raises goes nowhere, and
+      nothing anywhere records that Layer 3 is off. CD-002 checks that
+      Sentry is wired; it cannot see that the wire carries nothing.
+      CD-037 makes the deploy config name the DSN; this rule covers what
+      CD-037 cannot see — the name provisioned but the value empty or
+      absent in the secret store.
+
+      A log line, not a failed startup. CD-018's telemetry carve-out
+      holds that Sentry's absence never stops work, and that applies to
+      Sentry being unconfigured as much as to Sentry being down: a
+      service that refused to start without a DSN would turn an
+      observability gap into an outage. Outside production (local runs,
+      tests, the development environment) no DSN is normal and the
+      service stays quiet; production is read through the shared
+      library's environment resolution, not a hand-rolled check.
+
+      `status: gap` until evaluator-cog registers the check (EVAL-007).
+      Every Python service hand-rolls its init today, so the fix is
+      repeated per repo; a shared Sentry initialiser in
+      common-python-utils that owns this branch would make the rule one
+      implementation the fleet inherits.
+    checkable: false
+    check_notes: >
+      NOT CHECKABLE YET — no evaluator-cog check is registered. Promote to
+      `requirement` and set `checkable: true` in the same change that
+      registers it, with this as the check:
+
+      DETERMINISTIC CHECK.
+      Python only; a repo with no pyproject.toml has no subject and is
+      skipped without a finding.
+      (1) Find every `sentry_sdk.init(...)` call under src/. None → skip;
+          CD-002 reports the missing init.
+      (2) For each, trace the `dsn=` argument back to its source — an
+          `os.getenv` / `os.environ.get` call, a Settings field, or a local
+          bound from one — within the same module.
+      (3) Fail when the DSN can be empty or None on a path that reaches
+          neither a shared-logger call at ERROR or above nor a raise:
+          `sentry_sdk.init(dsn=os.getenv(...))` with no emptiness check at
+          all, or an `if not dsn:` branch that only returns or passes.
+      (4) A log call conditioned on production — `is_production()` or
+          `current_environment()` from mini_app_polis.environment — passes.
+          Outside production, silence is not flagged.
+      Name the module and the variable in the finding.
+    origin: >
+      2026-10, db-ops: the Sentry DSN its entry point read was never
+      provisioned anywhere, and the init skipped itself on an empty value.
+      All three Railway crons ran with Sentry off and nothing said so until
+      the names were audited by hand.
+
   - id: CD-003
 
 
@@ -551,6 +614,92 @@ standards:
       relative import of a module the package itself calls dotenv is
       allowed. An unreadable file is skipped, never fatal to the rule. Manually set Railway variables are not
       visible to the checker.
+
+  - id: CD-037
+    title: The deploy config provisions every variable the service needs
+    status: gap
+    dimension: cd_readiness
+    severity: ERROR
+    applies_to: [pipeline-cog, trigger-cog, api-service]
+    description: >
+      Every environment variable a deployed service reads with no default
+      in code is named in that service's deployment config, and so is every
+      observability variable it reads at all — its Sentry DSN (CD-002) and
+      any Healthchecks URL (CD-007), default or not.
+
+      The deployment config is the one file per host that says which
+      names reach the running process:
+        Lambda (pipeline and trigger cogs): the cog's module block in the
+          infrastructure repository (ADR-010, ADR-011) — its
+          `ssm_parameters`, `ssm_optional_parameters` and `environment`,
+          plus whatever the module itself sets on every function.
+        Railway: Infrastructure as Code under `.railway/`
+          (`.railway/railway.ts` or its .py / .go form).
+
+      Observability names are held to the stricter test because their
+      default is "off". A secret missing from the config fails loudly at
+      the first call that needs it; a missing Sentry DSN or Healthchecks
+      URL fails silently forever — the code reads an empty value, skips
+      the report or the ping, and carries on. Those are exactly the
+      signals that would have said something was wrong.
+
+      Related, and not repeated here: CD-011 says Doppler holds the values
+      and the platforms are synced from it; DOC-004 and CFG-002 keep
+      `.env.example` and the Settings class in step with the code, and
+      CD-011's convention makes an uncommented `.env.example` name a
+      required one. This rule closes the last link — `.env.example` to
+      the deploy config — so a name the code needs cannot exist only on a
+      workstation. Whether Doppler actually holds a value for each name
+      is not visible from source; CD-038 covers the Sentry case at
+      runtime.
+
+      `status: gap` until evaluator-cog registers the check (EVAL-007).
+    checkable: false
+    check_notes: >
+      NOT CHECKABLE YET — no evaluator-cog check is registered. Promote to
+      `requirement` and set `checkable: true` in the same change that
+      registers it, with this as the check:
+
+      DETERMINISTIC CHECK.
+      (1) Required names — the union of:
+            (a) every uncommented key in `.env.example` (CD-011: commented
+                keys are the ones the code has a default for);
+            (b) every name under src/ read with no default: `os.environ[...]`
+                subscripts, and pydantic-settings fields with no default;
+            (c) every name under src/ beginning `SENTRY_DSN` or
+                `HEALTHCHECKS_URL`, read in any form, with or without a
+                default.
+          A `_DEV`-suffixed name that the shared library's environment
+          resolution reads only outside production is not required in
+          production config.
+      (2) Provisioned names, by host:
+            Lambda — find the root `module` block in the infrastructure
+              repository (the registry's repo of type `infrastructure`)
+              whose `github_repo` equals this repo's `<org>/<repo>`. Take
+              the keys of its `ssm_parameters`, `ssm_optional_parameters`
+              and `environment` maps, plus the keys the called module sets
+              in its function's `environment.variables`, read from the
+              module's own source rather than listed here.
+            Railway — `.railway/railway.{ts,py,go}`. The file is code and
+              is matched as text: a name is provisioned when it appears in
+              the file as a string literal or as a `shared.<NAME>`
+              reference. Platform-injected `RAILWAY_*` names count as
+              provisioned.
+          A repo with neither (a library, a site, or a Railway service
+          configured only in the dashboard, whose variables are not in
+          source) is skipped without a finding.
+      (3) Fail once per required name missing from the provisioned set,
+          naming the variable, the file that requires it, and the deploy
+          config it is missing from. A multi-service config (one Railway
+          file declaring several services) is read as the union of its
+          services.
+      Names provisioned but never read are not flagged here.
+    origin: >
+      2026-10, db-ops: its code read a Sentry DSN and two Healthchecks URLs
+      under names that existed in neither Doppler nor the Railway config.
+      Each read came back empty, Sentry and the pings no-opped, and the
+      crons looked healthy because the only signals that could have said
+      otherwise were the ones switched off.
 
   - id: CD-014
 
@@ -1598,6 +1747,42 @@ standards:
     origin: >
       2026-09: the promote and automerge callers were rolled out fleet-wide;
       nothing required a new repository to carry them.
+
+  - id: CD-039
+    title: The default branch is main, and a dev branch exists
+    status: gap
+    dimension: cd_readiness
+    severity: WARN
+    applies_to: [all]
+    description: >
+      A repository's default branch on GitHub is `main`, and it has a
+      branch named `dev`.
+
+      CD-034's promotion flow assumes both and checks neither. The callers
+      it requires are inert without them: `promote.yml` fires on a push to
+      `dev`, so with no `dev` it never runs; and GitHub runs a
+      `workflow_run` workflow — `automerge.yml`'s trigger — only from the
+      copy on the default branch, so a repository whose default is `dev`
+      (or anything else) runs whatever automerge it has there, not the one
+      on `main`, or none. Both failures are silent: the workflow files
+      are present, CD-034 passes, and nothing promotes or merges.
+
+      `status: gap` until evaluator-cog registers the check (EVAL-007).
+    checkable: false
+    check_notes: >
+      NOT CHECKABLE YET — no evaluator-cog check is registered. Promote to
+      `requirement` and set `checkable: true` in the same change that
+      registers it, with this as the check:
+
+      DETERMINISTIC CHECK.
+      Through the GitHub REST API, for the repository's `<org>/<repo>` as
+      the evaluator already resolves it:
+        (1) `GET /repos/{org}/{repo}` — fail unless `default_branch` is
+            `main`, naming the actual default.
+        (2) `GET /repos/{org}/{repo}/branches/dev` — fail on 404.
+      An API error other than 404 is not a finding: emit nothing for the
+      rule on that run rather than reporting the repository as
+      non-conformant.
 
   - id: CD-035
     title: Each commit's checks run once

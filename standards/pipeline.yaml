@@ -549,6 +549,69 @@ standards:
       failure legible was `_deadline.py` — SIGALRM 30 seconds early, raising
       inside the run so the flow's own report still goes out.
 
+  - id: PIPE-022
+    title: The worst-case job fits inside the function timeout, less the deadline margin
+    status: gap
+    dimension: pipeline_reliability
+    severity: WARN
+    applies_to: [pipeline-cog]
+    description: >
+      A pipeline cog on Lambda declares the longest one job can
+      legitimately take, and its function timeout leaves room for that job
+      plus the margin PIPE-020's handler stops at.
+
+      PIPE-020 makes a run that hits the deadline fail legibly. It cannot
+      tell a hung job from a slow healthy one: a timeout below the cog's
+      own worst case kills good jobs every time they are slow, each one
+      reported, retried, and eventually dead-lettered — correct behaviour
+      for a fault, applied to work that had none. The worst case is
+      knowable in advance, because it is the sum of the timeouts and
+      retries the code already sets on its slowest path; it only has to be
+      written down where the timeout can be compared against it.
+
+      The two numbers live with their owners. The worst case is declared
+      in the cog's own `evaluator.yaml` under `job_budget`
+      (`index.yaml` `schema.evaluator_yaml.job_budget`), with the basis it
+      was derived from; the timeout is the `timeout_seconds` of the cog's
+      module block in the infrastructure repository (ADR-010). The margin
+      is the cog's declared `deadline_margin_seconds`, or the default
+      documented with `job_budget` when it declares none.
+
+      A cog not on Lambda — no module block names its repository — has
+      no function timeout and is out of scope; the check skips it.
+      Keeping the declared worst case true when the code's timeouts
+      change is the author's job, and the declaration's `basis` is what a
+      reviewer reads to catch it.
+
+      `status: gap` until evaluator-cog registers the check (EVAL-007).
+    checkable: false
+    check_notes: >
+      NOT CHECKABLE YET — no evaluator-cog check is registered. Promote to
+      `requirement` and set `checkable: true` in the same change that
+      registers it, with this as the check:
+
+      DETERMINISTIC CHECK.
+      (1) In the infrastructure repository (the registry's repo of type
+          `infrastructure`), find the root `module` block whose
+          `github_repo` equals this repo's `<org>/<repo>`. None → the cog
+          is not on Lambda; skip without a finding.
+      (2) Read that block's `timeout_seconds`. Fail if it is not a literal
+          number — the comparison cannot be made.
+      (3) Read this repo's evaluator.yaml `job_budget`. Fail if it is
+          absent, or `worst_case_seconds` is not a positive integer, or
+          `basis` is empty.
+      (4) margin = `job_budget.deadline_margin_seconds` if present,
+          otherwise the default stated in `index.yaml`
+          `schema.evaluator_yaml.job_budget`.
+      (5) Fail if worst_case_seconds + margin > timeout_seconds, naming
+          all three numbers and both files.
+    origin: >
+      2026-10, transcription-cog: the voice-note path's own configuration
+      budgeted more time for one note than the function's timeout allowed,
+      so a slow but healthy note would have been killed mid-run and
+      retried. The timeout was raised once someone compared the two by
+      hand; nothing compared them otherwise.
+
   - id: PIPE-021
     title: One run, one report
     status: requirement

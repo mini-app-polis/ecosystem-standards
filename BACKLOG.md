@@ -18,6 +18,30 @@ What remains:
 
 ---
 
+## Gap rules waiting on an evaluator-cog check
+
+Written as `status: gap`, `checkable: false`, so they are published and
+readable but not graded: a `checkable: true` rule with no registered
+check would be EVAL-007 drift. Each rule's `check_notes` is the
+specification. Promote it to `requirement`, set `checkable: true` and
+replace the `NOT CHECKABLE YET` preamble in the same release that
+registers the check in evaluator-cog.
+
+  - [ ] **CD-037** — deploy config provisions every variable the service
+        needs. Reads the infrastructure repo's module block for Lambda cogs.
+  - [ ] **CD-038** — a production service with no Sentry DSN logs an ERROR.
+        Simplest if common-python-utils grows a shared Sentry initialiser
+        first, so the fleet has one branch to check.
+  - [ ] **CD-039** — default branch `main`, `dev` exists. GitHub API.
+  - [ ] **DOC-014** — living docs do not describe a `retired:` entry as
+        current. Reads the catalog's `retired` block.
+  - [ ] **DOC-015** — ADR status and supersession links agree.
+  - [ ] **PIPE-022** — worst-case job fits the timeout less the margin.
+        Needs `job_budget` in each Lambda pipeline cog's evaluator.yaml
+        before promotion, or every one of them fails on the first run.
+
+---
+
 ## Nobody notices a Railway service that exhausted its restart budget
 
 Deferred from ADR-007's recovery contract, recorded here rather than
