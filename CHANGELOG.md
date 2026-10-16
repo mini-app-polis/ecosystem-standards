@@ -1,3 +1,10 @@
+# [7.20.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.19.0...v7.20.0) (2026-10-16)
+
+
+### Features
+
+* **standards:** enforce PIPE-022 worst-case job budget in the cog-worker module, drop evaluator.yaml job_budget ([ecba2f1](https://github.com/mini-app-polis/ecosystem-standards/commit/ecba2f1dd2fdb4df3e1901d47848a7ee63b70611))
+
 # [7.19.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.18.0...v7.19.0) (2026-10-16)
 
 
