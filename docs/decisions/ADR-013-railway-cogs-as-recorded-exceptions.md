@@ -8,6 +8,8 @@ Lambda behind their own queue)
 **Amends:** ADR-009 — its decision that `pipeline-cog` means a queue-driven
 Lambda worker "for every cog of that type", and its consequence that cogs
 not yet moved read as backlog rather than being exempted
+**Amends:** ADR-007 — its §4 recovery contract, which no longer covers the
+Railway-hosted one-shot cogs (see ADR-007's current-state note)
 
 ---
 

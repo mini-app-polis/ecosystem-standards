@@ -6,6 +6,7 @@
 **Depends on:** ADR-009 (pipeline cogs run on Lambda behind their own queue)
 **Amends:** ADR-009 — its clause that each pipeline cog's queue and function
 are "declared in the repo's `infra/`"
+**Amends:** ADR-002 — its repository types, adding `infrastructure`
 
 ---
 

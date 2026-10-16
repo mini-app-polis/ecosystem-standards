@@ -92,7 +92,13 @@ The policy is **delete, don't tombstone**. Git history is the record.
      if the underlying concern still applies.
 3. If a rule existed only to constrain the retired service, retire the
    rule too (see `new-standard.md` Step 8).
-4. The commit message should say what was retired and why. That's the
+4. Add the retired name to `index.yaml` `retired:` with `what`,
+   `replaced_by` and `when` (its CONTEXT CONTRACT describes the fields).
+   This is not a tombstone for the inventory: the entry is what lets
+   DOC-014 find the name where it still reads as current, in every other
+   repo, after the grep in step 2 has been forgotten. The same applies to
+   a retired library, platform or mechanism that was never a service.
+5. The commit message should say what was retired and why. That's the
    durable record.
 
 ### Transitioning status
@@ -281,7 +287,7 @@ Each key is a `dod_type` referenced from `ecosystem.yaml`.
    one-line criteria strings).
 3. Each checklist item should be independently checkable — if two
    criteria always fail together, collapse them into one.
-4. Reference specific rule IDs where applicable (e.g. "see PY-012"
+4. Reference specific rule IDs where applicable (e.g. "see PY-013"
    or "per DOC-013"). This keeps the checklist honest and links it to
    the enforceable rules.
 

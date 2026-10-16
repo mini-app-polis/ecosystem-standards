@@ -94,6 +94,7 @@ _INDEX_BLOCKS: tuple[str, ...] = (
     "statuses",
     "vulnerability_severities",
     "vulnerability_response",
+    "retired",
 )
 
 

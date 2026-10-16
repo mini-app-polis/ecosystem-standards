@@ -122,6 +122,156 @@ standards:
       decisions are typically captured in the API-or-library repo
       they consume, not duplicated in the UI repo.
 
+  - id: DOC-015
+    title: An ADR's status and supersession links agree wherever they appear
+    status: gap
+    dimension: documentation_coverage
+    severity: WARN
+    applies_to: [pipeline-cog, trigger-cog, api-service, shared-library, standards-repo]
+    description: >
+      DOC-005 requires ADRs; this keeps them telling the truth about
+      themselves once later decisions land. An ADR's status is stated in
+      up to three places — its `**Status:**` header line, its row in
+      `docs/decisions/README.md` where the repo keeps an index, and any
+      current-state banner at the top of the file — and all three agree.
+
+      Supersession and amendment are recorded at both ends, with the
+      header lines `playbooks/new-adr.md` defines:
+        `**Supersedes:** ADR-X`            pairs with `**Superseded by:** ADR-Y`
+        `**Supersedes, in part:** ADR-X`   pairs with `**Superseded in part by:** ADR-Y`
+        `**Amends:** ADR-X`                pairs with `**Amended by:** ADR-Y`
+      An ADR whose status is Superseded names what superseded it, and that
+      ADR names it back. A partially superseded or amended ADR stays
+      Accepted (new-adr.md Step 7) and carries the matching `by` line.
+
+      One end is not enough because readers arrive from either. Someone
+      reading the old ADR needs to know it no longer wholly holds; someone
+      reading the new one needs to know what it changed. A link written
+      only from the new side leaves the old ADR reading as current, which
+      is the failure this exists to stop.
+
+      References to another repository's ADRs, or to things that are not
+      ADRs (a rule ID, a document), are not held to the reciprocal test —
+      the other end is not in this repository to check.
+
+      `status: gap` until evaluator-cog registers the check (EVAL-007).
+    checkable: false
+    check_notes: >
+      NOT CHECKABLE YET — no evaluator-cog check is registered. Promote to
+      `requirement` and set `checkable: true` in the same change that
+      registers it, with this as the check:
+
+      LLM CHECK.
+      If the repo has no `docs/decisions/` directory, skip without a
+      finding (DOC-005 owns absence). Read every ADR file there, and its
+      header: the lines before the first `---` rule or `## ` heading.
+        (1) [deterministic] Status: the first word after `**Status:**`.
+            Fail if absent or not one of new-adr.md's Step 5 statuses.
+        (2) [deterministic] Index: if `docs/decisions/README.md` has a
+            table with an ID and a Status column, fail for each ADR whose
+            row status differs from (1), each ADR with no row, and each
+            row with no file.
+        (3) [deterministic] Relations: for every `**<relation>:**` header
+            line, take the ADR IDs listed before the first em dash,
+            parenthesis or line end. Normalise "Supersedes (partially)" to
+            "Supersedes, in part". Ignore IDs qualified with another
+            repository's name. For each ADR-X named, fail if X's header has
+            no reciprocal line naming this ADR.
+        (4) [deterministic] Fail if status is Superseded with no
+            `Superseded by` line, or if a `Superseded by` line is present
+            while status is anything else.
+        (5) [LLM] Read any blockquote banner in the header region. Fail if
+            it describes the ADR as superseded, replaced or amended by an
+            ADR that no header relation line names, or if it contradicts
+            (1).
+      Name the ADR, the line and the counterpart file in each finding.
+    origin: >
+      2026-10, ecosystem-standards: ADR-004 supersedes part of ADR-002 and
+      ADR-009 part of ADR-003, but each link was written at one end only;
+      ADR-009 amends ADR-002 and ADR-007, which say so, while ADR-009 does
+      not. The current-state notes added to those ADRs on 2026-10-16 were
+      reconciled by hand.
+
+  - id: DOC-014
+    title: Living docs do not describe a retired component as current
+    status: gap
+    dimension: documentation_coverage
+    severity: WARN
+    applies_to: [all]
+    description: >
+      A repo's living documentation does not describe anything in the
+      `retired:` registry in `index.yaml` as if it were still in use.
+      Living documentation is the README, everything under `docs/`, the
+      `.env.example`, and docstrings and comments in source — what a
+      reader, human or agent, takes as a description of how things are
+      now.
+
+      Naming a retired component is fine when the sentence is about its
+      retirement: what it was, what replaced it, when it went, why the
+      code looks as it does. That provenance is the opposite of stale and
+      is never a violation. What is flagged is the present-tense survivor
+      — a docstring telling callers what to do "when running under" a
+      retired orchestrator, an `.env.example` key for a library that no
+      longer exists — which tells the next reader to reach for something
+      that is gone.
+
+      Out of scope, because their job is history:
+        - `docs/decisions/` — ADRs are preserved as written; their
+          currency is DOC-015's concern.
+        - `CHANGELOG.md` — semantic-release's record.
+        - A file under `docs/` marked historical. The marker is the file's
+          first non-blank line: an HTML comment beginning `<!-- historical`,
+          optionally with a reason (`<!-- historical: migration journal,
+          closed 2026-10 -->`). It declares the file a record of what
+          happened rather than a description of what is, and is invisible
+          when rendered, so the file should also say near its top what it
+          records and that it is closed.
+        - tests/, whose fixtures may name retired things on purpose.
+
+      The registry is the list, so this rule names nothing itself: adding
+      an entry to `retired:` is what extends the check. CD-019 already
+      polices the retired authentication mechanisms in source and docs;
+      they are not repeated in the registry.
+
+      `status: gap` until evaluator-cog registers the check (EVAL-007).
+    checkable: false
+    check_notes: >
+      NOT CHECKABLE YET — no evaluator-cog check is registered. Promote to
+      `requirement` and set `checkable: true` in the same change that
+      registers it, with this as the check:
+
+      DETERMINISTIC CHECK.
+      (1) Terms: every key of the catalog's `retired` block. Match each
+          case-insensitively, bounded on both sides by the start or end of
+          the text or a character that is not a letter or digit — so
+          `PREFECT_API_KEY` and "Prefect-era" match, and a longer word
+          that merely contains the term does not.
+      (2) Files: README.md at the root; every file under docs/ except
+          docs/decisions/ and files whose first non-blank line begins
+          `<!-- historical`; `.env.example`; and in source files under
+          src/, only comments and docstrings (Python: comments and
+          docstrings, via the tokenizer and AST; TypeScript: `//` and
+          `/* */` comments). Skip CHANGELOG.md and tests/.
+      (3) Provenance: split the text around a match into sentences (on
+          `.`, `?`, `!` or a blank line). A match is allowed when its
+          sentence also contains, case-insensitively, any of: retire,
+          retired, replaced, removed, superseded, deprecated, formerly,
+          previously, "no longer", "used to", "moved off", "migrated
+          from", "merged from", "instead of", "in place of", legacy,
+          historical. A `.env.example` key is never provenance — a key is
+          a name the service still reads; a comment line there is prose
+          and takes the provenance test.
+      (4) Fail once per file, listing each unallowed match with its line
+          number, the term, and the registry's `replaced_by` for it, so
+          the finding carries its own fix.
+    origin: >
+      2026-10: after a run of retirements, docstrings in
+      common-python-utils still told callers how to behave under the
+      retired orchestrator, and three ADRs here needed current-state notes.
+      Each retirement relied on a grep someone remembered to run
+      (playbooks/ecosystem-changes.md §1), against names nobody had
+      written down.
+
   # ─────────────────────────────────────────────
   # CODE-LEVEL
   # ─────────────────────────────────────────────

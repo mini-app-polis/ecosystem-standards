@@ -220,24 +220,6 @@ standards:
   # ERROR HANDLING
   # ─────────────────────────────────────────────
 
-  - id: PY-012
-    title: FAILED_ prefix for failed inputs
-    status: requirement
-    dimension: structural_conformance
-    severity: WARN
-    applies_to: [pipeline-cog, trigger-cog]
-    description: >
-      Files that fail processing are renamed FAILED_<original> in the source folder
-      for manual retry. Failed files must not be silently deleted or left unmarked.
-    checkable: true
-    check_notes: >
-      DETERMINISTIC CHECK.
-      Search all Python source files for the string 'FAILED_' in rename or
-      move operations (shutil.move, os.rename, Path.rename). If the cog
-      processes files and no FAILED_ rename pattern is found, flag as missing.
-      Confirm FAILED_ prefix is applied in exception handlers, not just happy
-      path code.
-
   - id: PY-013
     title: Deduplication handling is visible
     status: requirement
