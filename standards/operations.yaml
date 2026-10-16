@@ -88,8 +88,11 @@ standards:
           connection setting is declared.
       (2) Confirm the migration entry point — alembic env, drizzle
           config, the release workflow's migrate step, or a script named
-          by the platform descriptor's deploy start command — references
-          the migration setting.
+          by the service's start command — references the migration
+          setting. The start command is read from the final stage's CMD
+          or ENTRYPOINT in the root Dockerfile (the same source CD-017
+          accepts), a railway.json/railway.toml deploy.startCommand, or a
+          start command set in .railway/railway.{ts,py,go}.
       (3) Fail if any module under the application source imports or
           reads the migration setting.
       Step (3) is the load-bearing one: two settings that both reach the
