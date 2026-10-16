@@ -272,13 +272,10 @@ Pipeline cogs:
 - A `module "<cog>"` block in mini-app-polis/infra `cogs.tf` (ADR-010),
   through a pull request there — the queue and DLQ with a redrive policy,
   the function, the event source mapping with `ReportBatchItemFailures`,
-  the DLQ alarm and the deploy role all come from `modules/cog-worker`.
-  Set `worst_case_job_seconds` to the longest one job can legitimately
-  take — the per-request timeouts, attempts and back-offs on the longest
-  path, added up — with a comment naming the files they come from.
-  `timeout_seconds` must be at least that plus the deadline margin
-  (PIPE-022). A job with no bound (a loop over every item a folder holds)
-  is bounded first.
+  the alarms and the deploy role all come from `modules/cog-worker`.
+  Set `timeout_seconds` above the slowest job you expect; the module's
+  duration alarm fires when a job crosses `duration_alarm_ratio` of it,
+  which is the cue to raise the timeout or bound the job (PIPE-022).
   State the concurrency ceiling once: `reserved_concurrency = 1` for a cog
   that sweeps a shared resource and must run alone, otherwise
   `max_concurrency = N` (at least 2) — the module refuses both or neither

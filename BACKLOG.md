@@ -36,10 +36,10 @@ registers the check in evaluator-cog.
   - [ ] **DOC-014** — living docs do not describe a `retired:` entry as
         current. Reads the catalog's `retired` block.
   - [ ] **DOC-015** — ADR status and supersession links agree.
-  - [ ] **PIPE-022** — the cog-worker module enforces the worst-case job
-        against the timeout, and every module block declares it. Reads
-        only the infrastructure repo. Needs `worst_case_job_seconds` in
-        mini-app-polis/infra first, which needs each cog's jobs bounded.
+  - [ ] **PIPE-022** — the cog-worker module alarms on `Duration` at
+        `duration_alarm_ratio` × `timeout_seconds`, and every queue-fed
+        function comes from that module. Reads only the infrastructure
+        repo.
 
 ---
 
