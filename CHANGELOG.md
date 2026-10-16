@@ -1,3 +1,10 @@
+# [7.17.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.16.0...v7.17.0) (2026-10-16)
+
+
+### Features
+
+* **delivery:** read CD-017 and CD-024 from Railway IaC under .railway/ ([0d39549](https://github.com/mini-app-polis/ecosystem-standards/commit/0d3954946bc0d12085f91b67db00bbd35b3b8a78))
+
 # [7.16.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.15.1...v7.16.0) (2026-10-15)
 
 
