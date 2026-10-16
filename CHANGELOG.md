@@ -1,3 +1,10 @@
+## [7.17.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.17.0...v7.17.1) (2026-10-16)
+
+
+### Bug Fixes
+
+* **api:** API-001 accepts Railway IaC under .railway/ ([487a4de](https://github.com/mini-app-polis/ecosystem-standards/commit/487a4dea56b622aba2ec915129de7c51b6b33281))
+
 # [7.17.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.16.0...v7.17.0) (2026-10-16)
 
 
