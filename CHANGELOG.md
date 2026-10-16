@@ -1,3 +1,10 @@
+# [7.18.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.17.2...v7.18.0) (2026-10-16)
+
+
+### Features
+
+* **standards:** retire common-typescript-utils and Prefect-era requirements ([25f49ee](https://github.com/mini-app-polis/ecosystem-standards/commit/25f49ee82963437e65dd7595b11cbf3525d4877d))
+
 ## [7.17.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.17.1...v7.17.2) (2026-10-16)
 
 
