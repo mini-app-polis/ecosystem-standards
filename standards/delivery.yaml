@@ -81,7 +81,7 @@ standards:
     description: >
       All production services integrate Sentry for unhandled exception
       tracking. This includes FastAPI services, Hono services, and Python
-      cogs (always-on worker services). Free tier is
+      cogs (Lambda and Railway workers). Free tier is
       sufficient. Sentry is initialised at service entry point before
       any application logic runs. The DSN is set as an environment
       variable — never hardcoded. There is one Sentry project per service
@@ -111,8 +111,8 @@ standards:
     severity: WARN
     applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
-      All Python services use common-python-utils logger. All TypeScript
-      services use common-typescript-utils logger. Never use print() in production
+      All Python services use common-python-utils logger. There is no
+      shared TypeScript logger (XSTACK-001). Never use print() in production
       code paths. Log output is JSON-formatted in production.
 
       Standard log event shape (all services):
@@ -156,9 +156,8 @@ standards:
           its own logger via `logging.basicConfig(...)`,
           `logging.getLogger(__name__)` followed by `.addHandler(...)`,
           or `structlog.configure(...)` if that file is not itself the
-          shared library's logger module. For TypeScript: flag any file
-          calling `pino(...)`, `winston.createLogger(...)`, or equivalent
-          logger-factory call outside of the shared library itself.
+          shared library's logger module. TypeScript is not checked by
+          this step — there is no shared TypeScript logger to require.
 
   # ─────────────────────────────────────────────
   # CI/CD
@@ -234,11 +233,11 @@ standards:
     severity: WARN
     applies_to: [trigger-cog]
     description: >
-      Trigger cogs — services running their own continuous polling loop without
-      external orchestration visibility — integrate Healthchecks.io as a dead
-      man's switch. If a trigger cog silently dies, no work is triggered and
-      nothing else in the system notices.
-      The service pings HEALTHCHECKS_URL on every poll cycle. If the ping goes
+      Trigger cogs — scheduled functions that detect work, with no queue
+      behind them to alarm on — integrate Healthchecks.io as a dead
+      man's switch. If a trigger cog stops being invoked, no work is
+      triggered and nothing else in the system notices.
+      The service pings HEALTHCHECKS_URL on every tick. If the ping goes
       silent beyond the grace period, Healthchecks.io sends an email alert.
       Recommended settings: period 1 minute, grace 5 minutes.
       HEALTHCHECKS_URL is set as an environment variable — never hardcoded.
@@ -323,9 +322,8 @@ standards:
                   API failures, auth failures
 
       Log output is JSON in production, human-readable with emoji prefixes
-      in local development. The shared library (common-python-utils for
-      Python, common-typescript-utils for TypeScript) provides the logger — services
-      do not configure logging inline.
+      in local development. common-python-utils provides the logger for
+      Python services — services do not configure logging inline.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -344,7 +342,7 @@ standards:
     description: >
       Every production service implements the observability layers that
       apply to its type:
-        Layer 1 — Liveness:    Healthchecks.io for always-on workers.
+        Layer 1 — Liveness:    Healthchecks.io for trigger cogs.
                                Railway auto-restart for Railway services.
                                For queue-driven pipeline cogs, two alarms
                                with actions — there is no process to be
@@ -353,8 +351,8 @@ standards:
                                work queue's oldest-message age: nothing is
                                consuming, so nothing fails and nothing
                                reaches the dead-letter queue.
-        Layer 2 — Structured logs: common-python-utils or common-typescript-utils
-                               logger emitting JSON events with standard shape.
+        Layer 2 — Structured logs: common-python-utils logger emitting
+                               JSON events with standard shape.
                                Queryable in Railway log viewer or Better Stack.
         Layer 3 — Exceptions:  Sentry capturing all unhandled exceptions
                                with full stack trace and context.
@@ -477,7 +475,7 @@ standards:
       keys, Sentry DSNs, Healthchecks URLs, and Clerk credentials.
 
       Doppler syncs automatically to:
-        Railway:        all API services and cogs receive secrets via
+        Railway:        all API services and Railway-hosted cogs receive secrets via
                         the Doppler → Railway native sync
         GitHub Actions: CI secrets synced via Doppler → GitHub integration
         Cloudflare Pages: build variables are set on the Pages project —
@@ -720,12 +718,7 @@ standards:
       findings cannot be posted cannot be posted, and a Sentry capture of
       Sentry being unreachable has nowhere to go. Failures of these
       providers are logged and nothing more. post_run_finding is already
-      best-effort by construction (deejay-cog ADR-004), as is the
-      reporting call inside serve_resilience.
-
-      Startup-lifecycle failures satisfy the Report leg via
-      source="startup" rather than source="external_dependency" — see
-      ADR-006. Do not emit both for one event.
+      best-effort by construction (deejay-cog ADR-004).
     checkable: true
     check_notes: >
       LLM CHECK.
@@ -913,10 +906,14 @@ standards:
       API that accepts Clerk session JWTs verifies them in process: RS256
       against the issuer's JWKS document, cached, with the token's `iss`
       checked against a configured issuer set. Verification is consumed
-      from the shared library — `identity` for Python services,
-      `common-typescript-utils` for TypeScript — so there is one
-      implementation across the fleet, and it never calls out to Clerk
-      on the request path.
+      from the shared `identity` library, so there is one implementation
+      across the fleet, and it never calls out to Clerk on the request
+      path.
+
+      The library is Python. An API in another language has no shared
+      verifier to consume — there is no TypeScript library (XSTACK-001) —
+      and records a deferral until it is rewritten, as CD-036 does,
+      rather than an exemption.
 
       Required env vars:
         - CLERK_ISSUERS, or CLERK_ISSUER + CLERK_JWKS_URL
@@ -924,11 +921,10 @@ standards:
     check_notes: >
       DETERMINISTIC CHECK.
         (1) Verify the service consumes the shared library for session
-            verification rather than implementing it locally. Python:
-            require an import from `identity` (`identity.chain` or
-            `identity.clerk`). TypeScript: require `verifyClerkToken`
-            (or its payload type) imported from `common-typescript-utils`.
-            Flag any in-repo JWKS fetch or asymmetric (RS256-family)
+            verification rather than implementing it locally: require an
+            import from `identity` (`identity.chain` or `identity.clerk`).
+            A service with no Python source fails this step (the deferral
+            case in the description). Flag any in-repo JWKS fetch or asymmetric (RS256-family)
             token decode written outside that library — see XSTACK-005.
             A JWKS fetch has to look like an HTTP call to a JWKS URL; a
             decode has to name an asymmetric algorithm.

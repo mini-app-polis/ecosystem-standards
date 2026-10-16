@@ -34,10 +34,11 @@ standards:
       standards document being evaluated against. Without the rubric, evaluation
       is undefined.
 
-      Canonical implementation: resolve standards_version at runtime by reading
-      package.json from the ecosystem-standards repo, cached for the process
-      lifetime. Allow an explicit environment variable override
-      (STANDARDS_VERSION) for tests and controlled pins. Do not hardcode
+      Canonical implementation: resolve standards_version at runtime from the
+      `version` of the compiled catalog fetched from the API
+      (GET /v1/standards/catalog), cached for the run. Allow an explicit
+      environment override of the catalog address
+      (ECOSYSTEM_STANDARDS_CATALOG_URL) for tests and controlled pins. Do not hardcode
       version strings as defaults — they will go stale silently, and presence
       checks alone will not catch the drift.
     checkable: true
@@ -97,10 +98,11 @@ standards:
       the current standards catalog version, not a materially older
       one. Drift here means the pipeline page is showing findings
       generated against stale rules — misleading, though usually
-      self-correcting on the next scheduled conformance run. Because
-      conformance runs daily across every repo in `active_repos`,
-      long-lived drift only happens when a repo is dropped from the
-      active list or its runs have been failing. Both are easier to
+      self-correcting on the next conformance run. Because every
+      standards release triggers a fleet pass over every repo whose
+      ecosystem.yaml status is active, long-lived drift only happens
+      when a repo is not active in the registry or its runs have been
+      failing. Both are easier to
       notice through run-health monitoring than through a separate
       automated check.
     checkable: false
@@ -253,14 +255,16 @@ standards:
   # PIPELINE_EVALUATIONS.SOURCE — CANONICAL VALUES
   #
   # The `source` field on pipeline_evaluations records where a finding was
-  # emitted from. The following seven values are canonical. Adding a new
+  # emitted from. The following six values are canonical. Adding a new
   # source value requires updating this list first.
   #
   # 2026-09 (ADR-009): `flow_hook` and `prefect_webhook` were replaced by
   # `queue_consumer`. Both named Prefect mechanisms — an on_failure /
   # on_crashed hook, and evaluator-cog's webhook on flow-run state events —
-  # and a Lambda cog behind a queue has neither. Rows already carrying them
-  # stay readable; nothing emits them once wiki-curator-cog moves.
+  # and a Lambda cog behind a queue has neither. Neither is canonical any
+  # more; rows already carrying them stay in the table. No cog has emitted
+  # them since wiki-curator-cog left Prefect (2026-09-23), though
+  # common-python-utils' deprecated make_failure_hook still sets flow_hook.
   #
   # External emission origins (set by the emitting cog, must not be
   # overridden downstream):
@@ -278,23 +282,18 @@ standards:
   #                            failure, so a consumer that also reported it
   #                            would be two findings for one run.
   #
-  #   flow_hook                Retired 2026-09. Posted from a Prefect
-  #                            on_failure / on_crashed hook — a mechanism
-  #                            that no longer exists. Kept here so old rows
-  #                            can be read.
-  #
   # Evaluator-cog internal sources — conformance of a repo against the
   # standards catalog. The `conformance_*` pair mirrors the two paths a
   # rule can be routed to by its check_notes marker (see routing in
   # evaluator-cog's engine/routing.py):
   #
   #   conformance_deterministic  Posted by the deterministic path of the
-  #                              scheduled conformance flow (run_llm=False).
+  #                              on-demand conformance flow (run_llm=False).
   #                              Represents findings from explicit check
   #                              functions over repo structure, YAML,
   #                              pyproject, AST, etc.
   #
-  #   conformance_llm            Posted by the LLM path of the scheduled
+  #   conformance_llm            Posted by the LLM path of the on-demand
   #                              conformance flow (run_llm=True). Represents
   #                              Claude-judged soft-rule assessments for
   #                              rules whose check_notes starts with

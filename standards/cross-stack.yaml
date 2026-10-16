@@ -11,10 +11,10 @@
 #
 # Parity reference:
 #   Concern              Python                    TypeScript
-#   Shared library       common-python-utils        common-typescript-utils
+#   Shared library       common-python-utils        none (XSTACK-001)
 #   Data validation      Pydantic                   Zod
 #   API response shape   { data, meta } / { error } Identical
-#   Logging              common-utils logger         ts-utils logger
+#   Logging              common-utils logger         none (XSTACK-001)
 #   Auth                 Clerk JWT (FastAPI dep)     Clerk JWT (Hono middleware)
 #   ORM / DB             SQLAlchemy + Alembic        Drizzle ORM + Drizzle Kit
 #   HTTP framework       FastAPI                     Hono on Node
@@ -79,8 +79,7 @@ standards:
             structlog.configure, custom JSON formatters) in files
             other than the shared library's own logger module. If
             the service defines its own logger setup, flag unless
-            the logger module imports from `common-python-utils`
-            or `common-typescript-utils`.
+            the logger module imports from `common-python-utils`.
         (2) Credential verification or the authorization decision
             implemented inline — a manual JWT decode, a Clerk JWKS
             fetch, a constant-time comparison against machine keys, or
@@ -121,8 +120,9 @@ standards:
       services:
         success: { data: ..., meta: { count, version } }
         error:   { error: { code, message } }
-      Defined in `common-typescript-utils` for TypeScript. Enforced by
-      `response_model` on FastAPI route decorators for Python.
+      Enforced by `response_model` on FastAPI route decorators for
+      Python, and by the literal shape of each handler's return value for
+      TypeScript, which has no shared helper (XSTACK-001).
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -140,10 +140,9 @@ standards:
               flag as CD-009-adjacent (shared logger / shared utils
               non-use) rather than XSTACK-002.
         TypeScript (Hono):
-          (1) Every route handler must return either a response built
-              via `common-typescript-utils` helpers (`success()`,
-              `error()`) OR a literal object matching the {data, meta}
-              envelope for success / {error: {code, message}} for error.
+          (1) Every route handler must return a literal object matching
+              the {data, meta} envelope for success / {error: {code,
+              message}} for error.
           (2) Flag handlers that return raw `c.json({...})` with ad-hoc
               shapes (e.g. `c.json({items: [...]})` without wrapping).
 
