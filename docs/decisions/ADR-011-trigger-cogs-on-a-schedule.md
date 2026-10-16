@@ -7,6 +7,9 @@
 in one repository)
 **Amends:** ADR-009 — its definition of `trigger-cog` as "an always-on
 asyncio loop", and its rescoping of CD-017 and OPS-007 to that type
+**Amends:** ADR-002 — its definition of `trigger-cog`
+**Amends:** ADR-007 — its §4 recovery contract, which no longer covers
+trigger cogs (see ADR-007's current-state note)
 
 ---
 

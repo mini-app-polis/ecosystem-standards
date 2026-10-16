@@ -5,6 +5,9 @@
 **Repo:** ecosystem-standards
 **Depends on:** ADR-002 (type/trait taxonomy)
 **Supersedes:** ADR-006 (startup registration resilience for serve()-based cogs)
+**Supersedes, in part:** ADR-003 — evaluator-cog is invoked on demand from its own queue, not on a Prefect schedule (see ADR-003's current-state note)
+**Amends:** ADR-002 — its definitions of `pipeline-cog` and `trigger-cog`, and the `multi-flow` trait, which is retired
+**Amends:** ADR-007 — its §4 recovery contract, which no longer covers pipeline cogs (see ADR-007's current-state note)
 **Amended by:** ADR-010 — the queue and function are declared in mini-app-polis/infra, not the cog's `infra/`
 **Amended by:** ADR-011 — `trigger-cog` is a Lambda function on an EventBridge schedule, not an always-on asyncio loop
 **Amended by:** ADR-013 — `pipeline-cog` is not Lambda "for every cog of that type": wiki-curator-cog (until it moves to Lambda) and db-ops run on Railway and exempt the queue- and Lambda-shaped rules

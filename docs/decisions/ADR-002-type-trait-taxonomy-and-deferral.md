@@ -4,6 +4,7 @@
 **Status:** Accepted  
 **Repo:** ecosystem-standards  
 **Depends on:** ADR-001 (Federated Evaluation Configuration)  
+**Superseded in part by:** ADR-004 — the evaluator pseudo-type in the type taxonomy  
 **Amended by:** ADR-009, ADR-010, ADR-011 — the `pipeline-cog` and
 `trigger-cog` definitions below (an always-on Railway worker running
 Prefect) no longer hold: a pipeline cog is a Lambda function behind its own
