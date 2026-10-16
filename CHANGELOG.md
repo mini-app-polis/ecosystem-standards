@@ -1,3 +1,10 @@
+## [7.17.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.17.1...v7.17.2) (2026-10-16)
+
+
+### Bug Fixes
+
+* ops-002 ([6d11f85](https://github.com/mini-app-polis/ecosystem-standards/commit/6d11f855f9c1d3c348a1107623d7e8c5baa711ab))
+
 ## [7.17.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.17.0...v7.17.1) (2026-10-16)
 
 
