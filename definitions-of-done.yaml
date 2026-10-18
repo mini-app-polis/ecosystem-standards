@@ -53,7 +53,7 @@ definitions_of_done:
       - "If trigger cog (e.g. watcher-cog): starts runs by POSTing to
         api-kaianolevine-com — never sends to a queue itself (PIPE-019)"
       - External API calls retried at the call site (PIPE-007)
-      - "Sentry integration configured — sentry_sdk.init() at entry point, SENTRY_DSN_COGS in .env.example (CD-002); an empty DSN in production logs an ERROR rather than skipping silently (CD-038)"
+      - "Sentry integration configured — mini_app_polis.sentry.init_sentry() at entry point, SENTRY_DSN_COGS in .env.example (CD-002); an empty DSN in production logs an ERROR rather than skipping silently (CD-038)"
       - Structured logging via common-python-utils logger — not inline logging configuration
 
   new_fastapi_service:

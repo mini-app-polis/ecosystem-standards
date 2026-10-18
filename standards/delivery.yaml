@@ -104,7 +104,7 @@ standards:
 
   - id: CD-038
     title: A production service with no Sentry DSN says so
-    status: gap
+    status: requirement
     dimension: cd_readiness
     severity: WARN
     applies_to: [pipeline-cog, trigger-cog, api-service]
@@ -132,22 +132,19 @@ standards:
       service stays quiet; production is read through the shared
       library's environment resolution, not a hand-rolled check.
 
-      `status: gap` until evaluator-cog registers the check (EVAL-007).
-      Every Python service hand-rolls its init today, so the fix is
-      repeated per repo; a shared Sentry initialiser in
-      common-python-utils that owns this branch would make the rule one
-      implementation the fleet inherits.
-    checkable: false
+      The shared initialiser owns this branch: a Python service starts
+      Sentry with `mini_app_polis.sentry.init_sentry`, which logs the
+      ERROR itself, so the rule is one implementation the fleet inherits
+      rather than a guard repeated per repo. A service that calls
+      `sentry_sdk.init` directly carries the branch itself.
+    checkable: true
     check_notes: >
-      NOT CHECKABLE YET — no evaluator-cog check is registered. Promote to
-      `requirement` and set `checkable: true` in the same change that
-      registers it, with this as the check:
-
       DETERMINISTIC CHECK.
       Python only; a repo with no pyproject.toml has no subject and is
       skipped without a finding.
-      (1) Find every `sentry_sdk.init(...)` call under src/. None → skip;
-          CD-002 reports the missing init.
+      (1) Find every `sentry_sdk.init(...)` call under src/. None → skip:
+          a service on `init_sentry` has none, and CD-002 reports a
+          missing init.
       (2) For each, trace the `dsn=` argument back to its source — an
           `os.getenv` / `os.environ.get` call, a Settings field, or a local
           bound from one — within the same module.
