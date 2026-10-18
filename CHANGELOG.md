@@ -1,3 +1,10 @@
+# [7.22.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.21.0...v7.22.0) (2026-10-18)
+
+
+### Features
+
+* **standards:** promote CD-038 to a checkable requirement ([e9c3b38](https://github.com/mini-app-polis/ecosystem-standards/commit/e9c3b38436b85c9ac41137a3c1041e080aaa49b7))
+
 # [7.21.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.20.0...v7.21.0) (2026-10-16)
 
 
