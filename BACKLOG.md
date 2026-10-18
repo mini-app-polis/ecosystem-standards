@@ -29,9 +29,6 @@ registers the check in evaluator-cog.
 
   - [ ] **CD-037** — deploy config provisions every variable the service
         needs. Reads the infrastructure repo's module block for Lambda cogs.
-  - [ ] **CD-038** — a production service with no Sentry DSN logs an ERROR.
-        Simplest if common-python-utils grows a shared Sentry initialiser
-        first, so the fleet has one branch to check.
   - [ ] **CD-039** — default branch `main`, `dev` exists. GitHub API.
   - [ ] **DOC-014** — living docs do not describe a `retired:` entry as
         current. Reads the catalog's `retired` block.
