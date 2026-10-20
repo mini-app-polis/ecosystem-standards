@@ -108,6 +108,22 @@ services:
     enumerated by nothing.
 
     '
+- id: task-manager-cog
+  type: pipeline-cog
+  status: development
+  dod_type: new_cog
+  language: python
+  cog_subtype: pipeline
+  host: aws-lambda
+  description: 'The one writer to the Asana task board. A Lambda function behind
+    its own FIFO SQS queue (task-manager-jobs.fifo, one message group). Sources
+    of tasks ask api-kaianolevine-com (POST /v1/tasks) with a task draft, and
+    the API enqueues it; the worker looks up the source''s external id, composes
+    the board''s template, mints the task id for its source (VN- for voice
+    notes) or takes the one it brings (repo#n for issues), and creates the task.
+    No model calls. See task-manager-cog ADR-001.
+
+    '
 - id: db-ops
   type: pipeline-cog
   status: active
