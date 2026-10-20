@@ -109,8 +109,6 @@ added to this file or directly as GitHub Issues.
 Once built, mid-flow captures will automatically land as labeled Issues
 in this repo for processing into standards when there is headspace.
 
-Reference: capture system design is in a separate conversation.
-
 ---
 
 ## Pipeline UI — shared finding card component
