@@ -1,3 +1,10 @@
+# [7.23.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.22.0...v7.23.0) (2026-10-21)
+
+
+### Features
+
+* **ecosystem:** register task-groomer-cog ([bedc1a2](https://github.com/mini-app-polis/ecosystem-standards/commit/bedc1a21113b018a88fce92b916a96783cee2868))
+
 # [7.22.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.21.0...v7.22.0) (2026-10-18)
 
 
