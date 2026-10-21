@@ -127,6 +127,24 @@ services:
     ready one moves to Ready. No model calls. See task-manager-cog ADR-001.
 
     '
+- id: task-groomer-cog
+  type: pipeline-cog
+  status: development
+  dod_type: new_cog
+  language: python
+  cog_subtype: pipeline
+  host: aws-lambda
+  description: 'Grooms tasks on the Asana board. A Lambda function behind its
+    own SQS queue (task-groomer-jobs, one delivery per job). task-manager-cog
+    sends it a task that is not ready through api-kaianolevine-com (POST
+    /v1/tasks/groomings/jobs); a model reads the task and the code it names,
+    with read-only tools over the fleet''s repositories, and proposes what
+    the task should say. The proposal goes back through the API to
+    task-manager-cog, which applies it: this cog never writes to the board.
+    Every paid run is capped (rounds, tokens, a monthly spend cap) and
+    recorded with the API. See task-groomer-cog ADR-001.
+
+    '
 - id: db-ops
   type: pipeline-cog
   status: active
