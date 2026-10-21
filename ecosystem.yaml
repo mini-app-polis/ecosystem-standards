@@ -122,7 +122,9 @@ services:
     the API enqueues it; the worker looks up the source''s external id, composes
     the board''s template, mints the task id for its source (VN- for voice
     notes) or takes the one it brings (repo#n for issues), and creates the task.
-    No model calls. See task-manager-cog ADR-001.
+    An hourly schedule also puts a sweep on the same queue: every open task in
+    the grooming columns is checked against the definition of ready, and a
+    ready one moves to Ready. No model calls. See task-manager-cog ADR-001.
 
     '
 - id: db-ops
