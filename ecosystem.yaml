@@ -58,9 +58,10 @@ services:
     file is archived. Consumed by wcs.kaianolevine.com.
 
     * mode "voicenotes" — a voice note from voice-inbox/: Whisper transcribes,
-    Claude extracts a task, post_task creates it on the Asana board with the
-    Drive file id as its external id for idempotency, the audio is archived to
-    processed/YYYY-MM-DD/, and the retention sweep runs.
+    Claude extracts a task, which is handed to task-manager-cog through
+    POST /v1/tasks with the Drive file id in its external id for idempotency,
+    the audio is archived to processed/YYYY-MM-DD/, and the retention sweep
+    runs.
 
     * mode "voicenotes-cleanup" — the retention sweep on its own, for an
     operator; names no file.
