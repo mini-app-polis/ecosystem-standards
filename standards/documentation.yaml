@@ -76,13 +76,30 @@ standards:
     severity: WARN
     applies_to: [all]
     description: >
-      Every environment variable used by the service is documented in .env.example
-      with a description and example value. Kept current — not a one-time artifact.
+      Every environment variable the repository reads is listed in .env.example
+      with a description, and nothing is listed that nothing reads. Names only,
+      never values; CFG-003 says which names are required and which optional.
+      Kept current — not a one-time artifact.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Check for .env.example at repo root. Flag if absent. Cross-reference with
-      Settings class fields (see CFG-002 in python.yaml).
+      (1) Check for .env.example at repo root. Flag if absent.
+      (2) Collect the names the repository reads: os.environ[...],
+          os.environ.get(...) and os.getenv(...) in Python;
+          import.meta.env.NAME and process.env.NAME (dot or bracket access)
+          in TypeScript, JavaScript and Astro. Tests, build output and
+          dependency folders are not scanned. A name built at runtime
+          rather than written literally is not collected.
+      (3) Collect the names .env.example lists, commented or not
+          (NAME= or # NAME=).
+      (4) Flag each name read in (2) but missing from (3).
+      (5) Flag each name listed in (3) that nothing in (2) reads, unless
+          the comment block directly above it starts with
+          "# external tooling", the CFG-002 marker for a name consumed by
+          something other than the app (a shared library, a platform or a
+          tool).
+      Settings class fields count as reads; CFG-002 covers the
+      .env.example-to-Settings direction.
 
   - id: DOC-005
     title: Design decisions captured as ADRs
