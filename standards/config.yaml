@@ -47,3 +47,43 @@ standards:
     origin: >
       KAIANO_API_CLERK_TOKEN appears in common-python-utils/.env.example but is
       not read anywhere in the current implementation.
+
+  - id: CFG-003
+    title: Local commands use the dev Doppler config unless named as production
+    status: convention
+    dimension: cd_readiness
+    severity: WARN
+    applies_to: [all]
+    description: >
+      Which Doppler config a command on a workstation reads, and which
+      .env.example names that config must hold.
+
+      Config. A repository that declares .env.example pins
+      mini-app-polis-ecosystem / dev in its doppler.yaml, so
+      `doppler run -- …` reads dev. That is the default for every local
+      command. A command that has to act on production, such as an
+      operator command against a production service or reading the task
+      board, which exists only in production, says `--config prd`
+      explicitly, and the repository's README names it as a production
+      command where it documents it. A command never reaches production
+      by inheriting a config it did not name.
+
+      Required and optional names. .env.example lists the names the code
+      reads, never values. An uncommented name is required in Doppler's
+      dev config; a commented name is optional because the code has a
+      default or reads it only in production. Where a value differs
+      between environments by name, the dev-required name is the one
+      dev reads (for example KAIANO_API_BASE_URL_DEV, since every
+      environment other than production reads the _DEV name), and the
+      production-only name stays commented. `uv run check-doppler-keys`
+      (from miniapppolis-common-utils) then passes against dev.
+
+      CD-011 keeps the rest of the Doppler policy and points here for
+      local runs and required names.
+    checkable: false
+    origin: >
+      CD-011 said local runs never use prd, while wiki-curator-cog ran
+      about a dozen operator commands with `--config prd` and checking the
+      board locally needs prd; several .env.example files marked the
+      production-only KAIANO_API_BASE_URL required, so check-doppler-keys
+      failed against dev.
