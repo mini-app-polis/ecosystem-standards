@@ -1,3 +1,10 @@
+## [7.25.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.25.0...v7.25.1) (2026-10-23)
+
+
+### Bug Fixes
+
+* **documentation:** an external tooling marker in DOC-004 covers its block of names ([b4f938e](https://github.com/mini-app-polis/ecosystem-standards/commit/b4f938ede5c995e55a150b64f44f495090f40ec0))
+
 # [7.25.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.24.0...v7.25.0) (2026-10-23)
 
 
