@@ -94,10 +94,11 @@ standards:
           (NAME= or # NAME=).
       (4) Flag each name read in (2) but missing from (3).
       (5) Flag each name listed in (3) that nothing in (2) reads, unless
-          the comment block directly above it starts with
-          "# external tooling", the CFG-002 marker for a name consumed by
-          something other than the app (a shared library, a platform or a
-          tool).
+          it is marked as consumed by something other than the app (a
+          shared library, a platform or a tool): a comment line starting
+          "# external tooling" marks every name after it up to the next
+          blank line, so one explanation can head a block of names. This
+          is the CFG-002 marker.
       Settings class fields count as reads; CFG-002 covers the
       .env.example-to-Settings direction.
 
