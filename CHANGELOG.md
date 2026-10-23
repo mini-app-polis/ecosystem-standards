@@ -1,3 +1,10 @@
+# [7.24.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.23.0...v7.24.0) (2026-10-23)
+
+
+### Features
+
+* **config:** say which Doppler config local commands use, and which .env.example names dev must hold ([c159922](https://github.com/mini-app-polis/ecosystem-standards/commit/c1599228257235a604f0c77938189b3e9446f093))
+
 # [7.23.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.22.0...v7.23.0) (2026-10-21)
 
 
