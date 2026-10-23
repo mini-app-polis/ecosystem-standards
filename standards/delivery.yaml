@@ -557,9 +557,9 @@ standards:
           when Doppler manages that service — manual overrides must not
           diverge from Doppler as the source of truth
         - .env.example lists the names a service reads, never values —
-          the human-readable contract of what it needs. Uncommented names
-          are required in Doppler's dev config, commented ones optional
-          (the code has a default); `uv run check-doppler-keys` (from
+          the human-readable contract of what it needs. Which names are
+          required in Doppler's dev config, and which stay commented, is
+          CFG-003's; `uv run check-doppler-keys` (from
           miniapppolis-common-utils) lists any required name dev lacks
 
       Doppler project structure:
@@ -580,7 +580,7 @@ standards:
       Local development (Python repos that declare .env.example):
         - doppler.yaml at the root pins the repo to mini-app-polis-ecosystem
           / dev, so `doppler setup` asks nothing and `doppler run -- …`
-          injects dev. Local runs never use prd.
+          injects dev. When a local command may use prd is CFG-003's.
         - Nothing reads a .env file: no python-dotenv dependency, no
           dotenv import or load_dotenv() call, no env_file on a
           pydantic-settings config. A stray .env takes effect silently,
