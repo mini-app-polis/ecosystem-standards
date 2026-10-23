@@ -1,3 +1,10 @@
+# [7.25.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.24.0...v7.25.0) (2026-10-23)
+
+
+### Features
+
+* **documentation:** DOC-004 checks every env var read is listed in .env.example ([0ac6eb2](https://github.com/mini-app-polis/ecosystem-standards/commit/0ac6eb268eb2cd657b0bf846fe4ae8c7995e6c1b))
+
 # [7.24.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.23.0...v7.24.0) (2026-10-23)
 
 
