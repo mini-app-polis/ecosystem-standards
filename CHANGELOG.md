@@ -1,3 +1,10 @@
+## [7.25.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.25.1...v7.25.2) (2026-10-24)
+
+
+### Bug Fixes
+
+* **pipeline:** PIPE-020 accepts the shared lambda_worker deadline ([8000fb5](https://github.com/mini-app-polis/ecosystem-standards/commit/8000fb5f08b4d40166c8d19fbfb63f0d3039fc82))
+
 ## [7.25.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.25.0...v7.25.1) (2026-10-23)
 
 
