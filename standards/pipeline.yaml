@@ -537,11 +537,11 @@ standards:
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Search production source under src/ for `get_remaining_time_in_millis`.
-      Flag the cog when the handler module never reads it, directly or
-      through a helper it imports. A cog whose every job is bounded well
-      under the function timeout still needs it: the case this catches is
-      the job that is not.
+      Search production source under src/ for `get_remaining_time_in_millis`,
+      or for a call to `deadline(` from `mini_app_polis.lambda_worker`,
+      which reads it for the cog. Flag the cog when neither is there. A cog
+      whose every job is bounded well under the function timeout still
+      needs it: the case this catches is the job that is not.
     origin: >
       2026-09, transcription-cog: one WCS extraction can run minutes, and
       the shared Anthropic client ignored its configured timeout, so a hung
