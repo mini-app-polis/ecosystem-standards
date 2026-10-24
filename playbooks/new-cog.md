@@ -256,19 +256,22 @@ All cogs must include:
   redelivery is the backstop, not the retry.
 
 Pipeline cogs:
-- `worker.py` — `lambda_handler(event, context)` iterates the SQS records,
-  runs `process_message(body, run_id=record["messageId"])` for each, and
+- `worker.py` — `lambda_handler(event, context)` hands the records to
+  `mini_app_polis.lambda_worker.process_records`, which runs each one and
   returns `{"batchItemFailures": [...]}` naming the records that raised.
-  A malformed message is reported and dropped (never retried), and
+  Each record's body is read with `parse_message` against the cog's
+  message kind from `mini_app_polis.api.contract`; a malformed message
+  raises `UnprocessableMessage` and goes to the dead-letter queue, and is
   reported only on its first receive — gate on the record's
   `ApproximateReceiveCount`, or five redeliveries become five identical
   findings for one message (PIPE-021). The flows report their own
   failures; the consumer reports only what never reached one.
   Copy deejay-cog's `worker.py`.
-- `_deadline.py` — the handler stops the run a margin before the function
-  timeout and lets the flow fail the ordinary way, so a run that would
-  otherwise be killed mid-flight still reports (PIPE-020). Copy
-  transcription-cog's.
+- Each record runs inside `mini_app_polis.lambda_worker.deadline(context)`,
+  which stops the run a margin before the function timeout and lets the
+  flow fail the ordinary way, so a run that would otherwise be killed
+  mid-flight still reports (PIPE-020). Its `RunOutOfTime` is a
+  `BaseException`, so a flow's `except Exception` cannot swallow it.
 - A `module "<cog>"` block in mini-app-polis/infra `cogs.tf` (ADR-010),
   through a pull request there — the queue and DLQ with a redrive policy,
   the function, the event source mapping with `ReportBatchItemFailures`,
