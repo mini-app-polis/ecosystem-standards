@@ -1,3 +1,10 @@
+## [7.25.3](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.25.2...v7.25.3) (2026-10-24)
+
+
+### Bug Fixes
+
+* **pipeline:** exempt CI-side repository-work workflows from PIPE-008 ([0b90707](https://github.com/mini-app-polis/ecosystem-standards/commit/0b90707a101e588d725b0b4effa46b64cb8c44b7))
+
 ## [7.25.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.25.1...v7.25.2) (2026-10-24)
 
 
