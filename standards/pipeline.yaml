@@ -157,7 +157,9 @@ standards:
       Pipeline cogs do not contain any of the retired trigger patterns
       (repository_dispatch relays, workflow_dispatch from application
       code, direct GitHub API calls to trigger workflows,
-      google-app-script-trigger references). These were replaced by
+      google-app-script-trigger references), except where a cog starts a
+      CI-side workflow to do repository work (see check_notes). These
+      were replaced by
       watcher-cog → api-kaianolevine-com → the cog's queue. The broader "does this
       cog's trigger architecture match the canonical pattern" check
       lives in PIPE-015.
@@ -196,6 +198,13 @@ standards:
           invoking app code directly. That IS the canonical path — it's
           just initiated from GitHub instead of watcher-cog, which is a
           different question (CD-006, and out of scope for PIPE-008).
+        - The cog's code starts a workflow through the GitHub API so the
+          workflow does repository work in CI — checking out a repository,
+          changing its code, opening a pull request — that cannot run in
+          the cog's Lambda. That hands work to CI on purpose; it is not a
+          relay of production flow. It still counts as a relay, and is
+          flagged, if the workflow runs work the cog's queue or Lambda
+          already does or should do.
 
       When flagging, cite the specific workflow file(s) and name the
       queued mode or watcher-cog path that should be the canonical
