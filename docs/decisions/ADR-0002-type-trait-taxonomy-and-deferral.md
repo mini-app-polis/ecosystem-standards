@@ -1,15 +1,16 @@
-# ADR-002: Type/Trait Taxonomy, Rule Applicability Scoping, and Deferred Keyword
+# ADR-0002: Type/Trait Taxonomy, Rule Applicability Scoping, and Deferred Keyword
 
 **Date:** 2026-04-06  
 **Status:** Accepted  
 **Repo:** ecosystem-standards  
-**Depends on:** ADR-001 (Federated Evaluation Configuration)  
-**Superseded in part by:** ADR-004 — the evaluator pseudo-type in the type taxonomy  
-**Amended by:** ADR-009, ADR-010, ADR-011 — the `pipeline-cog` and
+**Depends on:** ADR-0001 (Federated Evaluation Configuration)  
+**Superseded in part by:** ADR-0004 — the evaluator pseudo-type in the type taxonomy  
+**Amended by:** ADR-0005 — the trait definitions, made machine-readable  
+**Amended by:** ADR-0009, ADR-0010, ADR-0011 — the `pipeline-cog` and
 `trigger-cog` definitions below (an always-on Railway worker running
 Prefect) no longer hold: a pipeline cog is a Lambda function behind its own
 queue and a trigger cog a scheduled Lambda function, with the exceptions in
-ADR-013. The `multi-flow` trait was retired with CD-015 (ADR-009).
+ADR-0013. The `multi-flow` trait was retired with CD-015 (ADR-0009).
 `index.yaml` `schema.repo_types` and `schema.traits` are the current
 definitions.
 
@@ -17,7 +18,7 @@ definitions.
 
 ## Context
 
-With ADR-001 establishing that each repo will own its own `evaluator.yaml`, the next question is: what should repos actually have to declare as exemptions, and what should be automatically resolved by the type and trait taxonomy?
+With ADR-0001 establishing that each repo will own its own `evaluator.yaml`, the next question is: what should repos actually have to declare as exemptions, and what should be automatically resolved by the type and trait taxonomy?
 
 The current state of `ecosystem.yaml` contains **62 exception entries** across 13 active repos. The goal of this ADR is to reduce that to as close to zero as possible by promoting shared patterns into first-class types and traits, and to introduce a `deferred` keyword for known failures that are not yet prioritized.
 
@@ -222,7 +223,7 @@ Teach the evaluator to read `type` and `traits` from each repo's `evaluator.yaml
 Migrate existing exceptions from `ecosystem.yaml` into per-repo files. After migration, strip `check_exceptions` from `ecosystem.yaml`.
 
 **Step 5: Slim down `ecosystem.yaml`**
-Remove `check_exceptions` from all entries. It becomes a registry only (ADR-001).
+Remove `check_exceptions` from all entries. It becomes a registry only (ADR-0001).
 
 ---
 
@@ -313,4 +314,4 @@ None of this changes the type/trait decisions in the original ADR. It
 formalizes contracts that were previously implicit in prose and
 evaluator-cog source code.
 
-See ADR-005 for the full change record.
+See ADR-0005 for the full change record.

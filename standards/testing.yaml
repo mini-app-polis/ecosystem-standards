@@ -1,7 +1,7 @@
 # ecosystem-standards / testing.yaml
 # Testing standards for the fleet's services, libraries and apps.
 #
-# Which test layers a repo must have is TEST-014 to TEST-017 (ADR-012);
+# Which test layers a repo must have is TEST-014 to TEST-017 (ADR-0012);
 # what an integration test is, per repo type, is TEST-015.
 
 standards:
@@ -22,7 +22,7 @@ standards:
         deployed dev instance of the API it calls.
       E2E tests (few): happy path only, against the deployed dev
         environment, run after each dev deploy.
-      Which layers a repo must have is TEST-014 to TEST-017 (ADR-012).
+      Which layers a repo must have is TEST-014 to TEST-017 (ADR-0012).
     checkable: false
 
   # ─────────────────────────────────────────────
@@ -216,7 +216,7 @@ standards:
       production default. Tests override via environment.
 
   # ─────────────────────────────────────────────
-  # TEST LAYERS (ADR-012)
+  # TEST LAYERS (ADR-0012)
   # Each layer proves something the others cannot. These rules require
   # the layer to exist and run, not a quantity of it.
   # ─────────────────────────────────────────────
@@ -232,7 +232,7 @@ standards:
       network, database or filesystem beyond temporary files — and CI runs
       them on every push. They are the fast, numerous base of the pyramid
       (TEST-000), and the only layer cheap enough to cover edge cases
-      exhaustively. See ADR-012.
+      exhaustively. See ADR-0012.
     checkable: true
     check_notes: >
       LLM CHECK.
@@ -249,7 +249,7 @@ standards:
       Remediation: add tests for the repo's pure logic first — parsing,
       normalisation, decisions — and run them in CI's test job.
     origin: >
-      ADR-012, 2026-09-29.
+      ADR-0012, 2026-09-29.
 
   - id: TEST-015
     title: Has integration tests
@@ -279,7 +279,7 @@ standards:
           failure, so it retries and reaches the dead-letter queue, while
           the rest of the batch completes. Swallowing the error is the
           wrong behaviour here: it hides the failure from the redrive.
-      See ADR-012.
+      See ADR-0012.
     checkable: true
     check_notes: >
       LLM CHECK.
@@ -299,7 +299,7 @@ standards:
       apply migrations in the test setup with the real runner, reset tables
       between tests, and send real requests through the app.
     origin: >
-      ADR-012, 2026-09-29. deejaytools-api's unique-conflict handlers
+      ADR-0012, 2026-09-29. deejaytools-api's unique-conflict handlers
       returned 500 instead of 409 because Drizzle wraps the Postgres error;
       unit tests mocked the database and could not see it. 2026-10-04: the
       pipeline-cog cases replace TEST-002 (deduplication) and TEST-003
@@ -324,7 +324,7 @@ standards:
       Contract tests write data, so they run only against dev, only with
       development credentials, and never concurrently with another suite
       writing to the same environment. A repo that calls no fleet API has
-      no subject for this rule. See ADR-012.
+      no subject for this rule. See ADR-0012.
       Not to be confused with TEST-010, which asks an API to assert its own
       response envelope.
     checkable: true
@@ -342,7 +342,7 @@ standards:
       and is triggered by the provider's dev deploys as well as the
       consumer's pushes.
     origin: >
-      ADR-012, 2026-09-29. deejaytools-com's contract suite, dispatched by
+      ADR-0012, 2026-09-29. deejaytools-com's contract suite, dispatched by
       deejaytools-api after each dev deploy.
 
   - id: TEST-017
@@ -358,7 +358,7 @@ standards:
       They run after each dev deploy, so a failure lands on the change that
       caused it; not nightly (TEST-000). Like contract tests they write
       data, so they run only against dev, with development credentials, one
-      suite at a time. See ADR-012.
+      suite at a time. See ADR-0012.
     checkable: true
     check_notes: >
       LLM CHECK.
@@ -370,7 +370,7 @@ standards:
       (3) [LLM] Judge whether the tests target a deployed dev environment
       rather than a local dev server, and refuse production.
     origin: >
-      ADR-012, 2026-09-29.
+      ADR-0012, 2026-09-29.
 
   - id: TEST-018
     title: Every API route is exercised by an integration test, and the suite enforces it
@@ -390,7 +390,7 @@ standards:
       The ledger is the shared pytest plugin in common-python-utils
       (`mini_app_polis.testing`), not a copy per API: route templates are
       resolved with their router prefixes, which is the part a local copy
-      gets wrong. See ADR-012.
+      gets wrong. See ADR-0012.
     checkable: true
     check_notes: >
       LLM CHECK.
@@ -406,7 +406,7 @@ standards:
       Becomes a deterministic check — the conftest registers the shared
       plugin — once the plugin is released.
     origin: >
-      ADR-012, 2026-09-29. deejaytools-api
+      ADR-0012, 2026-09-29. deejaytools-api
       `src/test/integration/route-ledger.ts`. 2026-10-04: rewritten for the
       FastAPI services around a shared plugin, and replaces TEST-010, whose
       check matched route paths as text anywhere in the tests.
@@ -434,7 +434,7 @@ standards:
       equivalent, and the intended mechanism is a ratchet in the shared
       python-test.yml that fails when coverage exceeds the floor by more
       than a point. Until that exists, raising the floor is by hand.
-      See ADR-012.
+      See ADR-0012.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -449,7 +449,7 @@ standards:
           TypeScript: a vitest config declaring `coverage.thresholds`.
       Each failed condition is its own finding.
     origin: >
-      ADR-012, 2026-09-29. Chosen over a fixed percentage and over diff
+      ADR-0012, 2026-09-29. Chosen over a fixed percentage and over diff
       coverage; both deejaytools repos' `vitest.config.ts`. 2026-10-04:
       absorbed TEST-006 (coverage measured in CI), whose "threshold not
       enforced by number" contradicted this rule.
@@ -467,7 +467,7 @@ standards:
       midnight when the data spans the current time. Otherwise the suite
       fails for part of every day: in Chicago, from 19:00 or 18:00, when
       UTC has already reached tomorrow. Where the code accepts an injected
-      clock, fixing the clock is better still. See ADR-012.
+      clock, fixing the clock is better still. See ADR-0012.
     checkable: true
     check_notes: >
       LLM CHECK.

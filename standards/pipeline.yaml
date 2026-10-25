@@ -145,7 +145,7 @@ standards:
       through common-python-utils clients and SDKs are not direct calls
       and are not examined.
       Previously this looked for Prefect @task(retries=) decorators;
-      Prefect is retired (ADR-009).
+      Prefect is retired (ADR-0009).
 
   - id: PIPE-008
     title: Retired trigger patterns are not used
@@ -367,13 +367,13 @@ standards:
       PIPE-001 (Prefect for new pipelines), CD-005 (Prefect Cloud for
       pipeline observability), CD-015 (Prefect serve() — no work pool) and
       CD-016 (serve() wrapped in serve_with_retry), all retired 2026-09 per
-      ADR-009. They required a resident Railway container polling Prefect
+      ADR-0009. They required a resident Railway container polling Prefect
       Cloud; the fleet's pipeline cogs now hold no resident process.
     description: >
       A pipeline cog is an AWS Lambda function fed by an SQS queue of its
       own. The queue, the function and the event source mapping between
       them are declared in mini-app-polis/infra, one `module` block per cog
-      (ADR-010); the cog's repository owns its code. AWS polls the queue
+      (ADR-0010); the cog's repository owns its code. AWS polls the queue
       and invokes the function, so nothing of the cog's stays running
       between jobs.
 
@@ -390,7 +390,7 @@ standards:
       Fail if `prefect` is declared in pyproject.toml or requirements.txt.
       That the runtime is declared is not checked from the cog: it is in
       another repository, and each evaluation reads only its own
-      (ADR-010). A cog with no module block in mini-app-polis/infra has no
+      (ADR-0010). A cog with no module block in mini-app-polis/infra has no
       function to deploy to, so its deploy job fails — that failure is the
       check.
     origin: >
@@ -425,7 +425,7 @@ standards:
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Two halves, in the two repositories that own them (ADR-010).
+      Two halves, in the two repositories that own them (ADR-0010).
       infrastructure — the Terraform, including its modules, where the
       shared cog module declares these once for every cog:
       (1) Fail unless the `aws_lambda_event_source_mapping` sets
@@ -453,10 +453,10 @@ standards:
     supersedes: >
       PIPE-004 (Prefect concurrency groups for shared resources) and
       PIPE-009 (named Prefect concurrency slot before scanning a shared
-      resource), retired 2026-09 per ADR-009.
+      resource), retired 2026-09 per ADR-0009.
     description: >
       How many jobs may run at once is stated for each cog, in its module
-      block in mini-app-polis/infra (ADR-010), not left to the account's
+      block in mini-app-polis/infra (ADR-0010), not left to the account's
       pool. Lambda will otherwise scale a burst out as wide as
       the account allows, and every one of those workers writes to the
       same API, the same Drive folders and the same Sheets.
@@ -499,7 +499,7 @@ standards:
     applies_to: [trigger-cog]
     supersedes: >
       PIPE-001's trigger-cog half, which required the Prefect client, and
-      was retired 2026-09 per ADR-009.
+      was retired 2026-09 per ADR-0009.
     description: >
       A trigger cog detects that there is work and asks
       api-kaianolevine-com to run it; the API enqueues onto the owning
@@ -569,7 +569,7 @@ standards:
       alarm on the function's `Duration` metric (Maximum) at
       `duration_alarm_ratio` × `timeout_seconds`, notifying the same topic
       as the module's other alarms, and every pipeline cog's runtime comes
-      from that module (ADR-010).
+      from that module (ADR-0010).
 
       PIPE-020 covers the run that reaches the deadline: it stops itself
       and reports. It cannot tell a hung job from a slow healthy one, so a

@@ -1,4 +1,4 @@
-# ADR-008: Named Machine Keys as the Machine Identity
+# ADR-0008: Named Machine Keys as the Machine Identity
 
 **Date:** 2026-09-02
 **Status:** Accepted

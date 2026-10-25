@@ -3,7 +3,7 @@ name: Contract
 # The live contract suite (tests/contract): the one outbound call this repo
 # makes — scripts/publish_catalog.py's POST /v1/standards/catalog on
 # api-kaianolevine-com — checked against the development API (TEST-016,
-# ADR-012). The publish itself only runs from the release job on main, after
+# ADR-0012). The publish itself only runs from the release job on main, after
 # semantic-release has tagged, so drift found there leaves a released version
 # with no catalog. This finds it on dev instead.
 #

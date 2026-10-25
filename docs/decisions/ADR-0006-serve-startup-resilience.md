@@ -1,10 +1,10 @@
-# ADR-006: Startup registration resilience for serve()-based cogs
+# ADR-0006: Startup registration resilience for serve()-based cogs
 
 **Date:** 2026-08-19
 **Status:** Superseded
-**Superseded by:** ADR-009 — pipeline cogs run on Lambda and register nothing at startup
+**Superseded by:** ADR-0009 — pipeline cogs run on Lambda and register nothing at startup
 **Repo:** ecosystem-standards
-**Depends on:** ADR-003 (conformance checker architecture)
+**Depends on:** ADR-0003 (conformance checker architecture)
 
 ---
 
@@ -277,6 +277,6 @@ disruptive change to a rule many repos already reference.
 
 - `standards/delivery.yaml` — CD-015 (amended), CD-016, CD-017
 - `index.yaml` `severities:` — CRITICAL as an emission-only severity
-- deejay-cog `docs/decisions/ADR-005-serve-startup-resilience.md` — the
-  canary adoption, and the amendment to deejay-cog ADR-001
+- deejay-cog `docs/decisions/ADR-0005-serve-startup-resilience.md` — the
+  canary adoption, and the amendment to deejay-cog ADR-0001
 - `BACKLOG.md` — infrastructure-level crash/failure capture

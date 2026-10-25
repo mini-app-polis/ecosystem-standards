@@ -1,4 +1,4 @@
-# ADR-001: Federated Evaluation Configuration
+# ADR-0001: Federated Evaluation Configuration
 
 **Date:** 2026-04-06  
 **Status:** Accepted  

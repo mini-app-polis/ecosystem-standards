@@ -138,7 +138,7 @@ Process:
    inherit broadly.
 3. If an ADR is shaping the decision, write it first
    (`new-adr.md`) — a new type almost always has an ADR behind it.
-   ADR-002 is the canonical example.
+   ADR-0002 is the canonical example.
 4. Update `README.md` and any playbook that references the type list.
 
 ### Adding a trait
@@ -221,7 +221,7 @@ Process:
 Extremely rare. The three rule-level severities (ERROR, WARN, INFO)
 and three statuses (requirement, convention, gap) are intentionally
 small. Adding a value here is an ADR-worthy decision — write the ADR
-first. ADR-005 is the canonical example of reducing this surface;
+first. ADR-0005 is the canonical example of reducing this surface;
 reverse the direction with care.
 
 ### Retiring a value
@@ -353,7 +353,7 @@ Examples:
 - `refactor(taxonomy): split api-service into api-service and
   api-service-billing`
 - `feat!(schema): remove deprecated check_exceptions from
-  ecosystem.yaml` (with BREAKING CHANGE body referring to ADR-001)
+  ecosystem.yaml` (with BREAKING CHANGE body referring to ADR-0001)
 
 Do not edit `package.json` or `CHANGELOG.md` by hand (see META-001).
 

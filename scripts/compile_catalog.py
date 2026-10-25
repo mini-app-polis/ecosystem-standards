@@ -110,7 +110,7 @@ def _domains_by_file(index: dict[str, Any]) -> dict[str, str]:
 def _normalize_applies_to(rule: dict[str, Any]) -> list[str] | None:
     """Resolve ``applies_to`` to a list of type names, or ``None``.
 
-    ``None`` means the rule is not a repo-source scan (ADR-004) — its check
+    ``None`` means the rule is not a repo-source scan (ADR-0004) — its check
     reads the evaluations table, the evaluator's own registry, or another
     non-per-repo source, and ``check_notes`` is authoritative for what.
 

@@ -1,26 +1,26 @@
-# ADR-011: Trigger Cogs Run on a Schedule, Not as a Resident Process
+# ADR-0011: Trigger Cogs Run on a Schedule, Not as a Resident Process
 
 **Date:** 2026-09-26
 **Status:** Accepted
 **Repo:** ecosystem-standards
-**Depends on:** ADR-009 (pipeline cogs on Lambda), ADR-010 (infrastructure
+**Depends on:** ADR-0009 (pipeline cogs on Lambda), ADR-0010 (infrastructure
 in one repository)
-**Amends:** ADR-009 — its definition of `trigger-cog` as "an always-on
+**Amends:** ADR-0009 — its definition of `trigger-cog` as "an always-on
 asyncio loop", and its rescoping of CD-017 and OPS-007 to that type
-**Amends:** ADR-002 — its definition of `trigger-cog`
-**Amends:** ADR-007 — its §4 recovery contract, which no longer covers
-trigger cogs (see ADR-007's current-state note)
+**Amends:** ADR-0002 — its definition of `trigger-cog`
+**Amends:** ADR-0007 — its §4 recovery contract, which no longer covers
+trigger cogs (see ADR-0007's current-state note)
 
 ---
 
 ## Context
 
-ADR-009 moved pipeline cogs to Lambda and left `trigger-cog` defined as an
+ADR-0009 moved pipeline cogs to Lambda and left `trigger-cog` defined as an
 always-on asyncio loop on Railway, because watcher-cog — the only trigger
 cog — still was one. It remembered which Drive files it had seen and fired
 on the difference, and that memory was why it had to be resident.
 
-watcher-cog no longer remembers anything (its ADR-005). An EventBridge
+watcher-cog no longer remembers anything (watcher-cog ADR-0005). An EventBridge
 schedule invokes a Lambda function once a minute; each tick asks
 api-kaianolevine-com for every file present, and the API's dispatch claims
 turn the repeats into one job per file. The function is declared in
@@ -31,9 +31,9 @@ The rules that followed the old definition now describe a process that does
 not exist. CD-017 requires a Railway restart policy and CD-024 reads memory
 and CPU ceilings from `railway.json`; both fail on a repository that has
 correctly deleted it. CD-027, CD-028 and SEC-008 look for Terraform in a
-repository that, under ADR-010, holds none.
+repository that, under ADR-0010, holds none.
 
-ADR-002 names the signal: when a correct repository needs exemptions from
+ADR-0002 names the signal: when a correct repository needs exemptions from
 rules written for its type, the type is what changed.
 
 ## Decision
@@ -47,7 +47,7 @@ Rescoped, by removing `trigger-cog` from `applies_to`:
 |---|---|---|
 | CD-017 | No process to restart; a failed tick is retried by the next tick | — |
 | CD-024 | Its ceiling is the function's `memory_size` and `timeout` | mini-app-polis/infra, as `infrastructure` |
-| CD-027, CD-028, SEC-008 | It declares no Terraform (ADR-010) | mini-app-polis/infra, as `infrastructure` |
+| CD-027, CD-028, SEC-008 | It declares no Terraform (ADR-0010) | mini-app-polis/infra, as `infrastructure` |
 
 Unchanged, because each still describes the trigger cog as it is:
 
@@ -69,5 +69,5 @@ now has no resident subject among the cogs. Where it belongs, most likely
 - A future trigger cog that genuinely needed to be resident would be a new
   type rather than a return to the old definition: the rules above
   depended on residency, not on detecting events.
-- This amends ADR-009's type definition; ADR-009 is not superseded, and its
+- This amends ADR-0009's type definition; ADR-0009 is not superseded, and its
   pipeline-cog decisions stand.

@@ -1,9 +1,9 @@
-# ADR-004: `applies_to` has a single meaning; evaluator pseudo-type removed
+# ADR-0004: `applies_to` has a single meaning; evaluator pseudo-type removed
 
 **Date:** 2026-04-21
 **Status:** Accepted
 **Repo:** ecosystem-standards
-**Supersedes, in part:** ADR-002 (specifically, the evaluator pseudo-type
+**Supersedes, in part:** ADR-0002 (specifically, the evaluator pseudo-type
 pseudo-type in the type taxonomy)
 
 ---
@@ -26,7 +26,7 @@ used only to satisfy the field's presence.
 
 An evaluator-only pseudo-type had been added to `schema.repo_types` in
 `index.yaml` to give the first two rules a type to point at. It did
-not satisfy ADR-002's requirement that types are mutually exclusive
+not satisfy ADR-0002's requirement that types are mutually exclusive
 and that every repo has exactly one. No repo ever declared
 that pseudo-type in its `evaluator.yaml` — evaluator-cog is
 correctly a `pipeline-cog`. The pseudo-type existed only to back-fill
@@ -76,7 +76,7 @@ The rules now read cleanly without needing to justify their
   `source=conformance_check`, EVAL-007's is `source=standards_drift`.
   The data model already distinguishes these from repo-scan findings.
   The catalog doesn't need a parallel distinction at the rule level.
-- **ADR-002 is preserved where it matters and corrected where it
+- **ADR-0002 is preserved where it matters and corrected where it
   drifted.** Types remain mutually exclusive. The drift was the
   addition of the evaluator pseudo-type to the type list; removing it
   restores the invariant.

@@ -236,7 +236,7 @@ standards:
       log entry is created by performing the rotation, so unlike a policy
       document it cannot be satisfied by writing it.
 
-      This matters more here than the generic case. ADR-008 accepted a
+      This matters more here than the generic case. ADR-0008 accepted a
       manual, two-sided rotation — a Doppler edit plus a redeploy of both
       caller and receiver, with no window in which the old and new keys
       are both valid. A procedure with a hard cutover and no overlap is

@@ -170,7 +170,7 @@ ecosystem-standards/
 │   ├── evaluation.yaml             ← EVAL
 │   └── cross-stack.yaml            ← XSTACK
 ├── docs/
-│   └── decisions/                  ← ADRs (ADR-NNN-slug.md)
+│   └── decisions/                  ← ADRs (ADR-NNNN-slug.md)
 │       └── README.md               ← ADR index
 └── playbooks/
     ├── new-standard.md             ← rule changes

@@ -99,7 +99,7 @@ ecosystem-standards/
 ├── tests/
 │   └── contract/                   ← publish contract suite, against the dev API
 ├── docs/
-│   └── decisions/                  ← ADRs (ADR-NNN-slug.md)
+│   └── decisions/                  ← ADRs (ADR-NNNN-slug.md)
 │       └── README.md               ← ADR index
 └── playbooks/
     ├── new-standard.md             ← rule changes
@@ -179,7 +179,7 @@ Each evaluatable repo declares a type (and optional traits) in its own `evaluato
 ## Related Docs
 
 - `CONTRIBUTING.md` — top-level router for any change to this repo.
-- `docs/decisions/` — Architecture Decision Records. See `docs/decisions/README.md` for the index. Start with ADR-001 (federated evaluation), ADR-002 (type/trait taxonomy), ADR-003 (conformance checker architecture), ADR-004 (`applies_to` single meaning), ADR-005 (schema clarity audit).
+- `docs/decisions/` — Architecture Decision Records. See `docs/decisions/README.md` for the index. Start with ADR-0001 (federated evaluation), ADR-0002 (type/trait taxonomy), ADR-0003 (conformance checker architecture), ADR-0004 (`applies_to` single meaning), ADR-0005 (schema clarity audit).
 - `playbooks/` — narrative guides for common changes: `new-standard.md` (rules), `new-adr.md` (decisions), `ecosystem-changes.md` (registry, types, enums, DoD), `new-cog.md` (bootstrap a new cog).
 - `BACKLOG.md` — open items and roadmap for the standards themselves.
 - `CHANGELOG.md` — managed by semantic-release; never edit manually.

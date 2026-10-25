@@ -1,23 +1,23 @@
-# ADR-007: External provider failure — reporting and recovery contract
+# ADR-0007: External provider failure — reporting and recovery contract
 
 **Date:** 2026-08-19
 **Status:** Accepted
 **Repo:** ecosystem-standards
-**Depends on:** ADR-006 (startup registration resilience)
-**Amended by:** ADR-009, ADR-011, ADR-013 — see the note below
+**Depends on:** ADR-0006 (startup registration resilience)
+**Amended by:** ADR-0009, ADR-0011, ADR-0013 — see the note below
 
 > **Current state (2026-10-16).** Sections 1 to 3 stand: the two error
 > classes (PY-016), the reporting contract and the telemetry exemption
 > (CD-018). Two sections no longer describe the system:
 >
 > - **§4, the recovery contract, now covers Railway API services only.**
->   It rested on ADR-006's in-process retry (CD-016, retired with Prefect)
+>   It rested on ADR-0006's in-process retry (CD-016, retired with Prefect)
 >   multiplied by CD-017's restart budget. Lambda pipeline cogs have no
 >   process to restart: a failed job is redelivered and dead-lettered behind
->   an alarm (PIPE-017, CD-010, ADR-009). A trigger cog's failed tick is
+>   an alarm (PIPE-017, CD-010, ADR-0009). A trigger cog's failed tick is
 >   retried by the next tick, with Healthchecks catching silence (CD-007,
->   ADR-011). The Railway-hosted one-shot cogs retry on their next run and
->   declare their own liveness (ADR-013). CD-017's bounded budget still
+>   ADR-0011). The Railway-hosted one-shot cogs retry on their next run and
+>   declare their own liveness (ADR-0013). CD-017's bounded budget still
 >   applies to the API services, and the monitoring gap after it is spent
 >   is in `BACKLOG.md`.
 > - **§5, the `external_providers:` registry, was never created.**
@@ -36,7 +36,7 @@ Every service in the ecosystem depends on external providers it does not
 control: Prefect Cloud, Google Drive/Sheets, Clerk, Sentry, Anthropic,
 OpenAI, Spotify, AcoustID, MusicBrainz, Todoist, GitHub, Railway.
 Provider failure is not an edge case — it is a routine operating
-condition, and the July 2026 fleet-down incident (ADR-006) was one
+condition, and the July 2026 fleet-down incident (ADR-0006) was one
 instance of it.
 
 The catalog already says something about *retrying* these calls:
@@ -63,7 +63,7 @@ outage in the ecosystem currently launders itself into looking like our
 own defect. That is the same shape of problem as July, one layer up: the
 failure is recorded, but the record does not say what caused it.
 
-**Half two: recovery after full stop is unbounded-then-nothing.** ADR-006
+**Half two: recovery after full stop is unbounded-then-nothing.** ADR-0006
 established two layers for a process that cannot start: in-process retry
 (30 min) and Railway `ON_FAILURE` restarts (10). Multiplied, that is
 roughly five hours of unattended coverage. After that the service stays
@@ -150,7 +150,7 @@ exited — the responsible service emits a finding through
 - Severity chosen by what actually happened to the work, which the
   application decides: the run finished with less done than intended
   (`WARN`), the run could not do its job (`ERROR`), or no work can
-  happen at all and the process is exiting (`CRITICAL`, per ADR-006 —
+  happen at all and the process is exiting (`CRITICAL`, per ADR-0006 —
   still reserved for the pre-flow process lifecycle).
 
 Alongside the finding, the failure is logged via the shared logger and
@@ -175,7 +175,7 @@ This is not a convenience. A finding that says "we could not post
 findings" cannot be posted, and a system that retries or escalates its
 own reporting failure spends the outage generating noise about the
 outage. `post_run_finding` is already best-effort by construction
-(ADR-004), and `serve_resilience` wraps its own reporting call for the
+(deejay-cog ADR-0004), and `serve_resilience` wraps its own reporting call for the
 same reason. Telemetry failure is a log line, never a finding.
 
 ### 4. The recovery contract
@@ -299,9 +299,9 @@ that had to be retired.
 
 ## See also
 
-- ADR-006 — startup registration resilience; the special case this
+- ADR-0006 — startup registration resilience; the special case this
   generalizes
-- ADR-004 (deejay-cog) — best-effort pipeline evaluation posting
+- deejay-cog ADR-0004 — best-effort pipeline evaluation posting
 - PRIN-002 — pipeline resilience, continue on item failure
 - PIPE-007, XSTACK-005, CD-016, CD-017 — the retry-side rules this
   ADR sits downstream of

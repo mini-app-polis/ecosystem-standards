@@ -23,7 +23,7 @@ Use the same test as in `playbooks/new-standard.md` Step 1:
 A topic can have both. The ADR captures the "why"; individual rules in
 `standards/*.yaml` capture the "what." If you are introducing a
 significant new convention, write the ADR first, then derive rules from
-it. ADR-001 → `evaluator.yaml` rules is the canonical example.
+it. ADR-0001 → `evaluator.yaml` rules is the canonical example.
 
 Write an ADR when at least one of these is true:
 
@@ -62,24 +62,32 @@ audit trail.
 File name pattern (from DOC-005):
 
 ```
-docs/decisions/ADR-NNN-short-slug.md
+docs/decisions/ADR-NNNN-short-slug.md
 ```
 
-- `NNN` is three digits (`001`, `002`, ..., `042`).
+- `NNNN` is four digits, zero-padded (`0001`, `0002`, ..., `0042`).
 - `short-slug` is kebab-case, 3–6 words, describing the decision not
   the component. Prefer a noun phrase over an active verb.
 
 Good examples:
 
-- `ADR-001-federated-evaluation-config.md`
-- `ADR-002-type-trait-taxonomy-and-deferral.md`
-- `ADR-003-conformance-checker-architecture.md`
+- `ADR-0001-federated-evaluation-config.md`
+- `ADR-0002-type-trait-taxonomy-and-deferral.md`
+- `ADR-0003-conformance-checker-architecture.md`
 
 Bad examples:
 
-- `ADR-00X-fix-ci.md` (too vague, reads as a ticket, not a decision)
-- `ADR-00X-use-postgres.md` (active-verb framing; prefer
-  `ADR-00X-postgres-as-primary-store.md`)
+- `ADR-NNNN-fix-ci.md` (too vague, reads as a ticket, not a decision)
+- `ADR-NNNN-use-postgres.md` (active-verb framing; prefer
+  `ADR-NNNN-postgres-as-primary-store.md`)
+
+### Citing an ADR
+
+A bare ID always means an ADR in the repository the citation is
+written in: `ADR-0009`. An ADR in another repository is cited with
+that repository's name first, `evaluator-cog ADR-0004`, or by its URL.
+Never cite another repository's ADR by bare ID, or as "its ADR-NNNN";
+a reader cannot tell which repository's ADR is meant.
 
 ---
 
@@ -89,13 +97,13 @@ Every ADR has this structure. Use the existing three ADRs as the
 formatting reference.
 
 ```markdown
-# ADR-NNN: Decision title
+# ADR-NNNN: Decision title
 
 **Date:** YYYY-MM-DD
 **Status:** Proposed | Accepted | Superseded
 **Repo:** ecosystem-standards
-**Depends on:** ADR-NNN (optional — only if it builds on another)
-**Supersedes:** ADR-NNN or <file> (optional — only if it replaces one)
+**Depends on:** ADR-NNNN (optional — only if it builds on another)
+**Supersedes:** ADR-NNNN or <file> (optional — only if it replaces one)
 
 ---
 
@@ -150,7 +158,7 @@ ADRs move through these states:
 - **Accepted** — the default state. The ecosystem operates on this
   decision.
 - **Superseded** — a later ADR replaces this one. The file stays in
-  place but the status is flipped, and a `**Superseded by:** ADR-NNN`
+  place but the status is flipped, and a `**Superseded by:** ADR-NNNN`
   line is added near the top.
 
 You do not delete superseded ADRs. The history of how thinking evolved
@@ -167,10 +175,10 @@ current required state. ADRs are the audit trail, not the state.
 
 When writing a new ADR that replaces an older one:
 
-1. **In the new ADR**, add `**Supersedes:** ADR-NNN` to the header
+1. **In the new ADR**, add `**Supersedes:** ADR-NNNN` to the header
    block. Reference the old decision in the Context section and
    explain what changed.
-2. **In the old ADR**, add `**Superseded by:** ADR-NNN` below the
+2. **In the old ADR**, add `**Superseded by:** ADR-NNNN` below the
    existing header lines, and change `**Status:** Accepted` to
    `**Status:** Superseded`. Do not rewrite the old ADR's body — its
    original reasoning is the point.
@@ -189,16 +197,16 @@ other parts intact. In that case:
 
 - Do not flip the old ADR to `Superseded` — its still-active parts
   need to read as Accepted.
-- In the new ADR, add `**Supersedes, in part:** ADR-NNN` to the header
+- In the new ADR, add `**Supersedes, in part:** ADR-NNNN` to the header
   and name which sub-sections of the old ADR it replaces.
-- In the old ADR, add `**Superseded in part by:** ADR-NNN` to the
+- In the old ADR, add `**Superseded in part by:** ADR-NNNN` to the
   header, and a note near the affected section pointing at the new
-  ADR: `> Superseded in part by ADR-NNN — see that ADR's Decision
+  ADR: `> Superseded in part by ADR-NNNN — see that ADR's Decision
   section for the updated rule.`
 
 An ADR that changes a clause of an earlier one without replacing any
-section of it amends it: `**Amends:** ADR-NNN` in the new ADR's header,
-`**Amended by:** ADR-NNN` in the old one's. The old ADR stays Accepted.
+section of it amends it: `**Amends:** ADR-NNNN` in the new ADR's header,
+`**Amended by:** ADR-NNNN` in the old one's. The old ADR stays Accepted.
 
 Every relation is written at both ends, in the header, with the ADR IDs
 first on the line and any explanation after an em dash. DOC-015 checks
@@ -225,7 +233,7 @@ ADRs and rules are paired:
 When an ADR introduces a new convention, derive the enforceable rules
 from it in the same PR (or the next PR if the rule implementation
 needs design). Cross-reference the ADR from the rule's `description`
-or `origin` field. ADR-002 → the `applies_to` type/trait taxonomy in
+or `origin` field. ADR-0002 → the `applies_to` type/trait taxonomy in
 `index.yaml` and `evaluator.yaml` schema is the canonical example of
 this pairing.
 
@@ -299,12 +307,12 @@ What we decided, in one or two sentences, then detail.
 
 ## See also
 
-- `docs/decisions/ADR-001-federated-evaluation-config.md` — canonical
+- `docs/decisions/ADR-0001-federated-evaluation-config.md` — canonical
   reference for ADR format and "decision opens a path" style.
-- `docs/decisions/ADR-002-type-trait-taxonomy-and-deferral.md` —
+- `docs/decisions/ADR-0002-type-trait-taxonomy-and-deferral.md` —
   canonical reference for a large ADR with sub-decisions, tables,
   implementation plan, and worked schema examples.
-- `docs/decisions/ADR-003-conformance-checker-architecture.md` —
+- `docs/decisions/ADR-0003-conformance-checker-architecture.md` —
   canonical reference for a `Supersedes:` entry pointing at a
   non-ADR predecessor doc.
 - `docs/decisions/README.md` — ADR index with status and one-line

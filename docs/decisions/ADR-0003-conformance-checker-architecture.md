@@ -1,10 +1,10 @@
-# ADR-003: Conformance Checker Architecture
+# ADR-0003: Conformance Checker Architecture
 
 **Date:** 2026-03  
 **Status:** Accepted  
 **Repo:** ecosystem-standards  
 **Supersedes:** `docs/standards-checker-decisions.md`  
-**Superseded in part by:** ADR-009 and evaluator-cog ADR-0004 — see the note
+**Superseded in part by:** ADR-0009 and evaluator-cog ADR-0004 — see the note
 below
 
 > **Current state (2026-10-16).** The structural half of this ADR stands:
@@ -19,7 +19,7 @@ below
 > - **Invocation is on demand, not a Prefect schedule.** evaluator-cog is a
 >   Lambda function behind its own queue; api-kaianolevine-com enqueues one
 >   job per repository on a release, or the whole registry on a standards or
->   evaluator release (CD-031, ADR-009, evaluator-cog ADR-0004).
+>   evaluator release (CD-031, ADR-0009, evaluator-cog ADR-0004).
 > - **The `source` values have changed.** Conformance findings post as
 >   `conformance_deterministic` / `conformance_llm`, not
 >   `conformance_check`, and `flow_hook` and `prefect_webhook` are retired.
@@ -141,8 +141,8 @@ a `check_id` field on rules. No such field was ever added to the
 catalog. The intent — a stable identifier linking each rule to its
 implementation in evaluator-cog — is satisfied by the rule's own
 `id` field, which evaluator-cog's check registry uses as the
-registration key. ADR-005 formalized this and removed the
+registration key. ADR-0005 formalized this and removed the
 phantom `check_id` reference from EVAL-007. No behavior changed; the
 contract clarified.
 
-See ADR-005 for the full schema-clarity audit.
+See ADR-0005 for the full schema-clarity audit.

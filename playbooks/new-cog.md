@@ -4,11 +4,11 @@
 A cog is a Python service. This playbook covers both subtypes:
 - **Pipeline cog** — a Lambda function behind its own SQS queue that
   processes one job per message (e.g. deejay-cog, evaluator-cog). Nothing
-  runs between jobs. See ADR-009.
+  runs between jobs. See ADR-0009.
 - **Trigger cog** — a Lambda function on an EventBridge schedule that
   detects events and asks api-kaianolevine-com to run a job (e.g.
   watcher-cog). Nothing runs between ticks. The API is the only producer to
-  any queue. See ADR-011.
+  any queue. See ADR-0011.
 
 ---
 
@@ -192,7 +192,7 @@ Copy `.github/workflows/ci.yml` from deejay-cog and change only the
 - **test** — `mini-app-polis/.github/.github/workflows/python-test.yml@v3`
   (lock check, ruff, format, pytest with coverage). Pass `typecheck` when
   the cog declares `[tool.mypy]`. No `terraform-dir`: a cog has no
-  Terraform (ADR-010).
+  Terraform (ADR-0010).
 - **release** — semantic-release, recording the tag it cut as a job output
 - **deploy** — `lambda-deploy.yml@v3`, `needs: release`, run
   only when a tag was cut. A trigger cog passes `trigger: schedule`. It is a job rather than an `on: release`
@@ -272,7 +272,7 @@ Pipeline cogs:
   flow fail the ordinary way, so a run that would otherwise be killed
   mid-flight still reports (PIPE-020). Its `RunOutOfTime` is a
   `BaseException`, so a flow's `except Exception` cannot swallow it.
-- A `module "<cog>"` block in mini-app-polis/infra `cogs.tf` (ADR-010),
+- A `module "<cog>"` block in mini-app-polis/infra `cogs.tf` (ADR-0010),
   through a pull request there — the queue and DLQ with a redrive policy,
   the function, the event source mapping with `ReportBatchItemFailures`,
   the alarms and the deploy role all come from `modules/cog-worker`.
@@ -294,7 +294,7 @@ Pipeline cogs:
   run without a deploy.
   A repository created now presents GitHub's id-based OIDC subject
   (`repo:mini-app-polis@<id>/<name>@<id>`); the module's deploy-role trust
-  must match it (see ADR-010, Negative).
+  must match it (see ADR-0010, Negative).
   Queue names are `<cog>-jobs`; api-kaianolevine-com derives them the same
   way.
 - An API dispatch path in api-kaianolevine-com (`services/<cog>_dispatch.py`
@@ -308,7 +308,7 @@ Trigger cogs:
 - `config.py` — config dataclass, empty config list by default
 - Healthchecks.io ping after every tick
 - A `module "<cog>"` block in mini-app-polis/infra `cogs.tf` calling
-  `modules/scheduled-worker` (ADR-011)
+  `modules/scheduled-worker` (ADR-0011)
 - Runs are started with a POST to api-kaianolevine-com through
   `KaianoApiClient`, never by sending to a queue (PIPE-019)
 

@@ -1,31 +1,31 @@
-# ADR-009: Pipeline Cogs Run on Lambda Behind Their Own Queue
+# ADR-0009: Pipeline Cogs Run on Lambda Behind Their Own Queue
 
 **Date:** 2026-09-21
 **Status:** Accepted
 **Repo:** ecosystem-standards
-**Depends on:** ADR-002 (type/trait taxonomy)
-**Supersedes:** ADR-006 (startup registration resilience for serve()-based cogs)
-**Supersedes, in part:** ADR-003 — evaluator-cog is invoked on demand from its own queue, not on a Prefect schedule (see ADR-003's current-state note)
-**Amends:** ADR-002 — its definitions of `pipeline-cog` and `trigger-cog`, and the `multi-flow` trait, which is retired
-**Amends:** ADR-007 — its §4 recovery contract, which no longer covers pipeline cogs (see ADR-007's current-state note)
-**Amended by:** ADR-010 — the queue and function are declared in mini-app-polis/infra, not the cog's `infra/`
-**Amended by:** ADR-011 — `trigger-cog` is a Lambda function on an EventBridge schedule, not an always-on asyncio loop
-**Amended by:** ADR-013 — `pipeline-cog` is not Lambda "for every cog of that type": wiki-curator-cog (until it moves to Lambda) and db-ops run on Railway and exempt the queue- and Lambda-shaped rules
+**Depends on:** ADR-0002 (type/trait taxonomy)
+**Supersedes:** ADR-0006 (startup registration resilience for serve()-based cogs)
+**Supersedes, in part:** ADR-0003 — evaluator-cog is invoked on demand from its own queue, not on a Prefect schedule (see ADR-0003's current-state note)
+**Amends:** ADR-0002 — its definitions of `pipeline-cog` and `trigger-cog`, and the `multi-flow` trait, which is retired
+**Amends:** ADR-0007 — its §4 recovery contract, which no longer covers pipeline cogs (see ADR-0007's current-state note)
+**Amended by:** ADR-0010 — the queue and function are declared in mini-app-polis/infra, not the cog's `infra/`
+**Amended by:** ADR-0011 — `trigger-cog` is a Lambda function on an EventBridge schedule, not an always-on asyncio loop
+**Amended by:** ADR-0013 — `pipeline-cog` is not Lambda "for every cog of that type": wiki-curator-cog (until it moves to Lambda) and db-ops run on Railway and exempt the queue- and Lambda-shaped rules
 
 > **Current state (2026-10-16).** Prefect is retired fleet-wide.
 > evaluator-cog, deejay-cog and transcription-cog run on Lambda behind
-> their own queues, declared in mini-app-polis/infra (ADR-010); watcher-cog
-> is a scheduled Lambda function (ADR-011). The Negative consequences below
+> their own queues, declared in mini-app-polis/infra (ADR-0010); watcher-cog
+> is a scheduled Lambda function (ADR-0011). The Negative consequences below
 > describe the transition and no longer hold: transcription-cog moved, and
 > watcher-cog's triggers all go through the API. wiki-curator-cog left
 > Prefect for a one-shot Railway process and db-ops was built on Railway;
-> both are recorded exceptions to this decision (ADR-013).
+> both are recorded exceptions to this decision (ADR-0013).
 
 ---
 
 ## Context
 
-ADR-002 defined `pipeline-cog` as an "always-on Railway worker running one
+ADR-0002 defined `pipeline-cog` as an "always-on Railway worker running one
 or more Prefect @flow(s)" and `trigger-cog` as a worker that "fires Prefect
 flow runs via API". Eight rules encoded that runtime: PIPE-001, PIPE-004,
 PIPE-006, PIPE-009, PIPE-012, CD-005, CD-015 and CD-016, with CD-017,
@@ -41,7 +41,7 @@ The first release of each moved cog was graded against the old runtime:
 "Prefect is not declared" (PIPE-001), "no railway.json restart policy"
 (CD-017), "no railway.json memory or CPU ceiling" (CD-024). Both cogs
 were correct, and the standard was describing the wrong target. Two more
-cogs were due to carry the same exemptions, which ADR-002 names as the
+cogs were due to carry the same exemptions, which ADR-0002 names as the
 signal to change the taxonomy rather than write the exemption again.
 
 ---
@@ -119,5 +119,5 @@ cog that has not reached it should say so.
 
 ### Exempting the moved cogs
 
-Rejected on ADR-002's own test. Four cogs carrying the same exemptions for
+Rejected on ADR-0002's own test. Four cogs carrying the same exemptions for
 the same structural reason is a taxonomy that has fallen behind.

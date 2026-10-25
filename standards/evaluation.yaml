@@ -169,7 +169,7 @@ standards:
       All active repos in the ecosystem must have an evaluator.yaml file at
       the repo root. This file declares the repo's type, traits, exemptions,
       deferrals, and downgrades — the per-repo evaluation configuration
-      introduced in ADR-001 (federated evaluation) and ADR-002 (type/trait
+      introduced in ADR-0001 (federated evaluation) and ADR-0002 (type/trait
       taxonomy). See index.yaml schema.evaluator_yaml for the authoritative
       field contract.
 
@@ -258,7 +258,7 @@ standards:
   # emitted from. The following six values are canonical. Adding a new
   # source value requires updating this list first.
   #
-  # 2026-09 (ADR-009): `flow_hook` and `prefect_webhook` were replaced by
+  # 2026-09 (ADR-0009): `flow_hook` and `prefect_webhook` were replaced by
   # `queue_consumer`. Both named Prefect mechanisms — an on_failure /
   # on_crashed hook, and evaluator-cog's webhook on flow-run state events —
   # and a Lambda cog behind a queue has neither. Neither is canonical any
