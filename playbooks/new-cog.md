@@ -32,6 +32,14 @@ A cog is a Python service. This playbook covers both subtypes:
 2. Name it `{purpose}-cog` (e.g. `notes-cog`, `spotify-cog`)
 3. Add a README and .gitignore (Python template)
 4. Clone locally
+5. Settings → Actions → General: enable Actions. A new repository in the
+   org starts with Actions disabled, and nothing in the repository says
+   so: pushes register the workflows, but none of them ever runs. Match an
+   existing cog's settings there: allow all actions and reusable
+   workflows, read and write workflow permissions, and allow GitHub
+   Actions to create and approve pull requests (promote and automerge
+   need it).
+6. Settings → General: turn off the wiki, as the other repositories have.
 
 ---
 
