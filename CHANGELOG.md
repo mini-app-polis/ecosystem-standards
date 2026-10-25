@@ -1,3 +1,10 @@
+# [7.26.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.25.3...v7.26.0) (2026-10-25)
+
+
+### Features
+
+* **documentation:** ADR filenames use four digits and cross-repo ADR citations name their repo ([b4eccc0](https://github.com/mini-app-polis/ecosystem-standards/commit/b4eccc0ae93979d865db11781d5c68240699a231))
+
 ## [7.25.3](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.25.2...v7.25.3) (2026-10-24)
 
 
