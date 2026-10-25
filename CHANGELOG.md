@@ -1,3 +1,10 @@
+# [7.27.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.26.0...v7.27.0) (2026-10-25)
+
+
+### Features
+
+* **registry:** register rotator-cog ([5ab1f2b](https://github.com/mini-app-polis/ecosystem-standards/commit/5ab1f2b44d241aba5fb913159ee6976a194df155))
+
 # [7.26.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.25.3...v7.26.0) (2026-10-25)
 
 
