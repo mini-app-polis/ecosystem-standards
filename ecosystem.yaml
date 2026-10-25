@@ -7,7 +7,7 @@ services:
   cog_subtype: trigger
   host: aws-lambda
   description: 'Config-driven Google Drive folder watcher. An AWS Lambda function
-    on a 1-minute EventBridge schedule (ADR-011), declared in mini-app-polis/infra
+    on a 1-minute EventBridge schedule (ADR-0011), declared in mini-app-polis/infra
     (modules/scheduled-worker): each tick polls the Drive API and asks api-kaianolevine-com to run the cog that owns a folder when
     files change — once per folder for deejay-cog, once per changed file for
     transcription-cog. The API enqueues; watcher holds no queue key.
@@ -50,7 +50,7 @@ services:
   host: aws-lambda
   description: 'Two pipelines in one Lambda function behind its own FIFO SQS queue
     (transcription-jobs.fifo). watcher-cog asks api-kaianolevine-com for one run per
-    changed Drive file, and one message is one file (ADR-007):
+    changed Drive file, and one message is one file (transcription-cog ADR-0007):
 
     * mode "wcs-transcripts" — a WCS lesson transcript from the notes input
     folder: an LLM extracts structured notes, raw transcript and extraction are
@@ -68,7 +68,7 @@ services:
 
     Both pipelines report under the transcription-cog repo identifier, told
     apart by flow_name (process-transcript, voicenotes-ingest). Merged from
-    notes-ingest-cog and voicenotes-cog in May 2026 (ADR-004); those
+    notes-ingest-cog and voicenotes-cog in May 2026 (transcription-cog ADR-0004); those
     identifiers are retired.
 
     '
@@ -87,14 +87,14 @@ services:
     the other three onto Lambda because GitPython needs a git executable the
     managed python3.11 runtime does not ship, and because a full idempotent
     re-render takes no arguments — every queue message would be identical. See
-    wiki-curator-cog ADR-004.
+    wiki-curator-cog ADR-0004.
 
     It is moving to Lambda (decided 2026-10-14) once that design is finished.
     Until then the pipeline-cog rules that describe a queue-driven Lambda —
     PIPE-016, PIPE-017, PIPE-018, PIPE-020, CD-010 and CD-024 — are exempted
     in its evaluator.yaml rather than deferred: they describe a runtime it
-    does not have yet. ADR-013 records this, and db-ops, as the exceptions
-    to ADR-009.
+    does not have yet. ADR-0013 records this, and db-ops, as the exceptions
+    to ADR-0009.
 
     PIPE-016 and PIPE-019 still fail a repo that declares prefect. That check
     stays: it is now a guard against regression rather than a description of
@@ -124,7 +124,7 @@ services:
     notes) or takes the one it brings (repo#n for issues), and creates the task.
     An hourly schedule also puts a sweep on the same queue: every open task in
     the grooming columns is checked against the definition of ready, and a
-    ready one moves to Ready. No model calls. See task-manager-cog ADR-001.
+    ready one moves to Ready. No model calls. See task-manager-cog ADR-0001.
 
     '
 - id: task-groomer-cog
@@ -142,7 +142,7 @@ services:
     the task should say. The proposal goes back through the API to
     task-manager-cog, which applies it: this cog never writes to the board.
     Every paid run is capped (rounds, tokens, a monthly spend cap) and
-    recorded with the API. See task-groomer-cog ADR-001.
+    recorded with the API. See task-groomer-cog ADR-0001.
 
     '
 - id: db-ops
@@ -159,10 +159,10 @@ services:
     takes a nightly pg_dump of both databases to S3 (the copy that is not on
     Railway), and db-drill restores from PITR and from the S3 dump and verifies
     the result. All three reach the databases over Railway private networking,
-    which is why they are not Lambda functions (db-ops ADR-001).
+    which is why they are not Lambda functions (db-ops ADR-0001).
 
     Registered as pipeline-cog rather than a new type; the queue- and
-    Lambda-shaped rules are exemptions in its evaluator.yaml (ADR-013).
+    Lambda-shaped rules are exemptions in its evaluator.yaml (ADR-0013).
 
     '
 - id: api-kaianolevine-com
@@ -188,7 +188,7 @@ services:
     \ conformance fixtures. Consumed by each enforcement point rather than run as\
     \ a service: one specification, N conformant enforcement points, deliberately\
     \ not a central auth service on the request path. Verifies Clerk session JWTs\
-    \ for humans and named per-machine API keys for cogs. See ADR-008, CD-019, CD-029, CD-030, AUTH-004.\n"
+    \ for humans and named per-machine API keys for cogs. See ADR-0008, CD-019, CD-029, CD-030, AUTH-004.\n"
 - id: common-python-utils
   type: shared-library
   status: active
@@ -234,7 +234,7 @@ services:
   host: aws
   description: 'The AWS account in Terraform: one root, remote state in S3, the
     account''s shared resources, and every pipeline cog''s runtime through one
-    cog-worker module block per cog (ADR-010). Plans on pull requests from dev and
+    cog-worker module block per cog (ADR-0010). Plans on pull requests from dev and
     applies on merge to main through a GitHub OIDC role; no releases.
 
     '
@@ -306,7 +306,7 @@ patterns:
       the API enqueues onto the owning cog''s SQS queue'
   orchestration:
     description: How pipelines are scheduled and executed
-    current: 'SQS + Lambda (ADR-009, ADR-010). api-kaianolevine-com is the only
+    current: 'SQS + Lambda (ADR-0009, ADR-0010). api-kaianolevine-com is the only
       producer; each pipeline cog is a Lambda function behind its own queue,
       declared in mini-app-polis/infra. wiki-curator-cog and db-ops run as
       one-shot Railway processes instead.'
@@ -334,8 +334,8 @@ patterns:
 terminology:
   cog:
     definition: 'A Python worker with no HTTP server and no port binding. Pipeline
-      cogs are AWS Lambda functions behind their own SQS queue (ADR-009); trigger
-      cogs are Lambda functions on an EventBridge schedule (ADR-011); wiki-curator-cog
+      cogs are AWS Lambda functions behind their own SQS queue (ADR-0009); trigger
+      cogs are Lambda functions on an EventBridge schedule (ADR-0011); wiki-curator-cog
       and db-ops run as one-shot Railway processes. The canonical service type for
       all automation, processing, and evaluation work in the ecosystem.
 

@@ -112,8 +112,12 @@ standards:
       When a significant architectural decision is made, the rationale
       is captured as an Architecture Decision Record (ADR) in
       `docs/decisions/`. Each ADR uses the format:
-        - `ADR-NNN-short-slug.md`
+        - `ADR-NNNN-short-slug.md`, where NNNN is four digits,
+          zero-padded (`ADR-0001-federated-evaluation-config.md`)
         - Sections: Context, Decision, Consequences
+      A bare ADR ID cites an ADR in the same repository. An ADR in
+      another repository is cited as `<repo> ADR-NNNN`
+      (`evaluator-cog ADR-0004`) or by its URL.
       ADRs record the "why" — what forces led to the decision, what
       was considered, what tradeoff was accepted. They are not a
       replacement for CHANGELOG entries (which record what changed),
@@ -129,7 +133,7 @@ standards:
             reasonably have ADRs. (Use git log and a simple wc -l
             against src/ to estimate.)
         (2) If the directory exists, verify at least one file in it
-            matches the pattern `ADR-NNN-*.md` where NNN is three
+            matches the pattern `ADR-NNNN-*.md` where NNNN is four
             digits. Flag if no matching files exist.
         (3) If the directory does not exist AND the repo passes the
             size threshold in (1), flag as INFO: "no ADRs present on
@@ -204,9 +208,9 @@ standards:
             (1).
       Name the ADR, the line and the counterpart file in each finding.
     origin: >
-      2026-10, ecosystem-standards: ADR-004 supersedes part of ADR-002 and
-      ADR-009 part of ADR-003, but each link was written at one end only;
-      ADR-009 amends ADR-002 and ADR-007, which say so, while ADR-009 does
+      2026-10, ecosystem-standards: ADR-0004 supersedes part of ADR-0002 and
+      ADR-0009 part of ADR-0003, but each link was written at one end only;
+      ADR-0009 amends ADR-0002 and ADR-0007, which say so, while ADR-0009 does
       not. The current-state notes added to those ADRs on 2026-10-16 were
       reconciled by hand.
 

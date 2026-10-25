@@ -447,7 +447,7 @@ standards:
                (a queue whose redrive policy names a dead-letter queue).
                The threshold is not checked. Both are declared
                once in mini-app-polis/infra's cog module and checked there
-               (type infrastructure), not in the cog (ADR-010). For the
+               (type infrastructure), not in the cog (ADR-0010). For the
                infrastructure type, Layer 1 is the whole of the check, and
                it is skipped when no event source mapping is declared.
       Layer 2: shared library logger imported and used throughout.
@@ -627,7 +627,7 @@ standards:
       The deployment config is the one file per host that says which
       names reach the running process:
         Lambda (pipeline and trigger cogs): the cog's module block in the
-          infrastructure repository (ADR-010, ADR-011) — its
+          infrastructure repository (ADR-0010, ADR-0011) — its
           `ssm_parameters`, `ssm_optional_parameters` and `environment`,
           plus whatever the module itself sets on every function.
         Railway: Infrastructure as Code under `.railway/`
@@ -753,7 +753,7 @@ standards:
 
       Pipeline and trigger cogs are out of scope: they run on Lambda and
       have no process to restart. A failed pipeline job is retried by its
-      queue (PIPE-017); a failed trigger tick by the next tick (ADR-011).
+      queue (PIPE-017); a failed trigger tick by the next tick (ADR-0011).
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -787,7 +787,7 @@ standards:
       serve()-based cogs, none of them came back. Railway restart policy was
       NEVER (or an exhausted low cap) on every affected service, and the
       setting existed only in the dashboard, so nothing in any repo recorded
-      or enforced it. See deejay-cog ADR-005 and ecosystem-standards ADR-006.
+      or enforced it. See deejay-cog ADR-0005 and ecosystem-standards ADR-0006.
 
   - id: CD-018
 
@@ -807,7 +807,7 @@ standards:
         Report  — a Pipeline Health finding via
                   mini_app_polis.pipeline_status with
                   source="external_dependency" and a provider=<id> extra
-                  (ADR-007). Severity reflects what happened to the work,
+                  (ADR-0007). Severity reflects what happened to the work,
                   which the application decides.
         Sentry  — an explicit sentry_sdk.capture_exception() call.
 
@@ -853,7 +853,7 @@ standards:
 
       This rule says nothing about how the failure is handled. Skipping a
       step, failing an item, aborting the run, and exiting the process are
-      all valid and application-dependent (ADR-007, PRIN-002). It requires
+      all valid and application-dependent (ADR-0007, PRIN-002). It requires
       only that the failure is not silent.
 
       TELEMETRY CARVE-OUT. Providers whose only role is receiving our
@@ -864,7 +864,7 @@ standards:
       findings cannot be posted cannot be posted, and a Sentry capture of
       Sentry being unreachable has nowhere to go. Failures of these
       providers are logged and nothing more. post_run_finding is already
-      best-effort by construction (deejay-cog ADR-004).
+      best-effort by construction (deejay-cog ADR-0004).
     checkable: true
     check_notes: >
       LLM CHECK.
@@ -914,7 +914,7 @@ standards:
       handles in order to degrade never reaches Sentry at all, because
       CD-002 and CD-010 scope Sentry to unhandled exceptions. The result
       is that the ecosystem's most routine class of failure is its least
-      observable. See ADR-007.
+      observable. See ADR-0007.
 
   - id: CD-019
 
@@ -976,7 +976,7 @@ standards:
       to the same subject, so writes could not be attributed, and it put
       a vendor round trip on the path of every internal write. Any
       surviving reference to either in source, documentation, or tooling
-      is drift and must be removed. See ADR-008.
+      is drift and must be removed. See ADR-0008.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -1037,7 +1037,7 @@ standards:
       cog-to-API traffic.
     supersedes: >
       CD-012 (Clerk M2M opaque tokens for machine callers, retired
-      2026-09 per ADR-008), which itself superseded the
+      2026-09 per ADR-0008), which itself superseded the
       `X-Internal-API-Key` shared-secret header (retired 2026-04,
       Project Keystone).
 
@@ -1315,7 +1315,7 @@ standards:
       so with an exemption in its evaluator.yaml.
 
       Promoted from `gap` on 2026-10-15, when db-ops became the first
-      service with a Dockerfile (db-ops ADR-002: it needed the PostgreSQL
+      service with a Dockerfile (db-ops ADR-0002: it needed the PostgreSQL
       18 client, which Railpack cannot install). What one costs is now
       known rather than estimated: two digest pins to move by hand, and
       a larger image to build.
@@ -1448,7 +1448,7 @@ standards:
       measured produces confident fiction.
 
       A pipeline or trigger cog's platform descriptor is its module block
-      in mini-app-polis/infra (ADR-010, ADR-011), and its ceiling is the
+      in mini-app-polis/infra (ADR-0010, ADR-0011), and its ceiling is the
       Lambda function's `memory_size` and `timeout` — checked there, as
       `infrastructure`, not in the cog.
       Lambda allocates CPU in proportion to memory, so there is no
@@ -1662,7 +1662,7 @@ standards:
       pk_live_ in production, never the other) and calls that
       environment's API, which answers.
       Read-only, so it is safe against production. Test suites that write
-      are CD-033's. See ADR-012.
+      are CD-033's. See ADR-0012.
     checkable: true
     check_notes: >
       LLM CHECK.
@@ -1675,7 +1675,7 @@ standards:
       the repo's type. Flag a check that writes data, or one that runs
       against production anything beyond these reads.
     origin: >
-      ADR-012, 2026-09-29. deejaytools-api `deployed.yml` and
+      ADR-0012, 2026-09-29. deejaytools-api `deployed.yml` and
       deejaytools-com `site.yml`. The dev site's wrong-environment Clerk
       key and the bot protection that refused GitHub's runners were found
       this way and nowhere else.
@@ -1696,7 +1696,7 @@ standards:
       anyway, before the first write. Suites that write to the same
       environment share one concurrency group and never run at once. What
       each run creates is named so a run that died can be swept at the
-      start of the next. See ADR-012.
+      start of the next. See ADR-0012.
     checkable: true
     check_notes: >
       LLM CHECK.
@@ -1708,7 +1708,7 @@ standards:
       (3) [deterministic] Flag workflows running such suites against the
       same environment without a shared `concurrency:` group.
     origin: >
-      ADR-012, 2026-09-29. deejaytools-com `src/contract/harness.ts` and
+      ADR-0012, 2026-09-29. deejaytools-com `src/contract/harness.ts` and
       `e2e/env.ts`; the `contract-dev-api` concurrency group shared by its
       contract and end-to-end jobs.
 

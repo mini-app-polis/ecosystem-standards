@@ -13,41 +13,41 @@ For the process of writing or superseding an ADR, see
 
 ## Index
 
-| ID      | Status    | Title                                                          |
-|---------|-----------|----------------------------------------------------------------|
-| ADR-001 | Accepted  | [Federated Evaluation Configuration](ADR-001-federated-evaluation-config.md) |
-| ADR-002 | Accepted  | [Type/Trait Taxonomy, Rule Applicability Scoping, and Deferred Keyword](ADR-002-type-trait-taxonomy-and-deferral.md) |
-| ADR-003 | Accepted  | [Conformance Checker Architecture](ADR-003-conformance-checker-architecture.md) |
-| ADR-004 | Accepted  | [`applies_to` Has a Single Meaning; `evaluator-service` Removed](ADR-004-applies-to-single-meaning.md) |
-| ADR-005 | Accepted  | [Schema Clarity Audit — Document All Rule Fields, Formalize Traits, Specify Dispatch](ADR-005-schema-clarity-audit.md) |
-| ADR-006 | Superseded | [Startup Registration Resilience for serve()-Based Cogs](ADR-006-serve-startup-resilience.md) |
-| ADR-007 | Accepted  | [External Provider Failure — Reporting and Recovery Contract](ADR-007-external-provider-failure-contract.md) |
-| ADR-008 | Accepted  | [Named Machine Keys as the Machine Identity](ADR-008-named-machine-keys.md) |
-| ADR-009 | Accepted  | [Pipeline Cogs Run on Lambda Behind Their Own Queue](ADR-009-pipeline-cogs-on-lambda.md) |
-| ADR-010 | Accepted  | [Infrastructure Lives in One Repository, With Its State Remote](ADR-010-infrastructure-in-one-repository.md) |
-| ADR-011 | Accepted  | [Trigger Cogs Run on a Schedule, Not as a Resident Process](ADR-011-trigger-cogs-on-a-schedule.md) |
-| ADR-012 | Accepted  | [Four Test Layers, Each Proving Something the Others Cannot](ADR-012-test-layers.md) |
-| ADR-013 | Accepted  | [Railway-Hosted Cogs Are Recorded Exceptions to ADR-009](ADR-013-railway-cogs-as-recorded-exceptions.md) |
+| ID       | Status    | Title                                                          |
+|----------|-----------|----------------------------------------------------------------|
+| ADR-0001 | Accepted  | [Federated Evaluation Configuration](ADR-0001-federated-evaluation-config.md) |
+| ADR-0002 | Accepted  | [Type/Trait Taxonomy, Rule Applicability Scoping, and Deferred Keyword](ADR-0002-type-trait-taxonomy-and-deferral.md) |
+| ADR-0003 | Accepted  | [Conformance Checker Architecture](ADR-0003-conformance-checker-architecture.md) |
+| ADR-0004 | Accepted  | [`applies_to` Has a Single Meaning; `evaluator-service` Removed](ADR-0004-applies-to-single-meaning.md) |
+| ADR-0005 | Accepted  | [Schema Clarity Audit — Document All Rule Fields, Formalize Traits, Specify Dispatch](ADR-0005-schema-clarity-audit.md) |
+| ADR-0006 | Superseded | [Startup Registration Resilience for serve()-Based Cogs](ADR-0006-serve-startup-resilience.md) |
+| ADR-0007 | Accepted  | [External Provider Failure — Reporting and Recovery Contract](ADR-0007-external-provider-failure-contract.md) |
+| ADR-0008 | Accepted  | [Named Machine Keys as the Machine Identity](ADR-0008-named-machine-keys.md) |
+| ADR-0009 | Accepted  | [Pipeline Cogs Run on Lambda Behind Their Own Queue](ADR-0009-pipeline-cogs-on-lambda.md) |
+| ADR-0010 | Accepted  | [Infrastructure Lives in One Repository, With Its State Remote](ADR-0010-infrastructure-in-one-repository.md) |
+| ADR-0011 | Accepted  | [Trigger Cogs Run on a Schedule, Not as a Resident Process](ADR-0011-trigger-cogs-on-a-schedule.md) |
+| ADR-0012 | Accepted  | [Four Test Layers, Each Proving Something the Others Cannot](ADR-0012-test-layers.md) |
+| ADR-0013 | Accepted  | [Railway-Hosted Cogs Are Recorded Exceptions to ADR-0009](ADR-0013-railway-cogs-as-recorded-exceptions.md) |
 
 ---
 
 ## Summaries
 
-**ADR-001 — Federated Evaluation Configuration.**
+**ADR-0001 — Federated Evaluation Configuration.**
 Per-repo `evaluator.yaml` files own type, traits, exemptions, and
 deferrals. `ecosystem.yaml` becomes a registry only. Standards files
 no longer carry per-repo exceptions. Unblocks scaling to arbitrary
 repo count without central-file bloat.
 
-**ADR-002 — Type/Trait Taxonomy.**
-Builds on ADR-001. Defines seven canonical repo types
+**ADR-0002 — Type/Trait Taxonomy.**
+Builds on ADR-0001. Defines seven canonical repo types
 (`pipeline-cog`, `trigger-cog`, `api-service`, `shared-library`,
 `static-site`, `react-app`, `standards-repo`) and composable traits
 (e.g. `logger-primitive`, `cloudflare-pages`). Introduces the
 `deferred` keyword for known-failing rules not yet remediated.
 Reduces per-repo exception count from 62 to ~3.
 
-**ADR-003 — Conformance Checker Architecture.**
+**ADR-0003 — Conformance Checker Architecture.**
 Conformance checking lives in `evaluator-cog`. Findings land in
 `pipeline_evaluations` with a `source` field distinguishing them.
 Deterministic checks for structural rules, LLM checks for soft rules,
@@ -55,9 +55,9 @@ with the split tagged in each rule's `check_notes` via the
 `DETERMINISTIC CHECK.` / `LLM CHECK.` prefix (see META-005). Superseded
 in part: the behavioral `pipeline_eval` flow was deleted, and
 evaluation runs on demand from evaluator-cog's queue rather than on a
-Prefect schedule (ADR-009, evaluator-cog ADR-0004).
+Prefect schedule (ADR-0009, evaluator-cog ADR-0004).
 
-**ADR-004 — `applies_to` Has a Single Meaning.**
+**ADR-0004 — `applies_to` Has a Single Meaning.**
 `applies_to` is optional and means exactly "repo types the
 conformance scanner scans for this rule." Rules that aren't repo-
 source scans (EVAL-003, MONO-003, EVAL-007) omit the field;
@@ -66,8 +66,8 @@ source scans (EVAL-003, MONO-003, EVAL-007) omit the field;
 — it existed only to give the field a target on rules that weren't
 actually scanning a repo type.
 
-**ADR-005 — Schema Clarity Audit.**
-Extends ADR-002. Documents all 13 rule fields in
+**ADR-0005 — Schema Clarity Audit.**
+Amends ADR-0002. Documents all 13 rule fields in
 `schema.rule_fields` (previously only `applies_to` was documented).
 Replaces prose trait-exemption language with structured `exempts:`
 and `downgrades:` fields. Removes the unused `pre-rule` trait.
@@ -78,7 +78,7 @@ for meta-rule interactions (MONO-001 / MONO-002). Adds a
 exemption, repo exemption, repo deferral, trait downgrade, rule
 modifier, and default.
 
-**ADR-006 — Startup Registration Resilience.**
+**ADR-0006 — Startup Registration Resilience.**
 A transient Prefect Cloud 503 on 2026-07-22 crashed all four
 `serve()`-based cogs at once and silently — the crash happened during
 `serve()` deployment registration, before any flow run existed, so the
@@ -92,8 +92,8 @@ severity for the pre-flow process lifecycle. Amends CD-015's
 `check_notes` so adopting the wrapper does not read as a missing
 registration pattern.
 
-**ADR-007 — External Provider Failure Contract.**
-Generalizes ADR-006 from Prefect-at-startup to every external provider.
+**ADR-0007 — External Provider Failure Contract.**
+Generalizes ADR-0006 from Prefect-at-startup to every external provider.
 Standardizes two things and deliberately declines a third. Reporting:
 provider-caused failures emit `source="external_dependency"` with a
 `provider=<id>` extra, so an outage is distinguishable from our own
@@ -108,10 +108,10 @@ obligations are data rather than rule prose. Telemetry providers
 (Sentry, and the finding-posting path itself) are exempt and fail
 silently — a finding saying "we cannot post findings" cannot be posted.
 Amended: the recovery contract now covers only the Railway API services,
-since cogs recover through their queue or schedule (ADR-009, ADR-011,
-ADR-013), and the `external_providers:` registry was never created.
+since cogs recover through their queue or schedule (ADR-0009, ADR-0011,
+ADR-0013), and the `external_providers:` registry was never created.
 
-**ADR-008 — Named Machine Keys as the Machine Identity.**
+**ADR-0008 — Named Machine Keys as the Machine Identity.**
 Machines authenticated with Clerk M2M opaque tokens minted from a
 `CLERK_SECRET_KEY` shared across the whole fleet, so every cog resolved
 to the same subject — `owner_id` could not distinguish a `deejay-cog`
@@ -130,31 +130,31 @@ with the machine roster declared in code and reconciled at boot. The
 Clerk M2M path was removed outright, with no fallback. Retires CD-012
 and AUTH-001; derives CD-019, AUTH-003, and AUTH-004.
 
-**ADR-009 — Pipeline Cogs Run on Lambda Behind Their Own Queue.**
+**ADR-0009 — Pipeline Cogs Run on Lambda Behind Their Own Queue.**
 Redefines `pipeline-cog` as a Lambda function behind an SQS queue of its
 own and `trigger-cog` as a loop that starts work through the API. Retires
 the eight rules that encoded Prefect on Railway (PIPE-001/004/006/009/012,
 CD-005/015/016) and adds PIPE-016 to PIPE-019. Cogs not yet moved read as
-backlog rather than being exempted. Supersedes ADR-006. Amended by
-ADR-013 for the cogs that run on Railway.
+backlog rather than being exempted. Supersedes ADR-0006. Amended by
+ADR-0013 for the cogs that run on Railway.
 
-**ADR-010 — Infrastructure Lives in One Repository, With Its State Remote.**
+**ADR-0010 — Infrastructure Lives in One Repository, With Its State Remote.**
 Moves every pipeline cog's Terraform out of its repository into
 mini-app-polis/infra: one root, remote state in S3, one `cog-worker`
 module, secrets synced from Doppler to Parameter Store and loaded at cold
 start rather than passed through Terraform. Adds the `infrastructure`
 repo type and splits PIPE-016/017/018, CD-010 and CD-024 between the cog
 and the infra repository, so each evaluation reads only its own. Amends
-ADR-009.
+ADR-0009.
 
-**ADR-011 — Trigger Cogs Run on a Schedule, Not as a Resident Process.**
+**ADR-0011 — Trigger Cogs Run on a Schedule, Not as a Resident Process.**
 Redefines `trigger-cog` as a Lambda function on an EventBridge schedule,
 declared in mini-app-polis/infra, after watcher-cog stopped keeping state.
 Removes `trigger-cog` from CD-017, CD-024, CD-027, CD-028 and SEC-008,
 whose facts either no longer exist or are checked in the infra
-repository. Amends ADR-009.
+repository. Amends ADR-0009.
 
-**ADR-012 — Four Test Layers, Each Proving Something the Others Cannot.**
+**ADR-0012 — Four Test Layers, Each Proving Something the Others Cannot.**
 The catalog said which tests a pipeline cog needs but not which kinds of
 test any repo must have, so a repo with only unit tests read as fully
 conformant. deejaytools had unit tests and still shipped 500s that only a
@@ -173,13 +173,13 @@ gets a read-only smoke check (CD-032); changes reach main only through
 the promotion pull request (CD-034); each commit's checks run once
 (CD-035). Amends TEST-000, which scheduled end-to-end tests nightly.
 
-**ADR-013 — Railway-Hosted Cogs Are Recorded Exceptions to ADR-009.**
+**ADR-0013 — Railway-Hosted Cogs Are Recorded Exceptions to ADR-0009.**
 wiki-curator-cog (a one-shot Railway process until it moves to Lambda,
 decided 2026-10-14) and db-ops (three Railway crons on private
 networking) stay `pipeline-cog` and exempt the queue- and Lambda-shaped
 rules in their own `evaluator.yaml`, each declaring its own liveness
 signal. No new repo type while db-ops is the only permanent member.
-Railway cogs share `SENTRY_DSN_COGS`. Amends ADR-009.
+Railway cogs share `SENTRY_DSN_COGS`. Amends ADR-0009.
 
 ---
 
@@ -188,7 +188,7 @@ Railway cogs share `SENTRY_DSN_COGS`. Amends ADR-009.
 - **Proposed** — drafted but not yet committed to.
 - **Accepted** — the ecosystem operates on this decision.
 - **Superseded** — replaced by a later ADR. The file stays in place
-  with a `**Superseded by:** ADR-NNN` line in its header; the
+  with a `**Superseded by:** ADR-NNNN` line in its header; the
   superseding ADR references it in its Context section. Superseded
   ADRs are preserved — their reasoning is the audit trail for why
   the current approach exists.

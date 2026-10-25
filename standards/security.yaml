@@ -374,7 +374,7 @@ standards:
       the file most likely to acquire a secret by hand, and a saved plan
       carries the values it was built with.
 
-      The fleet's state is remote, in S3 (ADR-010), and no secret passes
+      The fleet's state is remote, in S3 (ADR-0010), and no secret passes
       through Terraform (CD-011), so a committed state file should not
       exist and would hold less than it once did. The rule stays because
       a local copy is one `terraform init -migrate-state` away, and a

@@ -147,7 +147,7 @@ statuses:
 retired:
   Prefect:
     what: Workflow orchestrator that ran the pipeline cogs as resident Railway workers (flows, serve(), Prefect Cloud deployments).
-    replaced_by: Pipeline cogs as AWS Lambda functions behind their own SQS queue, declared in the infrastructure repository; trigger cogs as scheduled Lambda functions (ADR-009, ADR-010, ADR-011).
+    replaced_by: Pipeline cogs as AWS Lambda functions behind their own SQS queue, declared in the infrastructure repository; trigger cogs as scheduled Lambda functions (ADR-0009, ADR-0010, ADR-0011).
     when: "2026-09"
   common-typescript-utils:
     what: Shared TypeScript library — Clerk middleware, response envelope helpers, a logger and shared Zod schemas.
@@ -366,12 +366,12 @@ schema:
   repo_types:
     pipeline-cog: >
       Queue-driven worker: an AWS Lambda function behind an SQS queue of
-      its own, both declared in mini-app-polis/infra (ADR-010); the
+      its own, both declared in mini-app-polis/infra (ADR-0010); the
       repository holds the cog's code. Processes data and holds no
       resident process between jobs. Examples: deejay-cog, evaluator-cog,
       transcription-cog. wiki-curator-cog and db-ops are this type but run
       on Railway, exempting the queue- and Lambda-shaped rules in their own
-      evaluator.yaml (ADR-013).
+      evaluator.yaml (ADR-0013).
     trigger-cog: >
       AWS Lambda function on an EventBridge schedule, declared in
       mini-app-polis/infra. No resident process. Detects that there is work
@@ -418,11 +418,11 @@ schema:
       A Terraform root, at the repository's root: the AWS account's
       shared resources and, through one `module` block per cog, every
       pipeline cog's queue, dead-letter queue, alarm, function and deploy
-      role (ADR-010). State is remote. Changes plan on pull requests and
+      role (ADR-0010). State is remote. Changes plan on pull requests and
       apply on merge to main; there are no releases, so release and
       package rules are out of scope by taxonomy. Each trigger cog's
       scheduled function comes from a second module, `scheduled-worker`
-      (ADR-011). Rules about the pipeline
+      (ADR-0011). Rules about the pipeline
       cogs' runtime (PIPE-017's infrastructure half, PIPE-018, CD-010's
       dead-letter-queue alarm, CD-024) and about Terraform itself (CD-027,
       CD-028, SEC-008) are checked here, once.

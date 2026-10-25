@@ -7,7 +7,7 @@
 # standards/delivery.yaml: CD-019 (the contract and the caller's side),
 # CD-029 (receivers verifying Clerk sessions) and CD-030 (receivers
 # verifying named machine keys); and
-# ADR-008 for why machines hold named keys rather than Clerk M2M tokens.
+# ADR-0008 for why machines hold named keys rather than Clerk M2M tokens.
 # AUTH rules here govern the per-service posture — what a service must
 # enforce on its own routes, and the client-API consistency invariants.
 
@@ -135,7 +135,7 @@ standards:
       the registration call rather than the path.
     supersedes: >
       AUTH-001 (unverified X-Owner-Id write endpoints permitted behind
-      private networking, retired 2026-09 per ADR-008). That rule
+      private networking, retired 2026-09 per ADR-0008). That rule
       described a posture where identity could come from an unverified
       header as long as the service was not publicly reachable; identity
       now comes only from a verified credential, on every route.
@@ -198,4 +198,4 @@ standards:
       verify Clerk tokens, upstream this logic rather than copying it."
       A second enforcement point became real. Nothing recorded who was
       denied what, so a permission problem in production could only be
-      diagnosed by reproducing it. See ADR-008.
+      diagnosed by reproducing it. See ADR-0008.

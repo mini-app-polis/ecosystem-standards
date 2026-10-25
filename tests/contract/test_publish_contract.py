@@ -1,4 +1,4 @@
-"""Live contract suite for the catalog publish call (TEST-016, ADR-012).
+"""Live contract suite for the catalog publish call (TEST-016, ADR-0012).
 
 scripts/publish_catalog.py makes one outbound call: POST
 /v1/standards/catalog on api-kaianolevine-com, from the release job on

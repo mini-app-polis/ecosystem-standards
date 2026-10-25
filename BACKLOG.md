@@ -42,14 +42,14 @@ registers the check in evaluator-cog.
 
 ## Nobody notices a Railway service that exhausted its restart budget
 
-Deferred from ADR-007's recovery contract, recorded here rather than
+Deferred from ADR-0007's recovery contract, recorded here rather than
 solved there.
 
 The cogs no longer have this problem: a Lambda pipeline cog's failed job
 is redelivered and dead-lettered behind an alarm (PIPE-017, CD-010), a
 trigger cog's missed tick is caught by its Healthchecks ping (CD-007),
 and the Railway one-shot cogs declare their own liveness signal in their
-CD-010 exemption (ADR-013). What is left is an API service on Railway:
+CD-010 exemption (ADR-0013). What is left is an API service on Railway:
 CD-017 (`ON_FAILURE`, max retries 10) restarts it, and once that budget
 is spent it stays down until a human redeploys it, and **nothing in the
 ecosystem observes that**.
@@ -128,8 +128,8 @@ Priority: low — functional but will drift further as UI evolves.
 
 ## Pipeline concurrency (PIPE-018)
 
-PIPE-009's Prefect concurrency slot is retired (ADR-009); PIPE-018 asks for
-the ceiling in each cog's module block in mini-app-polis/infra (ADR-010).
+PIPE-009's Prefect concurrency slot is retired (ADR-0009); PIPE-018 asks for
+the ceiling in each cog's module block in mini-app-polis/infra (ADR-0010).
 
 - [x] **deejay-cog** — `reserved_concurrency = 1`: the quota increase was
   approved, and sweeps run one at a time.
@@ -142,8 +142,8 @@ the ceiling in each cog's module block in mini-app-polis/infra (ADR-010).
 The 2026-04 standards audit (which produced the DETERMINISTIC/LLM
 check split, the META prefix, and zero remaining `requirement` +
 `checkable: false` rules) surfaced several rule-addition candidates.
-ADR-004 later removed the `evaluator-service` pseudo-type introduced
-during that audit, and ADR-005 formalized the full rule-field schema
+ADR-0004 later removed the `evaluator-service` pseudo-type introduced
+during that audit, and ADR-0005 formalized the full rule-field schema
 and trait structure. The additions below remain candidates; they are
 not urgent and should land only when evaluator-cog is ready to honor
 them.
@@ -272,23 +272,23 @@ what that repo needs in order to fully honor the current standards
 schema:
 
 - Honor structured trait fields — `exempts:` and `downgrades:` on
-  `schema.traits` (ADR-005).
+  `schema.traits` (ADR-0005).
 - Honor per-repo `downgrades:` on `schema.evaluator_yaml` — the
   per-repo counterpart to trait-level downgrades. Added in v4.1.0;
   used for repo-specific checker limitations not covered by a
   shared trait. Currently unused by any repo, so the gap is latent
   rather than actively broken.
-- Honor the optional `modifies:` field on rules (ADR-005). No rule
+- Honor the optional `modifies:` field on rules (ADR-0005). No rule
   currently declares it.
 - Implement the eight-step dispatch precedence defined in
-  `index.yaml` `schema.dispatch.precedence` (ADR-005 introduced
+  `index.yaml` `schema.dispatch.precedence` (ADR-0005 introduced
   seven; v4.1.0 inserted `repo_downgrade` as step 6 between
   `trait_downgrade` and `rule_modifier`).
 - Implement runtime data-quality checks for rules that omit
   `applies_to` — currently EVAL-003 and EVAL-007
-  (ADR-004).
+  (ADR-0004).
 - Reject rules carrying `status: advisory` or `status: idea` —
-  both statuses were removed in ADR-005.
+  both statuses were removed in ADR-0005.
 
 These are not standards-repo work. Listed here only so a future
 audit can cross-check that the catalog and evaluator stay in sync.

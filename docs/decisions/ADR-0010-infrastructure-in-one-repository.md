@@ -1,18 +1,18 @@
-# ADR-010: Infrastructure Lives in One Repository, With Its State Remote
+# ADR-0010: Infrastructure Lives in One Repository, With Its State Remote
 
 **Date:** 2026-09-24
 **Status:** Accepted
 **Repo:** ecosystem-standards
-**Depends on:** ADR-009 (pipeline cogs run on Lambda behind their own queue)
-**Amends:** ADR-009 — its clause that each pipeline cog's queue and function
+**Depends on:** ADR-0009 (pipeline cogs run on Lambda behind their own queue)
+**Amends:** ADR-0009 — its clause that each pipeline cog's queue and function
 are "declared in the repo's `infra/`"
-**Amends:** ADR-002 — its repository types, adding `infrastructure`
+**Amends:** ADR-0002 — its repository types, adding `infrastructure`
 
 ---
 
 ## Context
 
-ADR-009 put each pipeline cog's runtime in the cog's own `infra/`. Three
+ADR-0009 put each pipeline cog's runtime in the cog's own `infra/`. Three
 cogs later that meant three copies of one template (about 800 lines each,
 already drifting), three local Terraform states on one workstation, and
 secrets passed to Terraform as variables — so every Lambda secret sat in

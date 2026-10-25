@@ -1,9 +1,9 @@
-# ADR-005: Schema clarity audit — document all rule fields, formalize traits, specify dispatch
+# ADR-0005: Schema clarity audit — document all rule fields, formalize traits, specify dispatch
 
 **Date:** 2026-04-21
 **Status:** Accepted
 **Repo:** ecosystem-standards
-**Extends:** ADR-002 (type/trait taxonomy)
+**Amends:** ADR-0002 — its type/trait taxonomy
 
 ---
 

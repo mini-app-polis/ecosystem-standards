@@ -167,7 +167,7 @@ def check_rules(index: dict, errors: Errors) -> list[str]:
                 f"(allowed: {sorted(valid_dimensions)})"
             )
 
-        # An omitted `applies_to` means "not a repo-source scan" (ADR-004)
+        # An omitted `applies_to` means "not a repo-source scan" (ADR-0004)
         # and is legitimate. An explicit empty list declares that the rule
         # applies to no repo type — which nothing honours as written. The
         # deterministic runner dispatches these anyway, scoping them in

@@ -1,4 +1,4 @@
-# ADR-012: Four Test Layers, Each Proving Something the Others Cannot
+# ADR-0012: Four Test Layers, Each Proving Something the Others Cannot
 
 **Date:** 2026-09-29
 **Status:** Accepted

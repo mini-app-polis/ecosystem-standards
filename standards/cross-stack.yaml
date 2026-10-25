@@ -219,7 +219,7 @@ standards:
 
       Found on wiki-curator-cog, which reached 67 commits, declared
       `type: pipeline-cog`, and held a live machine principal named in
-      ADR-008 while absent from the registry.
+      ADR-0008 while absent from the registry.
 
       SCOPE LIMIT: registration is not membership. A repo may be
       deliberately outside the ecosystem — a personal site, a scratch

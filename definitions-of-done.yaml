@@ -11,7 +11,7 @@ definitions_of_done:
       functions behind their own SQS queue and process data. Trigger cogs
       (e.g. watcher-cog) are Lambda functions on a schedule that detect
       events and ask api-kaianolevine-com to run a job, which enqueues it
-      (ADR-009, ADR-011). Some checklist items apply only
+      (ADR-0009, ADR-0011). Some checklist items apply only
       to one subtype — see inline notes.
     checklist:
       - Bootstrapped following playbooks/new-cog.md in this repo
@@ -38,7 +38,7 @@ definitions_of_done:
       - "If pipeline cog: worker.lambda_handler consumes SQS records and
         returns batchItemFailures; a module block in mini-app-polis/infra
         cogs.tf declares the queue, DLQ, function and event source mapping
-        (PIPE-016, PIPE-017, ADR-010)"
+        (PIPE-016, PIPE-017, ADR-0010)"
       - "If pipeline cog: deployed by the shared lambda-deploy workflow as a
         job after release; secrets are listed by name in its module block and
         loaded from Parameter Store at cold start (load_secrets in the
