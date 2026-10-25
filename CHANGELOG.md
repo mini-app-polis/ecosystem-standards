@@ -1,3 +1,10 @@
+## [7.27.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.27.0...v7.27.1) (2026-10-25)
+
+
+### Bug Fixes
+
+* **documentation:** DOC-004 counts a name held in a module-level constant ([d5e19d5](https://github.com/mini-app-polis/ecosystem-standards/commit/d5e19d5d2776d8ff800829b374efe793fb071927))
+
 # [7.27.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.26.0...v7.27.0) (2026-10-25)
 
 
