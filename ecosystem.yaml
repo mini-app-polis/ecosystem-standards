@@ -145,6 +145,21 @@ services:
     recorded with the API. See task-groomer-cog ADR-0001.
 
     '
+- id: rotator-cog
+  type: pipeline-cog
+  status: active
+  dod_type: new_cog
+  language: python
+  cog_subtype: pipeline
+  host: aws-lambda
+  description: 'Rotates the fleet''s secrets and records each rotation. Holds the
+    inventory of every credential the fleet holds (never a value), the record
+    of rotations, and scripts/rotate.py, which rotates, verifies and records a
+    secret from a workstation. A Lambda worker behind its own queue, declared
+    in mini-app-polis/infra, takes over the same rotations on a daily schedule
+    and on request through api-kaianolevine-com.
+
+    '
 - id: db-ops
   type: pipeline-cog
   status: active
