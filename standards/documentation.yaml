@@ -89,7 +89,10 @@ standards:
           import.meta.env.NAME and process.env.NAME (dot or bracket access)
           in TypeScript, JavaScript and Astro. Tests, build output and
           dependency folders are not scanned. A name built at runtime
-          rather than written literally is not collected.
+          rather than written literally is not collected; a literal held
+          in a module-level constant, or in a module-level dict of them,
+          is collected where the read passes the constant or indexes
+          the dict.
       (3) Collect the names .env.example lists, commented or not
           (NAME= or # NAME=).
       (4) Flag each name read in (2) but missing from (3).
