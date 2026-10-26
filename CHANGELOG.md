@@ -1,3 +1,10 @@
+## [7.27.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.27.1...v7.27.2) (2026-10-26)
+
+
+### Bug Fixes
+
+* take in the serverless migration record, the PyPI publishing playbook and the WCS pipeline architecture ([aab8211](https://github.com/mini-app-polis/ecosystem-standards/commit/aab8211f91546f5a61b80219eaa66441738c480c))
+
 ## [7.27.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.27.0...v7.27.1) (2026-10-25)
 
 
