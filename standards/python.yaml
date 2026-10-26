@@ -454,7 +454,7 @@ standards:
       file .gitattributes forbids merging. The fix was applied across all
       eight Python repos the same day; this rule keeps a new repo from
       reintroducing the pattern. See
-      common-python-utils/docs/pypi-package-publishing.md and
+      playbooks/pypi-package-publishing.md and
       SPEC-file-sourced-version.md for the applied change.
 
 # CFG-* rules moved to standards/config.yaml.
