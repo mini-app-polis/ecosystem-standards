@@ -32,7 +32,7 @@ PIPE-006, PIPE-009, PIPE-012, CD-005, CD-015 and CD-016, with CD-017,
 CD-024, CD-007, CD-010 and OPS-007 assuming it in part.
 
 In 2026-09 the fleet started moving off it, one cog at a time
-(evaluator-cog `docs/serverless-migration.md`). evaluator-cog and
+([`docs/serverless-migration.md`](../serverless-migration.md)). evaluator-cog and
 deejay-cog now run as Lambda functions behind SQS queues of their own,
 hold no resident process, and do not depend on Prefect. watcher-cog
 starts deejay-cog's work by asking api-kaianolevine-com, which enqueues.

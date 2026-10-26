@@ -76,7 +76,7 @@ Two facts neither side can see alone are not rule checks:
   does, the match is a comment in each `ci.yml`.
 
 **Terraform, not CloudFormation.** Weighed explicitly, because the first
-decision (evaluator-cog `docs/aws-foundation.md`) compared Terraform only
+decision (infra `docs/aws-foundation.md`) compared Terraform only
 with click-ops. CloudFormation would hold state for free and roll a failed
 update back atomically. Terraform was kept because the infrastructure
 reaches past AWS (GitHub, Doppler and Cloudflare all have providers);

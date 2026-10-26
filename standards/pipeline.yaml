@@ -395,7 +395,7 @@ standards:
       check.
     origin: >
       2026-09: evaluator-cog and deejay-cog moved from Prefect on Railway
-      to SQS and Lambda (evaluator-cog docs/serverless-migration.md), and
+      to SQS and Lambda (docs/serverless-migration.md), and
       the rules still describing the old runtime graded both as drifted.
 
   - id: PIPE-017

@@ -99,13 +99,16 @@ ecosystem-standards/
 ├── tests/
 │   └── contract/                   ← publish contract suite, against the dev API
 ├── docs/
+│   ├── serverless-migration.md     ← the cogs' move to SQS + Lambda, as it happened
+│   ├── wcs-pipeline.md             ← the WCS pipeline end to end, across its repositories
 │   └── decisions/                  ← ADRs (ADR-NNNN-slug.md)
 │       └── README.md               ← ADR index
 └── playbooks/
     ├── new-standard.md             ← rule changes
     ├── new-adr.md                  ← ADR lifecycle
     ├── ecosystem-changes.md        ← registry, types, enums, DoD
-    └── new-cog.md                  ← bootstrap a new cog
+    ├── new-cog.md                  ← bootstrap a new cog
+    └── pypi-package-publishing.md  ← how the fleet's libraries publish to PyPI
 ```
 
 ---
@@ -180,6 +183,8 @@ Each evaluatable repo declares a type (and optional traits) in its own `evaluato
 
 - `CONTRIBUTING.md` — top-level router for any change to this repo.
 - `docs/decisions/` — Architecture Decision Records. See `docs/decisions/README.md` for the index. Start with ADR-0001 (federated evaluation), ADR-0002 (type/trait taxonomy), ADR-0003 (conformance checker architecture), ADR-0004 (`applies_to` single meaning), ADR-0005 (schema clarity audit).
-- `playbooks/` — narrative guides for common changes: `new-standard.md` (rules), `new-adr.md` (decisions), `ecosystem-changes.md` (registry, types, enums, DoD), `new-cog.md` (bootstrap a new cog).
+- `playbooks/` — narrative guides for common changes: `new-standard.md` (rules), `new-adr.md` (decisions), `ecosystem-changes.md` (registry, types, enums, DoD), `new-cog.md` (bootstrap a new cog), `pypi-package-publishing.md` (publishing the fleet's Python libraries to PyPI).
+- `docs/serverless-migration.md` — the working record of the fleet's move from Prefect to SQS and Lambda (ADR-0009).
+- `docs/wcs-pipeline.md` — the WCS pipeline from recorded lesson to wiki: each stage, the repository that runs it, and who reads the substrate.
 - `BACKLOG.md` — open items and roadmap for the standards themselves.
 - `CHANGELOG.md` — managed by semantic-release; never edit manually.
