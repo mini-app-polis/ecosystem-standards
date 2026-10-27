@@ -119,14 +119,17 @@ which the release writes (PY-017).
 
 ## Step 4 — Standard files
 
-Create `doppler.yaml`, which pins the repo to the shared config so
-`doppler setup` asks nothing and `doppler run` injects `dev` (CD-011):
+Create `doppler.yaml`, which pins the repo to its own Doppler project so
+`doppler setup` asks nothing and `doppler run` injects `dev` (CD-011). The
+project is the one infra's `doppler/` root makes for the cog (step 6), named
+for the repository:
 ```yaml
-# Pins this repo to the shared Doppler config for local development.
+# Pins this repo to its own Doppler project for local development: the
+# names its code reads, as production has them, and no others.
 # `doppler setup` reads it; `doppler run -- …` then injects the dev secrets.
 # Local runs use dev only — prd is synced to the platforms, never run.
 setup:
-  - project: mini-app-polis-ecosystem
+  - project: {purpose}-cog
     config: dev
 ```
 
@@ -136,7 +139,7 @@ names are required in Doppler's `dev` config; commented ones are optional
 name `dev` is missing:
 ```bash
 # {cog} — the names this cog reads. Names only: the values live in Doppler
-# (mini-app-polis-ecosystem / dev locally, prd deployed). Run under
+# ({purpose}-cog / dev locally, prd deployed). Run under
 # `doppler run -- …`; do not copy this to .env — nothing reads it.
 
 # {description of var}
