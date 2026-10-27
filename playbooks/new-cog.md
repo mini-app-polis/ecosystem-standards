@@ -293,8 +293,11 @@ Pipeline cogs:
   (PIPE-018). List the secrets the worker needs by name in
   `ssm_parameters` / `ssm_optional_parameters` — every uncommented
   `.env.example` name, and the Sentry DSN and any Healthchecks URL the code
-  reads (CD-037); their values go in Doppler's `prd` config, which syncs to
-  Parameter Store.
+  reads (CD-037). Each maps the name the code reads to the name of its value
+  in Doppler's `mini-app-polis-ecosystem` / `prd`. infra's `doppler/` root
+  gives the cog a Doppler project of its own whose `prd` config references
+  those values and syncs to the cog's Parameter Store prefix: apply it, and
+  run its references script, before the function first deploys.
   The cog's package `__init__.py` calls `mini_app_polis.load_secrets()`
   before anything else, so they are in the environment before any module
   reads it, and the handler calls `load_secrets(refresh=True)` at the top

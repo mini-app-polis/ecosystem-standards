@@ -36,11 +36,13 @@ their code.**
 
 - **State** is in S3, versioned, with S3-native locking. The bucket is
   managed by the root that uses it.
-- **Secrets never pass through Terraform.** Doppler's `prd` config syncs to
-  SSM Parameter Store under `/mini-app-polis/prd/`; each worker loads the
-  parameters its module block names, at cold start, through
-  `mini_app_polis.ssm_secrets`. Its role may read those and no others.
-  Terraform holds names, never values (CD-011).
+- **Secrets never pass through Terraform.** Each worker has a Doppler
+  project of its own, whose `prd` config references the values it needs in
+  `mini-app-polis-ecosystem` and syncs to SSM Parameter Store under
+  `/mini-app-polis/<repository>/prd/`. The worker loads the parameters its
+  module block names, at cold start, through `mini_app_polis.ssm_secrets`.
+  Its role may read those and no others. Terraform holds names, never
+  values (CD-011).
 - **One module per cog.** `modules/cog-worker` declares a cog's queue,
   dead-letter queue and alarm, function, event source mapping, and the
   role its CI deploys code through. `cogs.tf` calls it once per cog.

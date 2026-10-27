@@ -535,15 +535,18 @@ standards:
       keys, Sentry DSNs, Healthchecks URLs, and Clerk credentials.
 
       Doppler syncs automatically to:
-        Railway:        all API services and Railway-hosted cogs receive secrets via
-                        the Doppler → Railway native sync
-        GitHub Actions: CI secrets synced via Doppler → GitHub integration
+        Railway:        each API service and Railway-hosted cog receives its
+                        secrets through a Doppler → Railway sync targeting
+                        the service itself
+        GitHub Actions: each repository's secrets and variables through a
+                        Doppler → GitHub sync, the organisation's through
+                        one more
         Cloudflare Pages: build variables are set on the Pages project —
                         by a Doppler → Cloudflare Pages sync where one
                         exists; nothing in CI runs Doppler. Public build
                         values may sit in wrangler.toml [vars].
         AWS Lambda:     Doppler → SSM Parameter Store native sync, into
-                        /mini-app-polis/prd/. Each worker loads the
+                        /mini-app-polis/<repository>/prd/. Each worker loads the
                         parameters its module block names
                         (mini_app_polis.ssm_secrets) at cold start and
                         again at the start of every invocation; none pass
@@ -563,14 +566,21 @@ standards:
           miniapppolis-common-utils) lists any required name dev lacks
 
       Doppler project structure:
-        One project, mini-app-polis-ecosystem, with configs dev and prd.
-        prd syncs to SSM and to Railway's production environment; dev
-        feeds local runs and Railway's development environment. Each
+        Every value lives once, in mini-app-polis-ecosystem (configs dev
+        and prd), which feeds local runs and syncs nowhere. Everything
+        deployed reads from a Doppler project of its own, named for its
+        repository: its configs hold only the names that reader uses,
+        each a reference into mini-app-polis-ecosystem, and they sync to
+        that reader alone (a Railway service, a worker's Parameter Store
+        prefix, a repository's GitHub Actions). A value is edited in
+        mini-app-polis-ecosystem and reaches every reader through the
+        references; a reader's own config is never edited by hand.
+        mini-app-polis/infra declares the projects and their syncs. Each
         environment's own values, ENVIRONMENT included, live in its
         config — never hand-set on a platform, where a copied value
         silently labels one environment as the other.
 
-      Naming in the shared config: a value that differs per service takes
+      Naming in mini-app-polis-ecosystem: a value that differs per service takes
       the service as a suffix (<NAME>_<MACHINE>, e.g. DEEJAY_COG_API_KEY);
       a value per Sentry project or tenant takes that as a prefix or
       suffix (SENTRY_DSN_COGS, DEEJAYTOOLS_CLERK_ISSUER). Bare names are
