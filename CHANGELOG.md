@@ -1,3 +1,11 @@
+## [7.27.3](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.27.2...v7.27.3) (2026-10-28)
+
+
+### Bug Fixes
+
+* **cd-011:** describe the vault and per-reader Doppler projects ([1c483d3](https://github.com/mini-app-polis/ecosystem-standards/commit/1c483d346cc1c5bf78fc1b09c0124ed23ab8baf8))
+* **cd-011:** pin each repo's doppler.yaml to its own project ([b58cced](https://github.com/mini-app-polis/ecosystem-standards/commit/b58cced711af1b36caf2f8e4df6aed39ae9aaf50))
+
 ## [7.27.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.27.1...v7.27.2) (2026-10-26)
 
 
