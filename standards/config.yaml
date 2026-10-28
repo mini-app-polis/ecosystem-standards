@@ -58,13 +58,13 @@ standards:
       Which Doppler config a command on a workstation reads, and which
       .env.example names that config must hold.
 
-      Config. A repository that declares .env.example pins
-      mini-app-polis-ecosystem / dev in its doppler.yaml, so
+      Config. A repository that declares .env.example pins its own
+      Doppler project's dev config in its doppler.yaml (CD-011), so
       `doppler run -- …` reads dev. That is the default for every local
       command. A command that has to act on production, such as an
       operator command against a production service or reading the task
       board, which exists only in production, says `--config prd`
-      explicitly, and the repository's README names it as a production
+      explicitly, and reads the repo's own project's prd config, and the repository's README names it as a production
       command where it documents it. A command never reaches production
       by inheriting a config it did not name.
 
