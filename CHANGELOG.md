@@ -1,3 +1,10 @@
+## [7.27.4](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.27.3...v7.27.4) (2026-10-28)
+
+
+### Bug Fixes
+
+* **registry:** mark task-manager-cog and task-groomer-cog active so the fleet sweep evaluates them ([c6d2564](https://github.com/mini-app-polis/ecosystem-standards/commit/c6d256444309bd52484c2ed22d7786329d13da19))
+
 ## [7.27.3](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.27.2...v7.27.3) (2026-10-28)
 
 
