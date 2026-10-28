@@ -111,7 +111,7 @@ services:
     '
 - id: task-manager-cog
   type: pipeline-cog
-  status: development
+  status: active
   dod_type: new_cog
   language: python
   cog_subtype: pipeline
@@ -129,7 +129,7 @@ services:
     '
 - id: task-groomer-cog
   type: pipeline-cog
-  status: development
+  status: active
   dod_type: new_cog
   language: python
   cog_subtype: pipeline
