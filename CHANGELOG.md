@@ -1,3 +1,10 @@
+# [7.29.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.28.0...v7.29.0) (2026-10-29)
+
+
+### Features
+
+* **documentation:** promote DOC-016 and DOC-017 to checkable requirements ([ddcaa3e](https://github.com/mini-app-polis/ecosystem-standards/commit/ddcaa3ec7eab3936a7d290ab5fc074cf9684443f))
+
 # [7.28.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.27.4...v7.28.0) (2026-10-29)
 
 
