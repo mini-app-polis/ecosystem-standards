@@ -301,7 +301,7 @@ standards:
 
   - id: DOC-016
     title: Code and tests name another repo's public contract, never its internals
-    status: gap
+    status: requirement
     dimension: documentation_coverage
     severity: WARN
     applies_to: [all]
@@ -317,9 +317,7 @@ standards:
       Scope is source code and tests only. README.md, docs/,
       CHANGELOG.md and docs/decisions/ are out of scope: a document may
       describe how the repo fits with others.
-
-      `status: gap` until evaluator-cog registers the check (EVAL-007).
-    checkable: false
+    checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
       (1) Files: source files under src/ and tests/ (any language the
@@ -328,10 +326,11 @@ standards:
       (2) Deny patterns, each a regex over the file's text:
           - `MINI-\d+` — a task-board ticket id.
           - `app.asana.com/0/\d` — a task-board link.
-          - a `*.tf` file name, except in the infra repo.
+          - a `*.tf` file name, except in `infrastructure` repos,
+            which own their Terraform.
           - "migration NNN" (three digits) or an `NNN_name.sql` file
-            name, except in api-kaianolevine-com and api-deejaytools,
-            which own their migrations.
+            name, except in `api-service` repos, which own their
+            migrations.
       (3) Fail once per file, listing each match with its line number
           and the pattern it matched.
     origin: >
@@ -341,7 +340,7 @@ standards:
 
   - id: DOC-017
     title: Code comments describe the code as it is, not its history
-    status: gap
+    status: requirement
     dimension: documentation_coverage
     severity: WARN
     applies_to: [all]
@@ -355,9 +354,7 @@ standards:
 
       Scope is source code and tests only. README.md, docs/,
       CHANGELOG.md and docs/decisions/ are out of scope.
-
-      `status: gap` until evaluator-cog registers the check (EVAL-007).
-    checkable: false
+    checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
       (1) Files: source files under src/ and tests/, comments and
