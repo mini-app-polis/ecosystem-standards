@@ -1,3 +1,10 @@
+# [7.28.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.27.4...v7.28.0) (2026-10-29)
+
+
+### Features
+
+* **documentation:** add the self-containment and no-history rules as gap rules, and keep provenance out of comments ([86c3cb3](https://github.com/mini-app-polis/ecosystem-standards/commit/86c3cb3c7b7b2040859a284a00a2bbde230c6678))
+
 ## [7.27.4](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.27.3...v7.27.4) (2026-10-28)
 
 
