@@ -1,3 +1,10 @@
+# [7.30.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.29.0...v7.30.0) (2026-10-30)
+
+
+### Features
+
+* **versioning:** VER-006 requires semantic-release from the shared lockfile ([c435d6c](https://github.com/mini-app-polis/ecosystem-standards/commit/c435d6c7697aee4f3f25c069577bd54dec3b336f))
+
 # [7.29.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.28.0...v7.29.0) (2026-10-29)
 
 
