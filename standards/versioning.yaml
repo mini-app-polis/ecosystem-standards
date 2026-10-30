@@ -120,20 +120,46 @@ standards:
 
   - id: VER-006
 
-    title: Plugins installed explicitly before semantic-release
+    title: semantic-release and its plugins come from the fleet's shared lockfile
     status: requirement
     dimension: cd_readiness
     severity: ERROR
     applies_to: [pipeline-cog, trigger-cog, api-service, static-site, react-app]
     description: >
-      semantic-release plugins are installed via npm install --no-save in the release
-      job before running npx semantic-release. Not via package.json. Required because
-      npx only installs the core package.
+      The release job installs semantic-release and the plugins its .releaserc
+      lists from the lockfile committed in mini-app-polis/.github, beside the
+      semantic-release action (.github/actions/semantic-release), with npm ci.
+      It does so by calling the shared release workflow
+      (mini-app-polis/.github/.github/workflows/release.yml), or, in a release
+      job that has steps of its own, by using the semantic-release action as a
+      step. It does not install them inline (npm install --no-save, npx -p),
+      which resolves whatever is newest on npm at release time, transitive
+      dependencies included, in a job that holds a write token.
+      The shared tooling replaces npm with an empty stub, so a .releaserc does
+      not list @semantic-release/npm. A repository that writes its version to
+      package.json does it with @semantic-release/exec, prepareCmd
+      `npm version ${nextRelease.version} --no-git-tag-version --allow-same-version`,
+      listed before @semantic-release/git.
+      common-python-utils keeps its own release job, so that PyPI trusted
+      publishing stays in the job that holds id-token: write; that job installs
+      from the same lockfile by using the semantic-release action as a step.
+    origin: >
+      Every release job ran `npm install --no-save semantic-release
+      @semantic-release/...` with no versions, so each release installed the
+      newest plugins on npm with the job's write token in hand; in
+      common-python-utils that job can also publish to PyPI. deejaytools-com
+      pinned majors only (`npx -p ...@25`).
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Check release job in ci.yml for npm install --no-save step before npx
-      semantic-release. Flag if absent.
+      In .github/workflows/ci.yml, pass when the release job calls
+      mini-app-polis/.github/.github/workflows/release.yml or uses
+      mini-app-polis/.github/.github/actions/semantic-release.
+      Flag an inline install of the release tooling anywhere in ci.yml:
+      `npm install` (or `npm i`) naming semantic-release or a
+      @semantic-release/ plugin, or `npx -p` / `npx --package` naming
+      semantic-release.
+      Flag a .releaserc (.json, .cjs, .yaml) that lists @semantic-release/npm.
 
   - id: VER-007
 

@@ -213,42 +213,20 @@ Copy `.github/workflows/ci.yml` from deejay-cog and change only the
 - **evaluate** — `evaluate.yml@v3`, `needs: deploy`, so a release is
   graded only once it is running
 
-The release job, for reference:
+The release job, for reference. It calls the fleet's shared release
+workflow, which installs semantic-release and its plugins from the shared
+lockfile (VER-006); its `tag` output is the tag this run cut, or empty, and
+the deploy job reads it as `needs.release.outputs.tag`:
 ```yaml
   release:
     name: Release
     needs: [test, security]
-    runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
       contents: write
       issues: write
       pull-requests: write
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "22"
-      - name: Install semantic-release plugins
-        run: |
-          npm install --no-save \
-            semantic-release \
-            @semantic-release/changelog \
-            @semantic-release/exec \
-            @semantic-release/git \
-            @semantic-release/github \
-            @semantic-release/commit-analyzer \
-            @semantic-release/release-notes-generator
-      - name: Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
-      - name: Record the release tag
-        id: released
-        run: echo "tag=$(git tag --points-at HEAD --list 'v*' | head -n1)" >> "$GITHUB_OUTPUT"
+    uses: mini-app-polis/.github/.github/workflows/release.yml@v3
 ```
 
 ---
