@@ -90,21 +90,11 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install semantic-release plugins
-        run: |
-          npm install --no-save \
-            semantic-release \
-            @semantic-release/changelog \
-            @semantic-release/git \
-            @semantic-release/github \
-            @semantic-release/npm \
-            @semantic-release/commit-analyzer \
-            @semantic-release/release-notes-generator
-
+      # VER-006: semantic-release and its plugins from the fleet's shared lockfile.
       - name: Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
+        uses: mini-app-polis/.github/.github/actions/semantic-release@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v7
