@@ -28,6 +28,7 @@ For the process of writing or superseding an ADR, see
 | ADR-0011 | Accepted  | [Trigger Cogs Run on a Schedule, Not as a Resident Process](ADR-0011-trigger-cogs-on-a-schedule.md) |
 | ADR-0012 | Accepted  | [Four Test Layers, Each Proving Something the Others Cannot](ADR-0012-test-layers.md) |
 | ADR-0013 | Accepted  | [Railway-Hosted Cogs Are Recorded Exceptions to ADR-0009](ADR-0013-railway-cogs-as-recorded-exceptions.md) |
+| ADR-0014 | Accepted  | [Review Holds Handed-Off Work Until a `Landed:` Comment Closes It](ADR-0014-board-review-handoff-and-landing.md) |
 
 ---
 
@@ -180,6 +181,18 @@ networking) stay `pipeline-cog` and exempt the queue- and Lambda-shaped
 rules in their own `evaluator.yaml`, each declaring its own liveness
 signal. No new repo type while db-ops is the only permanent member.
 Railway cogs share `SENTRY_DSN_COGS`. Amends ADR-0009.
+
+**ADR-0014 — Review Holds Handed-Off Work Until a `Landed:` Comment Closes It.**
+Review on the task board held work handed off and work already on dev, and
+a task left it only when a person completed it by hand. Now a task enters
+Review with a `Handed off:` comment (what changed, repository and files,
+commit message, whether committed) and is closed by a `Landed:` comment
+(repository, branch, commit, CI result) from whoever confirms green CI on
+dev; task-manager-cog's sweep marks it complete. A session closing out
+Review checks each task against its own Done when and posts `Landed:`,
+sends it back to In progress, or hands it to a cowork session. Work is
+matched to tasks by Where and Done when, not ids in commits. Comments and
+columns only, for Asana's free tier.
 
 ---
 
