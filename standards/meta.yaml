@@ -23,14 +23,15 @@ standards:
       DETERMINISTIC CHECK.
       Verify the release pipeline is correctly wired:
         (1) `package.json` exists at repo root with a `version` field.
-        (2) `.releaserc.json` exists and includes both
-            `@semantic-release/npm` (with `npmPublish: false`) and
-            `@semantic-release/git` plugins.
+        (2) `.releaserc.json` exists, writes the version to
+            `package.json` with `@semantic-release/exec`
+            (`npm version ${nextRelease.version} --no-git-tag-version`,
+            per VER-006), and includes `@semantic-release/git`.
         (3) The `@semantic-release/git` `assets` array includes
             `package.json`.
-        (4) `.github/workflows/` contains a workflow that invokes
-            `npx semantic-release` on push to main, with
-            `@semantic-release/npm` among the installed plugins.
+        (4) `.github/workflows/` contains a workflow that runs
+            semantic-release on push to main, through the shared
+            release workflow or the semantic-release action (VER-006).
       Flag if any of the four conditions fails.
 
   - id: META-002
