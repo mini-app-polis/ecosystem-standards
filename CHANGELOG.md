@@ -1,3 +1,10 @@
+# [7.32.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.31.0...v7.32.0) (2026-10-31)
+
+
+### Features
+
+* **standards:** narrower exemptions, retired-repo checks, react-app rescope, and rule overlaps resolved ([723a5c7](https://github.com/mini-app-polis/ecosystem-standards/commit/723a5c77e1f3344ced75c0fe103080b30003f49c))
+
 # [7.31.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.30.0...v7.31.0) (2026-10-31)
 
 
