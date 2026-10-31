@@ -640,6 +640,13 @@ schema:
       - path: railpack.json
         purpose: Railway build configuration, for a service Railway builds.
         types: [pipeline-cog, trigger-cog, api-service]
+      - path: .railway/
+        purpose: Railway service descriptor (railway.ts), for a service Railway hosts.
+        rule: CD-017
+        types: [pipeline-cog, trigger-cog, api-service]
+      - path: doppler.yaml
+        purpose: Doppler project and config the repo's secrets come from.
+        rule: CD-011
       - path: Dockerfile
         purpose: The service's container image.
         rule: CD-022
