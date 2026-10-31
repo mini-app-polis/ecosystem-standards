@@ -1,3 +1,17 @@
+# [7.31.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.30.0...v7.31.0) (2026-10-31)
+
+
+### Bug Fixes
+
+* **standards:** check for names that exist in XSTACK-001/002/005, PY-006 and CD-002 ([f1618db](https://github.com/mini-app-polis/ecosystem-standards/commit/f1618db67d2ed49efcdb3b353ee879d592895d1a))
+* **standards:** exempt app-bound httpx.AsyncClient from TEST-007 ([3a0f82c](https://github.com/mini-app-polis/ecosystem-standards/commit/3a0f82c976170d07b2ead5d76670ec7ea75d05a3))
+* **versioning:** match semantic-release h1 major headings in VER-002 and VER-004 ([bacdc91](https://github.com/mini-app-polis/ecosystem-standards/commit/bacdc91039a9707a2016207bed01860faad919ab))
+
+
+### Features
+
+* **layout:** allow .railway/ and doppler.yaml in the repository layout ([8b72d74](https://github.com/mini-app-polis/ecosystem-standards/commit/8b72d747d9085959b2c72f1d64a17da5239624b2))
+
 # [7.30.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.29.0...v7.30.0) (2026-10-30)
 
 
