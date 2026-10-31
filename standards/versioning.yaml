@@ -49,8 +49,10 @@ standards:
     check_notes: >
       DETERMINISTIC CHECK.
       (1) Scan CHANGELOG.md for major version entries: lines matching the
-          regex `^##\s*\[?(\d+)\.0\.0\]?` where the first capture group is
-          ≥ 1 (major version bump, not 0.x).
+          regex `^#{1,2}\s*\[?(\d+)\.0\.0\]?` where the first capture group
+          is ≥ 1 (major version bump, not 0.x). semantic-release writes
+          major releases as h1 (`# [2.0.0](...)` or `# 1.0.0`) and
+          minor/patch releases as h2.
       (2) For each major version entry with version `X.0.0`, locate the
           git tag matching `vX.0.0` (or `X.0.0` if the repo tags without
           a `v` prefix) via `git tag --list`. Skip the check for entries
@@ -95,10 +97,13 @@ standards:
     check_notes: >
       DETERMINISTIC CHECK.
       Check CHANGELOG.md for lines that do not follow the semantic-release
-      output format (## [X.Y.Z](...) (YYYY-MM-DD) headers, ### Features /
-      ### Bug Fixes sections). Hand-written entries have prose paragraphs
-      or ## X.Y.Z — date formats. Flag if any section deviates from the
-      machine-generated format. Also check pyproject.toml version — if it
+      output format (## [X.Y.Z](...) (YYYY-MM-DD) headers, or h1
+      `# [X.0.0](...)` / `# X.0.0` headers for major releases, with
+      ### Features / ### Bug Fixes / ### BREAKING CHANGES sections).
+      The BREAKING CHANGES section holds generated prose paragraphs and
+      bullets; do not flag those. Hand-written entries have prose
+      paragraphs outside generated sections or ## X.Y.Z — date formats.
+      Flag if any section deviates from the machine-generated format. Also check pyproject.toml version — if it
       does not match the latest CHANGELOG.md version, flag as manually edited.
 
   - id: VER-005
