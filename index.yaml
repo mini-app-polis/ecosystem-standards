@@ -121,9 +121,11 @@ statuses:
 #
 # The canonical list of retired components, mechanisms and terms: things
 # the ecosystem used to run on and no longer does. DOC-014 reads it to
-# find living documentation that still describes one of them as current;
-# it is the rule's only list, so a retirement extends the check by adding
-# an entry here and nowhere else. Carried in the published catalog.
+# find living documentation that still describes one of them as current,
+# and DOC-016 and DOC-017 read it to find code comments that cite a
+# retired component's files or measure the code against it. It is those
+# rules' only list, so a retirement extends the checks by adding an entry
+# here and nowhere else. Carried in the published catalog.
 #
 # Keys are the retired name as it is written in prose and code. DOC-014
 # matches a key case-insensitively, bounded by anything that is not a
@@ -247,7 +249,7 @@ schema:
 
         Where a rule does apply everywhere but has no subject in some
         repos, `check_notes` says so explicitly and the check skips
-        without emitting (CD-020's "exempt any repo with no
+        without emitting (CD-020's "skip any repo with no
         `uv.lock`", CD-022's "if no `Dockerfile` exists ... skip
         without emitting a finding"). Conditional scope is expressed
         in the check, never in `applies_to`.
@@ -455,9 +457,13 @@ schema:
     cloudflare-pages:
       description: >
         Deployed via Cloudflare Pages Git integration (auto-deploy on
-        push to main). No ci.yml required — Cloudflare Pages is the
-        CI/CD pipeline.
-      exempts: [VER-003, VER-005, VER-006]
+        push to main). Cloudflare Pages builds and deploys the site, so
+        the repo has no `deploy` job (CD-026) and its smoke check waits
+        on the "Cloudflare Pages" check run (CD-032). It still carries a
+        ci.yml like every other repo — security, test, release and
+        evaluate — because Pages deploys but does not scan, version or
+        request an evaluation (VER-003, CD-025, CD-031). The trait
+        exempts nothing; it records how the site ships.
 
     pipeline-cog-evaluator:
       description: >
@@ -480,7 +486,11 @@ schema:
   #
   #   3. Per-repo exemption — if the repo's `evaluator.yaml`
   #      `exemptions:` lists this rule with a reason, the rule is not
-  #      run. An INFO finding naming the reason is recorded.
+  #      run. An INFO finding naming the reason is recorded. An
+  #      exemption that names `paths:` or `routes:` is narrower: the
+  #      rule IS run, findings located in what it names are recorded at
+  #      INFO with the reason, and every other finding continues down
+  #      this list as if there were no exemption.
   #
   #   4. Per-repo deferral — if the repo's `evaluator.yaml`
   #      `deferrals:` lists this rule, the check IS run. If failing,
@@ -683,13 +693,45 @@ schema:
       format: "list of trait names from the traits section above"
       required: false
     exemptions:
-      format: "list of {rule: RULE-ID, reason: string} objects"
+      format: "list of {rule: RULE-ID, reason: string, paths?: [glob], routes?: [path]} objects"
+      fields:
+        rule:
+          required: true
+          description: The rule ID exempted. Must be a rule in the catalog.
+        reason:
+          required: true
+          description: Why the rule does not apply here. Non-empty.
+        paths:
+          required: false
+          description: >
+            Files the exemption covers, as globs relative to the repo root
+            (`src/app/legacy.py`, `scripts/*.py`). A non-empty list of
+            non-empty strings.
+        routes:
+          required: false
+          description: >
+            HTTP routes the exemption covers, as the effective mounted path
+            the rule's check resolves (`/internal/tick`). Globs allowed. A
+            non-empty list of non-empty strings.
       purpose: >
         Rules that genuinely do not apply to this repo for structural reasons
-        unique to this repo. The evaluator skips the check and surfaces the
-        reason in findings as INFO. Exemptions require a reason string.
+        unique to this repo. Exemptions require a reason string.
         If multiple repos share the same exemption reason, that reason should
-        be promoted to a type or trait rather than repeated per repo.
+        be promoted to a type or trait — or written into the rule itself —
+        rather than repeated per repo.
+
+        An exemption with neither `paths` nor `routes` covers the whole
+        rule: the evaluator skips the check and surfaces the reason as
+        INFO. Prefer naming what is exempt. With `paths` or `routes` the
+        check runs; a finding whose file matches a `paths` glob, or whose
+        route matches a `routes` entry, is surfaced as INFO with the
+        reason, and any other finding is emitted as normal. A finding that
+        names no file or route is never covered by a narrowed exemption.
+        That is what keeps an exemption for one known route from hiding
+        the next route added without thought.
+
+        Unknown keys are not read. An exemption carrying only keys outside
+        `fields` is a whole-rule exemption, whatever those keys say.
     deferrals:
       format: "list of {rule: RULE-ID, reason: string, until: date|null} objects"
       purpose: >

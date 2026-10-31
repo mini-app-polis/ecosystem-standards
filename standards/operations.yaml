@@ -98,6 +98,12 @@ standards:
       Step (3) is the load-bearing one: two settings that both reach the
       request path are one setting with two names.
 
+      Declaring the migration setting as a field of the settings class is
+      not a read for step (3); an access to that field, or an import of a
+      name bound to it, from any other application module is. So the
+      field DOC-004 counts as read, and lists in .env.example, is the
+      declaration step (1) wants.
+
       Where the entry point names both settings — a runner that prefers
       the schema-owning role and falls back to the runtime one mentions
       both — the migration setting is the one whose name marks it as

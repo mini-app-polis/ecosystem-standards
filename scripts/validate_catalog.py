@@ -28,6 +28,11 @@ Enforces:
   - ``modifies:`` points at rule IDs that exist
   - a checkable rule does not declare ``applies_to: []`` — an explicitly
     empty scope that no consumer honours as written
+  - the exemption schema in ``schema.evaluator_yaml.exemptions.fields``
+    declares ``rule`` and ``reason`` as required, and this repo's own
+    ``evaluator.yaml`` exemptions follow it: a rule that exists, a
+    non-empty reason, and ``paths`` / ``routes``, where given, as
+    non-empty lists of non-empty strings
 
 Exit codes: 0 clean, 1 problems found, 2 a canonical source would not load.
 
@@ -49,6 +54,7 @@ from catalog_sources import (
     load_ecosystem,
     load_index,
     load_package_json,
+    load_yaml,
     rel,
     standards_files,
 )
@@ -267,6 +273,63 @@ def check_services(ecosystem: dict, dod: dict, errors: Errors) -> None:
             )
 
 
+def _exemption_fields(index: dict) -> dict:
+    """``schema.evaluator_yaml.exemptions.fields`` from ``index.yaml``."""
+    schema = index.get("schema") or {}
+    exemptions = (schema.get("evaluator_yaml") or {}).get("exemptions") or {}
+    return exemptions.get("fields") or {}
+
+
+def exemption_problems(entry: object, fields: dict, rule_ids: set[str]) -> list[str]:
+    """What is wrong with one ``exemptions:`` entry, against ``fields``.
+
+    Keys outside ``fields`` are not reported: the schema says they are not
+    read, so an entry carrying one is a whole-rule exemption, which is valid.
+    """
+    if not isinstance(entry, dict):
+        return ["not a mapping"]
+    problems: list[str] = []
+    for name, spec in fields.items():
+        if isinstance(spec, dict) and spec.get("required") is True:
+            value = entry.get(name)
+            if not isinstance(value, str) or not value.strip():
+                problems.append(f"missing or empty '{name}'")
+    rule = entry.get("rule")
+    if isinstance(rule, str) and rule.strip() and rule not in rule_ids:
+        problems.append(f"rule '{rule}' is not in the catalog")
+    for name in ("paths", "routes"):
+        if name not in entry or name not in fields:
+            continue
+        value = entry[name]
+        if (
+            not isinstance(value, list)
+            or not value
+            or not all(isinstance(v, str) and v.strip() for v in value)
+        ):
+            problems.append(f"'{name}' must be a non-empty list of non-empty strings")
+    return problems
+
+
+def check_exemptions(index: dict, rule_ids: list[str], errors: Errors) -> None:
+    """The exemption schema, and this repo's own evaluator.yaml against it."""
+    fields = _exemption_fields(index)
+    for name in ("rule", "reason"):
+        spec = fields.get(name)
+        if not isinstance(spec, dict) or spec.get("required") is not True:
+            errors.add(
+                f"index.yaml schema.evaluator_yaml.exemptions.fields: "
+                f"'{name}' must be declared with required: true"
+            )
+    path = REPO_ROOT / "evaluator.yaml"
+    if not path.exists():
+        return
+    config = load_yaml(path) or {}
+    known = set(rule_ids)
+    for number, entry in enumerate(config.get("exemptions") or [], 1):
+        for problem in exemption_problems(entry, fields, known):
+            errors.add(f"evaluator.yaml exemptions[{number}]: {problem}")
+
+
 def main() -> int:
     try:
         index = load_index()
@@ -296,6 +359,7 @@ def main() -> int:
 
     check_file_level_meta_002(errors)
     check_services(ecosystem, dod, errors)
+    check_exemptions(index, rule_ids, errors)
 
     if errors:
         print(f"\nFAIL - {len(errors)} problem(s):")

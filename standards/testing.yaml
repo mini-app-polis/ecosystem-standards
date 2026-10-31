@@ -195,7 +195,7 @@ standards:
     status: convention
     dimension: testing_coverage
     severity: INFO
-    applies_to: [pipeline-cog, api-service, react-app]
+    applies_to: [pipeline-cog, api-service]
     description: >
       Deliberate delays and waits in production code — retry intervals,
       poll sleeps, request timeouts — should be sourced from Settings or
@@ -205,6 +205,12 @@ standards:
       This is a quality-of-life convention, not a blocking requirement.
       Python: source from Settings or os.getenv(), default to production value.
       TypeScript: source from process.env, default to production value.
+
+      Not for a browser app. It has no runtime environment to read —
+      `process.env` does not exist in a browser, and a build-time value is
+      the same in tests as in production — and its timers are mostly UI
+      behaviour (a search debounce, a poll, a clock tick) that its tests
+      control with fake timers instead.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.

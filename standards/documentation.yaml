@@ -103,7 +103,10 @@ standards:
           blank line, so one explanation can head a block of names. This
           is the CFG-002 marker.
       Settings class fields count as reads; CFG-002 covers the
-      .env.example-to-Settings direction.
+      .env.example-to-Settings direction. That includes a field nothing
+      on the request path touches, such as the migration connection
+      OPS-002 requires: it is read by the step it exists for, and
+      declaring it is not a read in OPS-002's sense.
 
   - id: DOC-005
     title: Design decisions captured as ADRs
@@ -219,7 +222,7 @@ standards:
 
   - id: DOC-014
     title: Living docs do not describe a retired component as current
-    status: gap
+    status: requirement
     dimension: documentation_coverage
     severity: WARN
     applies_to: [all]
@@ -260,15 +263,15 @@ standards:
       polices the retired authentication mechanisms in source and docs;
       they are not repeated in the registry.
 
-      `status: gap` until evaluator-cog registers the check (EVAL-007).
-    checkable: false
+      In comments and docstrings, DOC-016 and DOC-017 read the same
+      registry: DOC-016 for a citation of a retired component's files,
+      DOC-017 for a comparison with it. A line one of them reports is
+      left to that rule, so one mention yields one finding.
+    checkable: true
     check_notes: >
-      NOT CHECKABLE YET — no evaluator-cog check is registered. Promote to
-      `requirement` and set `checkable: true` in the same change that
-      registers it, with this as the check:
-
       DETERMINISTIC CHECK.
-      (1) Terms: every key of the catalog's `retired` block. Match each
+      (1) Terms: every key of the `retired` block in index.yaml, read
+          from the published catalog, which carries it. Match each
           case-insensitively, bounded on both sides by the start or end of
           the text or a character that is not a letter or digit — so
           `PREFECT_API_KEY` and "Prefect-era" match, and a longer word
@@ -288,7 +291,9 @@ standards:
           historical. A `.env.example` key is never provenance — a key is
           a name the service still reads; a comment line there is prose
           and takes the provenance test.
-      (4) Fail once per file, listing each unallowed match with its line
+      (4) In comments and docstrings, drop a match on a line that DOC-016
+          or DOC-017 reports for the same term.
+      (5) Fail once per file, listing each unallowed match with its line
           number, the term, and the registry's `replaced_by` for it, so
           the finding carries its own fix.
     origin: >
@@ -314,6 +319,10 @@ standards:
       board. A citation of another repo's internals goes stale the moment
       that repo changes, and nothing in this repo tells the reader it has.
 
+      A retired repo has no public contract left to name. Citing one of
+      its files — the module a function was ported from, say — points the
+      reader at code that is no longer maintained and may be gone.
+
       Scope is source code and tests only. README.md, docs/,
       CHANGELOG.md and docs/decisions/ are out of scope: a document may
       describe how the repo fits with others.
@@ -331,6 +340,13 @@ standards:
           - "migration NNN" (three digits) or an `NNN_name.sql` file
             name, except in `api-service` repos, which own their
             migrations.
+          - a retired component's file: a key of the `retired` block in
+            index.yaml (matched as DOC-014 matches it), followed on the
+            same line by a path or file name — a token containing `/`,
+            or ending in a source or document extension (`.py`, `.ts`,
+            `.tsx`, `.js`, `.jsx`, `.sql`, `.md`). Catches
+            "(<retired> src/lib/db-errors.ts)" and "<retired>
+            lib/cache.ts".
       (3) Fail once per file, listing each match with its line number
           and the pattern it matched.
     origin: >
@@ -352,6 +368,12 @@ standards:
       it is written and misleading soon after, and it crowds out what the
       reader needs: what the code does and why.
 
+      Measuring the code against a retired component is history too:
+      "as in <retired>", "ported from <retired>", "<retired>'s wire
+      contract". The retired thing is gone, so the comparison tells the
+      reader nothing they can check. Say what the code does; if the
+      behaviour is a contract kept on purpose, name the contract.
+
       Scope is source code and tests only. README.md, docs/,
       CHANGELOG.md and docs/decisions/ are out of scope.
     checkable: true
@@ -364,13 +386,21 @@ standards:
       (2) Phrases, matched case-insensitively on word boundaries:
           "previously", "used to", "no longer", "was changed",
           "was renamed", "moved from", "as of <date>" (a date in any
-          common form), "originally".
-      (3) Fail once per file, listing each match with its line number
+          common form), "originally", "ported from", "carried over".
+      (3) Comparisons with a retired component. For each key T of the
+          `retired` block in index.yaml (matched as DOC-014 matches it),
+          case-insensitively: "as T", "as in T", "like T", "unlike T",
+          "same as T", "matching T", "from T", "replaces T", "replaced
+          T", and the possessive "T's".
+      (4) Fail once per file, listing each match with its line number
           and the phrase it matched.
     origin: >
       2026-10-20: the same fleet sweep found comments recounting what
       code used to do and when it changed, which had drifted from the
-      code they sat on.
+      code they sat on. 2026-10: a repo that replaced a retired one
+      carried dozens of comments measuring itself against the retired
+      repo ("as in", "ported from", file citations), none of which the
+      fixed phrase list caught.
 
   # ─────────────────────────────────────────────
   # CODE-LEVEL
@@ -385,11 +415,21 @@ standards:
     description: >
       All public functions and classes have docstrings. One sentence minimum
       describing what the function does, not how.
+
+      In TypeScript the docstring is a `/** ... */` comment, and public
+      means exported from a `.ts` module. React components in `.tsx` files
+      are not required to carry one: a component's name and props type
+      say what it renders.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      AST scan: find public functions and classes (not prefixed with _) lacking
-      a docstring. Flag if any exist.
+      Python: AST scan: find public functions and classes (not prefixed with
+      _) lacking a docstring. Flag if any exist.
+      TypeScript: in `src/**/*.ts`, excluding test files (`*.test.ts`,
+      `*.spec.ts`) and `*.d.ts`, find exported function and class
+      declarations and exported `const` bindings to an arrow function or
+      function expression. Flag each whose nearest preceding non-blank line
+      does not close a `/** ... */` comment.
 
   - id: DOC-007
     title: Pydantic field descriptions required
@@ -440,11 +480,18 @@ standards:
       from its import namespace (src/ directory name), both names and their
       relationship must be documented in __init__.py docstring. README must show
       both correct install snippet and correct import path.
+
+      Hyphens becoming underscores is not a split. It is the mapping PY-011
+      requires and the one every Python installer applies, so a reader
+      already knows it; `my-service` importing as `my_service` needs no
+      explanation.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Compare [project] name in pyproject.toml against directory name under src/.
-      If they differ, verify __init__.py docstring mentions both names and README
+      Compare [project] name in pyproject.toml against directory name under src/,
+      after normalising the [project] name as PEP 503 does and PY-011 expects:
+      lower case, with each run of `-`, `_` or `.` turned into `_`. If they still
+      differ, verify __init__.py docstring mentions both names and README
       contains both install and import examples.
     origin: >
       common-python-utils/__init__.py had broken install URL and no explanation
@@ -490,7 +537,8 @@ standards:
       including /version and any application-level endpoints — check the
       OpenAPI description field contains a phrase confirming intent —
       e.g. "intentionally public", "no auth required", "read-only public".
-      Flag unauthenticated routes with no such note. The rationale: DOC-011
+      Flag unauthenticated routes with no such note. A route that passes
+      here passes API-008 too. The rationale: DOC-011
       is the place to record *why* a route is public, so that API-008's
       flag becomes resolvable by writing the justification into the
       description rather than by exempting the rule.

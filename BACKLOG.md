@@ -30,8 +30,6 @@ registers the check in evaluator-cog.
   - [ ] **CD-037** — deploy config provisions every variable the service
         needs. Reads the infrastructure repo's module block for Lambda cogs.
   - [ ] **CD-039** — default branch `main`, `dev` exists. GitHub API.
-  - [ ] **DOC-014** — living docs do not describe a `retired:` entry as
-        current. Reads the catalog's `retired` block.
   - [ ] **DOC-015** — ADR status and supersession links agree.
   - [ ] **PIPE-022** — the cog-worker module alarms on `Duration` at
         `duration_alarm_ratio` × `timeout_seconds`, and every queue-fed

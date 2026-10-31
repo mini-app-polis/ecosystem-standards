@@ -139,10 +139,15 @@ standards:
       /v1/evaluations/summary and should pass.
       TypeScript/Hono: check route handler registrations (app.get, app.post,
       router.get, etc.) for /v1/ path prefix. Flag routes without it.
-      Exempt from versioning: /health, /metrics, /docs, /openapi.json,
-      /redoc, and /version. The /version endpoint is the single legitimate
-      carve-out because it reports the API version — it must be reachable
-      at a stable, version-independent path to be useful.
+      Exempt from versioning: /, /health, /metrics, /docs, /openapi.json,
+      /redoc, and /version. The /version endpoint reports the API version,
+      so it must be reachable at a stable, version-independent path to be
+      useful. The root `/` is the address a person or probe types first;
+      it carries no resource, only a redirect to /docs or a description of
+      the service, and it cannot move under /v1/ without ceasing to be the
+      root. Any other unversioned route is flagged, and a deliberate one
+      is exempted in the repo's evaluator.yaml by naming it under
+      `routes:`.
 
   - id: API-005
     title: Response envelope on all endpoints
@@ -267,8 +272,11 @@ standards:
       application-level endpoints like /contact or /, are flagged —
       whether the lack of auth is intentional is the policy decision to
       make, not a carve-out. Remediate either by adding auth or by
-      documenting the intent via DOC-011. LLM: for each unauthed route
-      found, assess whether it is plausibly intentional (e.g. public read
+      documenting the intent via DOC-011. A route whose description
+      carries DOC-011's intent note is documented and intentional, which
+      is what this rule asks: it is not flagged. LLM: for each unauthed
+      route that remains, assess whether it is plausibly intentional
+      (e.g. public read
       endpoint, contact form) or potentially accidental (e.g. write
       endpoint, user-specific data endpoint with no auth).
 
@@ -323,19 +331,40 @@ standards:
     severity: ERROR
     applies_to: [api-service]
     description: >
-      Alembic (Python) and Drizzle Kit (TypeScript) migrations are applied
-      as a CI/CD step before the new service version is live. Never run
-      migrations manually against a Railway database. Manual migration against
-      production bypasses the audit trail, risks applying the wrong version,
-      and cannot be rolled back cleanly. The migration step in CI runs after
-      tests pass and before the Railway deploy completes.
+      Migrations are applied automatically before the new service version
+      is live. Never run migrations manually against a Railway database.
+      Manual migration against production bypasses the audit trail, risks
+      applying the wrong version, and cannot be rolled back cleanly.
+
+      Three mechanisms qualify:
+        - Alembic (Python): `alembic upgrade head` as a CI/CD step after
+          tests pass and before the deploy completes.
+        - Drizzle Kit (TypeScript): `drizzle-kit migrate` or `drizzle-kit
+          push` as the same CI/CD step.
+        - The raw-SQL runner: numbered SQL files under `migrations/`
+          (`001_baseline.sql` onward), applied in order by a runner script
+          in the repo that records each applied file in a tracking table.
+          The service's start command runs the runner first and starts the
+          server only if it succeeds, so a failed migration keeps the new
+          version from going live.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Python/FastAPI (Alembic): check ci.yml for 'alembic upgrade head' step
-      in the deploy job. Flag if absent or if migration is run manually.
-      TypeScript/Hono (Drizzle): check ci.yml for 'drizzle-kit push' or
-      'drizzle-kit migrate' step. Flag if absent.
+      Pass when any one of these holds; flag if none does.
+      (1) Alembic: ci.yml has an 'alembic upgrade head' step in the deploy
+          or release path.
+      (2) Drizzle: ci.yml has a 'drizzle-kit migrate' or 'drizzle-kit
+          push' step.
+      (3) Raw-SQL runner, all of:
+          (a) `migrations/` holds at least one file matching
+              `^\d{3,}_.+\.sql$`;
+          (b) the start command — read from the same sources OPS-002 step
+              (2) reads: the final stage's CMD or ENTRYPOINT in the root
+              Dockerfile, a railway.json/railway.toml deploy.startCommand,
+              or a start command set in .railway/railway.{ts,py,go} —
+              runs a script in the repo, chained with `&&` before the
+              command that starts the server;
+          (c) that script names the `migrations` directory.
 
   - id: API-012
     title: A unique-constraint violation is a 409, never a 500
