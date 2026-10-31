@@ -160,8 +160,11 @@ standards:
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Check for pnpm-lock.yaml in the repo root. Flag if package-lock.json
-      or yarn.lock is present instead. Require that ci.yml contains either
+      Scan the repo root and every subdirectory, hidden ones included
+      (for example .railway/), skipping node_modules and .git. Each
+      directory holding a package.json must have a pnpm-lock.yaml. Flag
+      a package-lock.json or yarn.lock anywhere in that scan, including
+      nested ones such as .railway/package-lock.json. Require that ci.yml contains either
       pnpm/action-setup or corepack enable. Flag if neither is present. Flag if npm
       install or yarn install appears in CI steps.
 

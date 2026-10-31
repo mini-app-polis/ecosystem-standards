@@ -347,10 +347,12 @@ standards:
       (2) Fail if it does not parse as YAML, or if `version` is not 2,
           or if `updates` is not a non-empty list.
       (3) Determine which ecosystems the repo demonstrably uses from
-          files present, not from configuration: a `uv.lock` or
-          `pyproject.toml` means Python; a `package.json` means
-          JavaScript; a `.github/workflows/` directory means GitHub
-          Actions.
+          files present, not from configuration. Scan the repo root and
+          every subdirectory, hidden ones included (for example
+          .railway/), skipping node_modules and .git. A `uv.lock` or
+          `pyproject.toml` means Python; a `package.json` at any depth
+          of that scan means JavaScript; a `.github/workflows/`
+          directory means GitHub Actions.
       (4) Fail naming each ecosystem the repo uses that no `updates`
           entry declares. Python is satisfied by `uv` or `pip`,
           JavaScript by `npm`, `pnpm` or `yarn`, Actions by
