@@ -99,14 +99,14 @@ standards:
     severity: ERROR
     applies_to: [pipeline-cog, trigger-cog, api-service, shared-library]
     description: >
-      All cogs declare common-python-utils as a dependency. Shared behaviors
-      live there, not duplicated per-repo. Flag if cog re-implements logging,
-      API clients, or metadata helpers.
+      All Python services declare miniapppolis-common-utils as a dependency.
+      Shared behaviors live there, not duplicated per-repo. Flag if the
+      service re-implements logging, API clients, or metadata helpers.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Check pyproject.toml dependencies for common-python-utils. Flag if absent
-      and repo is a Python cog.
+      Check pyproject.toml dependencies for miniapppolis-common-utils. Flag if
+      absent.
 
   - id: PY-007
     title: pyproject.toml as single source of truth

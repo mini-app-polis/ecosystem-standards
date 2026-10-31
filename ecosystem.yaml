@@ -260,11 +260,12 @@ services:
   language: python
   framework: fastapi
   host: railway
-  description: 'FastAPI API for deejaytools.com. Replaced the retired Hono API on the
-    same PostgreSQL database with the same wire contract.
-    Events, floor trial sessions and their queues, check-ins, partners, teams, songs
-    and their Google Drive files. Clerk auth, scope-based authorization through the
-    identity library. Serves deejaytools-com.
+  description: 'FastAPI API for deejaytools.com on PostgreSQL. Events with per-event
+    staff roles, floor trial sessions and their queues, check-ins, partners, managed
+    partnerships, teams, songs and their Google Drive files, and event song
+    submissions. Clerk auth, scope-based authorization through the identity library.
+    Runs an in-process scheduler, sends feedback to Brevo and posts Discord
+    notifications. Serves deejaytools-com, which owns its live contract suite.
 
     '
 - id: deejaytools-com
@@ -274,9 +275,12 @@ services:
   language: typescript
   framework: react
   host: cloudflare-pages
-  description: "React web application for deejaytools.com. WCS routine management\
-    \ platform \u2014 events, sessions, floor trials, check-in queue, partner and\
-    \ song management. Vite + React + Tailwind + shadcn/ui. Talks to api-deejaytools.\n"
+  description: 'React web application for deejaytools.com. WCS routine management
+    platform: events, sessions, floor trials, check-in queue, partner, team and song
+    management, feedback, a staff portal and admin. Clerk sign-in. Vite + React +
+    Tailwind + shadcn/ui. Talks to api-deejaytools and owns its live contract suite.
+
+    '
 - id: website-astro-software
   type: static-site
   status: active

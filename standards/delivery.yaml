@@ -97,8 +97,9 @@ standards:
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
-      Check for sentry-sdk in pyproject.toml (Python) or @sentry/node in
-      package.json (TypeScript). Check for sentry_sdk.init() or Sentry.init()
+      Check for sentry-sdk in pyproject.toml (Python) or @sentry/node or
+      @sentry/react in package.json (TypeScript). Check for
+      mini_app_polis.sentry.init_sentry(), sentry_sdk.init() or Sentry.init()
       call at service entry point. Check for SENTRY_DSN in .env.example.
       Flag any production service missing any of these three.
 
