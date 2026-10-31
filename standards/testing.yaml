@@ -58,8 +58,11 @@ standards:
       Check pyproject.toml dev dependencies for respx. Search test files for
       any use of requests.get, httpx.get, or similar real HTTP calls outside
       of a respx.mock context. Flag any test file importing httpx or requests
-      without a corresponding respx mock. Also flag if respx is absent from
-      dev dependencies entirely.
+      without a corresponding respx mock. Do not flag a test file that uses
+      httpx.AsyncClient (or TestClient) against the application itself, as
+      TEST-008 sanctions, for example through ASGITransport(app=app); that
+      is not an external call. Still flag any other httpx use without respx.
+      Also flag if respx is absent from dev dependencies entirely.
 
   # ─────────────────────────────────────────────
   # FASTAPI TESTING
