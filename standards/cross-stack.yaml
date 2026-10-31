@@ -44,7 +44,7 @@ standards:
     check_notes: >
       DETERMINISTIC CHECK.
       Scan dependency declarations:
-        Python (language: python): `common-python-utils` appears in
+        Python (language: python): `miniapppolis-common-utils` appears in
           pyproject.toml [project.dependencies] OR
           [tool.poetry.dependencies]. Flag if absent.
         TypeScript: not checked — see the description.
@@ -89,7 +89,7 @@ standards:
             `identity.policy`). See AUTH-004.
         (3) Ad-hoc response envelope construction — `return {"data":
             ..., "meta": ...}` literals rather than using
-            `SuccessResponse` / `ErrorResponse` helpers. (This
+            `Envelope` / `ErrorEnvelope` helpers. (This
             overlaps with XSTACK-002 for api-service repos;
             XSTACK-005 catches the same pattern on non-api-service
             repos that still construct responses — e.g. cogs that
@@ -134,7 +134,7 @@ standards:
           (2) The referenced response model must extend (directly or
               transitively) a base class yielding the {data, meta}
               envelope. If the project uses `common-python-utils`'s
-              response helpers (e.g. `SuccessResponse`, `ErrorResponse`),
+              response helpers (e.g. `Envelope`, `ErrorEnvelope`),
               flag routes whose response_model does not derive from them.
               If the project does not use common-python-utils helpers,
               flag as CD-009-adjacent (shared logger / shared utils
