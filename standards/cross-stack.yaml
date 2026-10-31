@@ -60,7 +60,7 @@ standards:
     status: requirement
     dimension: cross_repo_coherence
     severity: WARN
-    applies_to: [pipeline-cog, trigger-cog, api-service, react-app]
+    applies_to: [pipeline-cog, trigger-cog, api-service]
     description: >
       Services that declare the shared library as a dependency
       (XSTACK-001) must actually use its helpers rather than
@@ -69,6 +69,9 @@ standards:
       authorization decision, API response envelope construction, the
       API client's credential resolution, retry wrappers around Google
       APIs.
+
+      Python services only. There is no shared TypeScript library to
+      reimplement (XSTACK-001), so a TypeScript app has no subject here.
     checkable: true
     check_notes: >
       LLM CHECK.
