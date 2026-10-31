@@ -64,18 +64,19 @@ definitions_of_done:
       - Contract test for every endpoint — response shape verified
       - Mock verification in all tests — no vacuous passes
       - Test database fixture — no production data in tests
-      - owner_id on all tables
+      - "Every data-bearing table is authorization-scoped to a principal by one of the three API-006 patterns: owner_id column, identity table keyed by user_id, or relationship table with a user_id ForeignKey to an identity table"
       - Sentry integration configured; an empty DSN in production logs an ERROR rather than skipping silently (CD-038)
       - Every name the code needs — each uncommented .env.example key and the Sentry DSN — is declared in .railway/railway.ts (CD-037)
       - Default branch is main and a dev branch exists (CD-039)
       - CORS configured — CORS_ORIGINS env var, not hardcoded
-      - Feature flags table seeded with initial flags
+      - "Major functionality toggles read their flags from api-kaianolevine-com's GET /v1/feature-flags, each flag documented with key, enabled, description and permanent (CD-001)"
       - Clerk auth requirement explicitly decided and documented
       - Deployed to Railway
       - "OpenAPI docs complete: summary, description, response_model on every endpoint"
       - .env.example present and current
       - README documents purpose, endpoints, deployment, versioning section
-      - README includes full Developer Setup section (prerequisites, uv sync --all-extras, pre-commit install, uvicorn run, pytest, lint/format/mypy, alembic upgrade head)
+      - README includes full Developer Setup section (prerequisites, uv sync --all-extras, pre-commit install, uvicorn run, pytest, lint/format/mypy, and the command that applies migrations locally)
+      - Database migrations are applied by a CI step before the new version is live, never manually against a Railway database (API-011)
       - Design decisions documented in docs/DESIGN.md
       - "CI workflow: ci.yml with test + release jobs using semantic-release"
       - .releaserc.json present with correct plugin configuration
@@ -115,7 +116,8 @@ definitions_of_done:
       - shadcn/ui installed — components copied into src/components/ui/
       - React Hook Form + Zod used for all forms and validation
       - Clerk configured for authentication where auth is required
-      - No hardcoded API URLs — VITE_API_URL env var throughout
+      - No hardcoded API URLs — API base URL read from a VITE_ env var
+      - Sentry integration configured — key mapped into the bundle by name in vite.config.ts define, never by widening envPrefix (CD-002)
       - "CI workflow: ci.yml with build + release jobs using semantic-release"
       - .releaserc.json present with correct plugin configuration
       - README documents purpose, local setup, environment variables, and deployment
