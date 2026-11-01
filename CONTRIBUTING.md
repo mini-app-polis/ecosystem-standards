@@ -23,6 +23,7 @@ Pick the playbook that matches your change:
 | Edit `ecosystem.yaml`, `index.yaml` schema, types, traits,   | `playbooks/ecosystem-changes.md`      |
 | canonical enums, DoD checklists, or add a standards file     |                                       |
 | Bootstrap a new cog                                          | `playbooks/new-cog.md`                |
+| Publish a Python library to PyPI, or recover a failed publish | `playbooks/pypi-package-publishing.md` |
 
 If you're unsure which applies, use this test:
 
@@ -67,27 +68,29 @@ wrong — flag it.
 
 ## Self-rules
 
-This repo's own structure is governed by `standards/meta.yaml`
-(META-001 through META-007). Read those before making changes to
-file headers, canonical enums, or `check_notes` format. The playbooks
-operationalize the META rules — if you follow the playbook, you
-satisfy META by construction.
+This repo's own structure is governed by the META rules in
+`standards/meta.yaml` — that file is the list. Read them before
+making changes to file headers, canonical enums, or `check_notes`
+format. The playbooks operationalize the META rules — if you follow
+the playbook, you satisfy META by construction.
+`scripts/validate_catalog.py` enforces the ones CI can check; its
+docstring says which.
 
 Highlights:
 
-- **META-001**: `package.json` version is owned by semantic-release.
-  Never edit by hand.
-- **META-002**: No `added:` fields, no top-level `updated:` /
-  `maintainer:`, no `# Version:` header comments in YAML or
-  Markdown. Git log is the record.
-- **META-003**: Canonical enums in `index.yaml` are dictionaries
-  with descriptions, not bare lists.
-- **META-005**: Checkable rules open `check_notes` with
-  `DETERMINISTIC CHECK.` or `LLM CHECK.` on the first line.
-- **META-006**: A rule's ID prefix must match its file's declared
-  `rule_prefix` in `index.yaml`. No orphaned prefixes.
-- **META-007** *(convention)*: Rule IDs should be append-only —
-  retired numbers should not be reused. The next ID is
+- `package.json` version is owned by semantic-release. Never edit
+  by hand.
+- No `added:` fields, no top-level `updated:` / `maintainer:`, no
+  `# Version:` header comments in YAML or Markdown. Git log is the
+  record.
+- Canonical enums in `index.yaml` are dictionaries with
+  descriptions, not bare lists.
+- Checkable rules open `check_notes` with `DETERMINISTIC CHECK.` or
+  `LLM CHECK.` on the first line.
+- A rule's ID prefix must match its file's declared `rule_prefix`
+  in `index.yaml`. No orphaned prefixes.
+- *(convention)* Rule IDs should be append-only — retired numbers
+  should not be reused. The next ID is
   `max(ever-seen) + 1` computed from git history. Full enforcement
   is out of scope for CI; author discipline per `new-standard.md`
   Step 4 is the primary control. CI only catches duplicates.
@@ -118,7 +121,9 @@ owns both.
 
 ## Testing your change
 
-Before committing:
+Before committing, run `python3 scripts/validate_catalog.py` — CI
+runs it on every push, and it covers the YAML and META checks below
+and more. The manual checks:
 
 1. **YAML validity.** Any `standards/*.yaml`, `index.yaml`,
    `ecosystem.yaml`, and `definitions-of-done.yaml` must parse. A
@@ -130,13 +135,13 @@ Before committing:
    ID, a repo type, or a trait, the referent must exist in
    `index.yaml`. If a `description:` mentions a service, that
    service must be in `ecosystem.yaml`.
-3. **META-002 clean.** Grep for forbidden fields:
+3. **No forbidden metadata fields.** Grep for them:
    ```bash
    grep -rnE '^\s*added:\s*[0-9]' standards/ index.yaml ecosystem.yaml
    grep -rnE '^# Version:' standards/ index.yaml ecosystem.yaml definitions-of-done.yaml
    ```
    Either command should return no matches.
-4. **META-005 clean.** Every `checkable: true` rule should have a
+4. **`check_notes` opens correctly.** Every `checkable: true` rule should have a
    `check_notes` starting with `DETERMINISTIC CHECK.` or `LLM CHECK.`.
 
 ---
@@ -150,11 +155,12 @@ ecosystem-standards/
 ├── CHANGELOG.md                    ← owned by semantic-release
 ├── BACKLOG.md                      ← open items
 ├── package.json                    ← version, owned by semantic-release
+├── .releaserc.json                 ← semantic-release config
 ├── index.yaml                      ← manifest, enums, schema
 ├── ecosystem.yaml                  ← service registry
 ├── evaluator.yaml                  ← per-repo config for this repo
 ├── definitions-of-done.yaml        ← DoD checklists
-├── standards/
+├── standards/                      ← rules; prefixes in index.yaml `files:`
 │   ├── principles.yaml             ← PRIN
 │   ├── python.yaml                 ← PY
 │   ├── config.yaml                 ← CFG
@@ -168,15 +174,26 @@ ecosystem-standards/
 │   ├── versioning.yaml             ← VER
 │   ├── meta.yaml                   ← META (rules for this repo)
 │   ├── evaluation.yaml             ← EVAL
-│   └── cross-stack.yaml            ← XSTACK
+│   ├── cross-stack.yaml            ← XSTACK
+│   ├── security.yaml               ← SEC
+│   ├── operations.yaml             ← OPS
+│   └── layout.yaml                 ← LAYOUT
 ├── docs/
-│   └── decisions/                  ← ADRs (ADR-NNNN-slug.md)
-│       └── README.md               ← ADR index
-└── playbooks/
-    ├── new-standard.md             ← rule changes
-    ├── new-adr.md                  ← ADR lifecycle
-    ├── ecosystem-changes.md        ← everything else
-    └── new-cog.md                  ← bootstrap a new cog
+│   ├── decisions/                  ← ADRs (ADR-NNNN-slug.md)
+│   │   └── README.md               ← ADR index
+│   └── *.md                        ← design notes
+├── playbooks/
+│   ├── new-standard.md             ← rule changes
+│   ├── new-adr.md                  ← ADR lifecycle
+│   ├── ecosystem-changes.md        ← everything else
+│   ├── new-cog.md                  ← bootstrap a new cog
+│   └── pypi-package-publishing.md  ← publishing a Python package to PyPI
+├── scripts/                        ← catalog validate, compile, publish,
+│                                      release-type check (run by CI)
+├── tests/
+│   └── contract/                   ← publish contract suite
+├── evaluators/                     ← placeholder (.gitkeep)
+└── .github/                        ← CI workflows, dependabot
 ```
 
 ---
