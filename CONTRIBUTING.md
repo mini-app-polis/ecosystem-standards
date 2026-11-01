@@ -107,9 +107,17 @@ the changelog.
 |--------------|--------------|------------------------------------------------------------|
 | `feat:`      | minor        | Adding a new rule, type, trait, service, or dimension      |
 | `fix:`       | patch        | Fixing a mistake — wrong threshold, typo, bad check_notes  |
-| `refactor:`  | patch        | Restructuring without changing semantics                   |
-| `docs:`      | patch        | README, ADRs, playbooks                                    |
+| `refactor:`  | none         | Restructuring scripts or tests; catalog unchanged          |
+| `docs:`      | none         | README, ADRs, playbooks, CONTRIBUTING                      |
 | `chore:`     | none         | Release commits, dependency bumps                          |
+
+Only `feat:` and `fix:` cut a release (`.releaserc.json` uses the default
+commit analyzer). So a commit that changes the catalog's content uses
+`feat:` or `fix:`, whatever the change is about, because the published
+catalog is compiled from it. Which paths count as catalog content is
+`scripts/check_release_type.py`'s to say; CI runs it on every push and
+fails a change to them that no commit will release. Rewording a rule's
+`check_notes` or `statuses` is a `fix:`, not a `docs:` change.
 
 Use `!` or a `BREAKING CHANGE:` body footer for changes that break
 consumers (evaluator-cog, per-repo `evaluator.yaml` files).
