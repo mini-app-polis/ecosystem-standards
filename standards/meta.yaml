@@ -26,7 +26,9 @@ standards:
         (2) `.releaserc.json` exists, writes the version to
             `package.json` with `@semantic-release/exec`
             (`npm version ${nextRelease.version} --no-git-tag-version`,
-            per VER-006), and includes `@semantic-release/git`.
+            or another command that writes the release version, such as a
+            node one-liner in a pnpm repo, per VER-006), and includes
+            `@semantic-release/git`.
         (3) The `@semantic-release/git` `assets` array includes
             `package.json`.
         (4) `.github/workflows/` contains a workflow that runs
