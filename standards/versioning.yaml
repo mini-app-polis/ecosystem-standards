@@ -142,9 +142,13 @@ standards:
       dependencies included, in a job that holds a write token.
       The shared tooling replaces npm with an empty stub, so a .releaserc does
       not list @semantic-release/npm. A repository that writes its version to
-      package.json does it with @semantic-release/exec, prepareCmd
-      `npm version ${nextRelease.version} --no-git-tag-version --allow-same-version`,
-      listed before @semantic-release/git.
+      package.json does it with @semantic-release/exec. The default prepareCmd
+      for an npm repo is
+      `npm version ${nextRelease.version} --no-git-tag-version --allow-same-version`.
+      A pnpm repo may use another command that writes the release version into
+      package.json, for example a `node -e` one-liner, because the shared
+      release job installs no pnpm and `npm version` is wrong in a pnpm repo.
+      Whichever command is used is listed before @semantic-release/git.
       common-python-utils keeps its own release job, so that PyPI trusted
       publishing stays in the job that holds id-token: write; that job installs
       from the same lockfile by using the semantic-release action as a step.
@@ -165,6 +169,9 @@ standards:
       @semantic-release/ plugin, or `npx -p` / `npx --package` naming
       semantic-release.
       Flag a .releaserc (.json, .cjs, .yaml) that lists @semantic-release/npm.
+      A @semantic-release/exec prepareCmd that writes the release version into
+      package.json passes, whether it uses `npm version` or another command,
+      such as a node one-liner. Do not flag it for not using `npm version`.
 
   - id: VER-007
 
