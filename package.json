@@ -1,6 +1,6 @@
 {
   "name": "ecosystem-standards",
-  "version": "7.32.2",
+  "version": "7.32.3",
   "private": true,
   "description": "Machine-readable standards for the MiniAppPolis ecosystem",
   "repository": {

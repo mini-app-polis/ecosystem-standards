@@ -1,3 +1,10 @@
+## [7.32.3](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.32.2...v7.32.3) (2026-11-01)
+
+
+### Bug Fixes
+
+* **versioning:** let a pnpm repo write the release version with a node one-liner in VER-006 ([693def6](https://github.com/mini-app-polis/ecosystem-standards/commit/693def647a73082154008eef0a3103e4a7b07769))
+
 ## [7.32.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.32.1...v7.32.2) (2026-11-01)
 
 
