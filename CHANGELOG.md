@@ -1,3 +1,10 @@
+## [7.32.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.32.1...v7.32.2) (2026-11-01)
+
+
+### Bug Fixes
+
+* **index:** exemptions emit no finding; mark the migration journal historical ([434589e](https://github.com/mini-app-polis/ecosystem-standards/commit/434589e885abbd1cca019cff6d6b98b2f5fe82f2))
+
 ## [7.32.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.32.0...v7.32.1) (2026-11-01)
 
 
