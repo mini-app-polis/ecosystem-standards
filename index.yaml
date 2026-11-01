@@ -242,16 +242,15 @@ schema:
         silently, while a rule scoped too broadly produces a finding
         someone can see and argue with. Narrow to an explicit type
         list only where the check cannot tell "no subject here" apart
-        from "violated" — CD-017 and CD-024 are the current
-        examples: each fails on a missing `railway.json`, and a
-        missing `railway.json` is also exactly what a repo hosted
-        somewhere else looks like.
+        from "violated" — the usual case is a rule that fails on a
+        missing `railway.json`, since a missing `railway.json` is also
+        exactly what a repo hosted somewhere else looks like.
 
         Where a rule does apply everywhere but has no subject in some
         repos, `check_notes` says so explicitly and the check skips
-        without emitting (CD-020's "skip any repo with no
-        `uv.lock`", CD-022's "if no `Dockerfile` exists ... skip
-        without emitting a finding"). Conditional scope is expressed
+        without emitting (for example "skip any repo with no
+        `uv.lock`", or "if no `Dockerfile` exists ... skip without
+        emitting a finding"). Conditional scope is expressed
         in the check, never in `applies_to`.
 
         `applies_to: []` is never valid on a checkable rule. It
@@ -264,17 +263,13 @@ schema:
         rules whose check reads the `pipeline_evaluations` table, the
         evaluator's own check registry, or any other non-per-repo
         source. For those rules, `check_notes` is authoritative for
-        what the check reads. Current rules omitting `applies_to`:
-        EVAL-003 (reads pipeline_evaluations for finding quality),
-        EVAL-007 (reads the standards catalog and evaluator-cog's
-        check registry for drift), XSTACK-006 (reads the org repo
-        listing and the registry), XSTACK-008 (reads the registry and
-        the run's own download results).
+        what the check reads. The rule files are the record of which
+        rules these are: every rule with no `applies_to` key.
 
         A rule without `applies_to` runs once per fleet run, and its
         findings are filed against the repository that has to act on
         them — the repo named in the finding where there is one, the
-        evaluator for its own output quality (EVAL-003), and
+        evaluator for its own output quality, and
         ecosystem-standards only for what is genuinely fleet-wide. A
         finding that one repo can fix alone is a per-repo rule, not a
         fleet-lane one.
@@ -413,8 +408,8 @@ schema:
       automation, no conformance check could say so, and on 2026-09-13
       its one manual release step was missed three times in an afternoon
       — each time surfacing as a CI failure in a consumer that looked
-      like a broken workflow. VER-003, VER-009, CD-025 and CD-026 now
-      scope to this type.
+      like a broken workflow. The release rules that apply here name
+      this type in their `applies_to`.
       Examples: .github.
     infrastructure: >
       A Terraform root, at the repository's root: the AWS account's
@@ -424,10 +419,9 @@ schema:
       apply on merge to main; there are no releases, so release and
       package rules are out of scope by taxonomy. Each trigger cog's
       scheduled function comes from a second module, `scheduled-worker`
-      (ADR-0011). Rules about the pipeline
-      cogs' runtime (PIPE-017's infrastructure half, PIPE-018, CD-010's
-      dead-letter-queue alarm, CD-024) and about Terraform itself (CD-027,
-      CD-028, SEC-008) are checked here, once.
+      (ADR-0011). Rules about the pipeline cogs' runtime and about
+      Terraform itself are checked here, once; each names this type in
+      its `applies_to`.
       Examples: infra.
 
   # Trait definitions. Each trait has a human-readable `description`
