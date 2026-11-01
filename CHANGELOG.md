@@ -1,3 +1,10 @@
+## [7.32.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.32.0...v7.32.1) (2026-11-01)
+
+
+### Bug Fixes
+
+* **standards:** stop enumerating rule ids in index.yaml and CONTRIBUTING ([1c95ad4](https://github.com/mini-app-polis/ecosystem-standards/commit/1c95ad456552e0152c985d8aa1c42370ceaa01c1))
+
 # [7.32.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.31.0...v7.32.0) (2026-10-31)
 
 
