@@ -475,16 +475,18 @@ schema:
   #
   #   2. Trait exemption — if the repo declares a trait in its
   #      `evaluator.yaml` `traits:` list, and that trait's `exempts:`
-  #      includes this rule, the rule is not run. An INFO finding
-  #      naming the trait is recorded for auditability.
+  #      includes this rule, the rule is not run. No finding emitted;
+  #      the trait in `evaluator.yaml` is the record.
   #
   #   3. Per-repo exemption — if the repo's `evaluator.yaml`
   #      `exemptions:` lists this rule with a reason, the rule is not
-  #      run. An INFO finding naming the reason is recorded. An
-  #      exemption that names `paths:` or `routes:` is narrower: the
-  #      rule IS run, findings located in what it names are recorded at
-  #      INFO with the reason, and every other finding continues down
-  #      this list as if there were no exemption.
+  #      run. No finding emitted; the reason in `evaluator.yaml` is the
+  #      record. An exemption that names `paths:` or `routes:` is
+  #      narrower: the rule IS run, findings located in what it names
+  #      are dropped, and every other finding continues down this list
+  #      as if there were no exemption. An exemption says the rule does
+  #      not apply there; a rule the repo means to satisfy later is a
+  #      deferral (step 4), not an exemption.
   #
   #   4. Per-repo deferral — if the repo's `evaluator.yaml`
   #      `deferrals:` lists this rule, the check IS run. If failing,
@@ -715,11 +717,12 @@ schema:
         rather than repeated per repo.
 
         An exemption with neither `paths` nor `routes` covers the whole
-        rule: the evaluator skips the check and surfaces the reason as
-        INFO. Prefer naming what is exempt. With `paths` or `routes` the
-        check runs; a finding whose file matches a `paths` glob, or whose
-        route matches a `routes` entry, is surfaced as INFO with the
-        reason, and any other finding is emitted as normal. A finding that
+        rule: the evaluator skips the check and emits nothing. Prefer
+        naming what is exempt. With `paths` or `routes` the check runs; a
+        finding whose file matches a `paths` glob, or whose route matches
+        a `routes` entry, is dropped, and any other finding is emitted as
+        normal. An exempted finding is never reported: what is to be
+        fixed later is a deferral. A finding that
         names no file or route is never covered by a narrowed exemption.
         That is what keeps an exemption for one known route from hiding
         the next route added without thought.
