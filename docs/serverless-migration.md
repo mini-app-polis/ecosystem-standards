@@ -1,3 +1,5 @@
+<!-- historical: migration journal, kept for its reasoning (ADR-0009) -->
+
 # Make evaluation reliable under burst, and able to idle at zero
 
 > **Historical journal.** This is the working record of the migration as it
