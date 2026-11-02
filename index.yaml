@@ -481,7 +481,7 @@ schema:
   #   3. Per-repo exemption — if the repo's `evaluator.yaml`
   #      `exemptions:` lists this rule with a reason, the rule is not
   #      run. No finding emitted; the reason in `evaluator.yaml` is the
-  #      record. An exemption that names `paths:` or `routes:` is
+  #      record. An exemption that names `paths:`, `routes:` or `models:` is
   #      narrower: the rule IS run, findings located in what it names
   #      are dropped, and every other finding continues down this list
   #      as if there were no exemption. An exemption says the rule does
@@ -689,7 +689,7 @@ schema:
       format: "list of trait names from the traits section above"
       required: false
     exemptions:
-      format: "list of {rule: RULE-ID, reason: string, paths?: [glob], routes?: [path]} objects"
+      format: "list of {rule: RULE-ID, reason: string, paths?: [glob], routes?: [path], models?: [name]} objects"
       fields:
         rule:
           required: true
@@ -709,6 +709,13 @@ schema:
             HTTP routes the exemption covers, as the effective mounted path
             the rule's check resolves (`/internal/tick`). Globs allowed. A
             non-empty list of non-empty strings.
+        models:
+          required: false
+          description: >
+            Models the exemption covers, by the class name a per-model
+            finding carries (`WcsQaEvalRun`). Globs allowed. A non-empty list
+            of non-empty strings. With `paths` or `routes` as well, a finding
+            must match both: the named models in the named files.
       purpose: >
         Rules that genuinely do not apply to this repo for structural reasons
         unique to this repo. Exemptions require a reason string.
@@ -716,14 +723,16 @@ schema:
         be promoted to a type or trait — or written into the rule itself —
         rather than repeated per repo.
 
-        An exemption with neither `paths` nor `routes` covers the whole
-        rule: the evaluator skips the check and emits nothing. Prefer
-        naming what is exempt. With `paths` or `routes` the check runs; a
-        finding whose file matches a `paths` glob, or whose route matches
-        a `routes` entry, is dropped, and any other finding is emitted as
-        normal. An exempted finding is never reported: what is to be
+        An exemption with none of `paths`, `routes` and `models` covers the
+        whole rule: the evaluator skips the check and emits nothing. Prefer
+        naming what is exempt. With any of them the check runs; a finding
+        whose file matches a `paths` glob, or whose route matches a
+        `routes` entry, is dropped, and any other finding is emitted as
+        normal. `models` narrows further: a finding is dropped only when
+        its model matches a `models` entry too, or, with `models` alone,
+        when its model matches whatever its file. An exempted finding is never reported: what is to be
         fixed later is a deferral. A finding that
-        names no file or route is never covered by a narrowed exemption.
+        names no file, route or model is never covered by a narrowed exemption.
         That is what keeps an exemption for one known route from hiding
         the next route added without thought.
 

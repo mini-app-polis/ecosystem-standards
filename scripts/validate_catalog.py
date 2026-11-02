@@ -31,7 +31,7 @@ Enforces:
   - the exemption schema in ``schema.evaluator_yaml.exemptions.fields``
     declares ``rule`` and ``reason`` as required, and this repo's own
     ``evaluator.yaml`` exemptions follow it: a rule that exists, a
-    non-empty reason, and ``paths`` / ``routes``, where given, as
+    non-empty reason, and ``paths`` / ``routes`` / ``models``, where given, as
     non-empty lists of non-empty strings
 
 Exit codes: 0 clean, 1 problems found, 2 a canonical source would not load.
@@ -297,7 +297,7 @@ def exemption_problems(entry: object, fields: dict, rule_ids: set[str]) -> list[
     rule = entry.get("rule")
     if isinstance(rule, str) and rule.strip() and rule not in rule_ids:
         problems.append(f"rule '{rule}' is not in the catalog")
-    for name in ("paths", "routes"):
+    for name in ("paths", "routes", "models"):
         if name not in entry or name not in fields:
             continue
         value = entry[name]
