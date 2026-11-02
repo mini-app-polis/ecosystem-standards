@@ -1,3 +1,10 @@
+# [7.34.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.33.0...v7.34.0) (2026-11-02)
+
+
+### Features
+
+* **delivery:** add CD-040, a repository's settings are declared in infra ([004e794](https://github.com/mini-app-polis/ecosystem-standards/commit/004e7945f4afb4ae35415fec9f37fdc68d7e822a))
+
 # [7.33.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.32.3...v7.33.0) (2026-11-02)
 
 
