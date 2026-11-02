@@ -1858,6 +1858,45 @@ standards:
       rule on that run rather than reporting the repository as
       non-conformant.
 
+  - id: CD-040
+    title: A repository's settings are declared in infra, not changed by hand
+    status: gap
+    dimension: cd_readiness
+    severity: WARN
+    applies_to: [all]
+    description: >
+      A repository's visibility, default branch, merge options, security
+      settings and ruleset are declared in the infrastructure repository
+      (mini-app-polis/infra) and are not changed by hand in GitHub's
+      settings. A setting made by hand at onboarding is easy to forget on
+      the next repository, and nothing records that it was ever made; a
+      setting declared in infra is applied the same way every time, and a
+      later hand change becomes drift that infra's nightly plan reports.
+      See CD-039 for the default branch the declaration must carry.
+
+      `status: gap` until evaluator-cog registers the check (EVAL-007).
+    checkable: false
+    check_notes: >
+      NOT CHECKABLE YET — no evaluator-cog check is registered. Promote to
+      `requirement` and set `checkable: true` in the same change that
+      registers it, with this as the check:
+
+      DETERMINISTIC CHECK.
+      Through the GitHub REST API and a read of mini-app-polis/infra, for
+      the repository's `<org>/<repo>` as the evaluator already resolves it:
+        (1) Fail unless infra declares the repository in its repo module,
+            naming the repository.
+        (2) `GET /repos/{org}/{repo}` — fail on any of `visibility`,
+            `default_branch`, the merge options or the security settings
+            that differs from the infra declaration, naming each field.
+        (3) `GET /repos/{org}/{repo}/rulesets` — fail unless the ruleset
+            infra declares is present.
+      An API error is not a finding: emit nothing for the rule on that run.
+    origin: >
+      The task-manager-cog, task-groomer-cog and rotator-cog onboarding hand
+      steps: each repository's settings were applied by hand, and steps were
+      forgotten from one repository to the next.
+
   - id: CD-035
     title: Each commit's checks run once
     status: convention
