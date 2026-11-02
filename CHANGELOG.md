@@ -1,3 +1,10 @@
+# [7.33.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.32.3...v7.33.0) (2026-11-02)
+
+
+### Features
+
+* **evaluator-yaml:** let an exemption name the models it covers with models: ([75fd708](https://github.com/mini-app-polis/ecosystem-standards/commit/75fd7082bff4d287863853a6813edc3bffd97fa7))
+
 ## [7.32.3](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.32.2...v7.32.3) (2026-11-01)
 
 
