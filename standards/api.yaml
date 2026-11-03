@@ -205,7 +205,9 @@ standards:
       Three patterns satisfy this: (1) direct ownership via an owner_id
       column holding the principal subject; (2) identity tables whose
       primary key is the user_id itself; (3) relationship tables whose
-      user_id column carries a ForeignKey to an identity table.
+      user column carries a ForeignKey to an identity table. A user column
+      is user_id or one naming which user it holds (submitted_by_user_id,
+      user_a_id).
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -215,7 +217,8 @@ standards:
       (1) an owner_id column (direct ownership);
       (2) a user_id column declared as primary_key=True, or the class
       name ends in Profile/Identity/User (identity table);
-      (3) a user_id column whose mapped_column(...) / Column(...) call
+      (3) a user column (user_id, or a name ending in _user_id or of the
+      form user_<x>_id) whose mapped_column(...) / Column(...) call
       contains a ForeignKey(...) argument (relationship table).
       Flag models that satisfy none of the three. Exempt join, lookup,
       and internal-only tables by class-name suffix (_lookup, _config,
