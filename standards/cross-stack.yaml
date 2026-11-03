@@ -185,10 +185,12 @@ standards:
       Mixing these leaks server secrets into client bundles or causes builds
       to fail silently. Each repo's .env.example must follow this convention
       for all declared variables.
-      Exception: Sentry DSNs are named for their Sentry project
-      (SENTRY_DSN_<PROJECT>, CD-002). A Vite app maps its one DSN key into
-      the bundle by name in vite.config.ts `define`, so the unprefixed name
-      in .env.example is not a leak.
+      Exception: a Vite app may map a public value into the bundle by name
+      in vite.config.ts `define` (never by widening envPrefix), so the value
+      keeps one name in Doppler, CI and code. Sentry DSNs are mapped this
+      way (SENTRY_DSN_<PROJECT>, CD-002), and so may any other public build
+      value (an API URL, a publishable key). A name mapped this way is not
+      a leak; .env.example must say it ends up in public JavaScript.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -199,7 +201,10 @@ standards:
       Check .env.example — flag any variable that appears to be client-exposed
       (API URL, public keys) without the correct prefix for its runtime.
       Flag any VITE_ variable in an Astro repo or PUBLIC_ variable in a
-      Vite repo.
+      Vite repo. In a Vite repo, do not flag an unprefixed name that
+      vite.config.ts reads (loadEnv or process.env) and maps into the
+      bundle under `define`; do flag an envPrefix that adds any prefix
+      other than VITE_.
 
   - id: XSTACK-006
     title: Every repo carrying an evaluator.yaml is registered in ecosystem.yaml

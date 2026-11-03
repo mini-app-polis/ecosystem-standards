@@ -76,7 +76,7 @@ definitions_of_done:
       - .env.example present and current
       - README documents purpose, endpoints, deployment, versioning section
       - README includes full Developer Setup section (prerequisites, uv sync --all-extras, pre-commit install, uvicorn run, pytest, lint/format/mypy, and the command that applies migrations locally)
-      - Database migrations are applied by a CI step before the new version is live, never manually against a Railway database (API-011)
+      - Database migrations are applied automatically before the new version is live (a CI step, or the start command's migration runner), never manually against a Railway database (API-011)
       - Design decisions documented in docs/DESIGN.md
       - "CI workflow: ci.yml with test + release jobs using semantic-release"
       - .releaserc.json present with correct plugin configuration

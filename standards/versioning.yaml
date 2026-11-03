@@ -45,26 +45,13 @@ standards:
       Use explicit BREAKING CHANGE in commit body for major version bumps.
       The feat!: shorthand is unreliable. Correct pattern using two -m flags:
         git commit -m 'feat: description' -m 'BREAKING CHANGE: explanation'
-    checkable: true
+    checkable: false
     check_notes: >
-      DETERMINISTIC CHECK.
-      (1) Scan CHANGELOG.md for major version entries: lines matching the
-          regex `^#{1,2}\s*\[?(\d+)\.0\.0\]?` where the first capture group
-          is ≥ 1 (major version bump, not 0.x). semantic-release writes
-          major releases as h1 (`# [2.0.0](...)` or `# 1.0.0`) and
-          minor/patch releases as h2.
-      (2) For each major version entry with version `X.0.0`, locate the
-          git tag matching `vX.0.0` (or `X.0.0` if the repo tags without
-          a `v` prefix) via `git tag --list`. Skip the check for entries
-          with no matching tag (CHANGELOG drift — a separate concern,
-          covered by VER-004).
-      (3) Read the full commit message of the tagged commit via
-          `git log -1 --format=%B <tag>`.
-      (4) Flag if the commit message body contains neither:
-            - a line matching `^BREAKING CHANGE:` (the canonical footer), NOR
-            - a subject line matching `^(feat|fix|refactor)(\([^)]+\))?!:`
-              (the `!` shorthand — accepted even though the description
-              prefers the explicit footer form).
+      Not checked. The release tag points at semantic-release's own
+      chore(release) commit, which never carries the footer, and the
+      commits a release contains are not recorded anywhere a scan can
+      read reliably. semantic-release writes major and minor releases as
+      h1 CHANGELOG entries and patches as h2.
 
   - id: VER-003
 
