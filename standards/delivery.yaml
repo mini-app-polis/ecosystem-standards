@@ -927,7 +927,9 @@ standards:
     check_notes: >
       LLM CHECK.
       (1) [deterministic] Confirm sentry_sdk is a declared dependency and
-          sentry_sdk.init() is called at the service entry point. This
+          Sentry is initialised at the service entry point:
+          mini_app_polis.sentry.init_sentry() or sentry_sdk.init() (as
+          CD-002 accepts). This
           overlaps CD-002 by design — CD-018 is unsatisfiable without it,
           and a repo failing both should see both findings. Do not accept
           an ERROR-level log call as satisfying the Sentry leg: the

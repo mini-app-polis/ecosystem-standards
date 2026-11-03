@@ -202,12 +202,15 @@ standards:
       queries can filter by the authenticated identity. The scoping value
       is the principal's subject — a Clerk user ID for a human caller, a
       machine name for a cog (CD-019, CD-030) — not a Clerk user ID specifically.
-      Three patterns satisfy this: (1) direct ownership via an owner_id
+      Four patterns satisfy this: (1) direct ownership via an owner_id
       column holding the principal subject; (2) identity tables whose
-      primary key is the user_id itself; (3) relationship tables whose
-      user column carries a ForeignKey to an identity table. A user column
-      is user_id or one naming which user it holds (submitted_by_user_id,
-      user_a_id).
+      primary key is the user_id itself; (3) a column of any name
+      (user_id, created_by, user_a_id) carrying a ForeignKey to an
+      identity table; (4) a child table carrying a ForeignKey to a table
+      that is itself scoped by one of these patterns, so it is scoped
+      through its parent. The model is the source of truth: a foreign key
+      that exists only in the database (a REFERENCES clause in a raw-SQL
+      migration) must also be declared on the model's column.
     checkable: true
     check_notes: >
       DETERMINISTIC CHECK.
@@ -217,10 +220,14 @@ standards:
       (1) an owner_id column (direct ownership);
       (2) a user_id column declared as primary_key=True, or the class
       name ends in Profile/Identity/User (identity table);
-      (3) a user column (user_id, or a name ending in _user_id or of the
-      form user_<x>_id) whose mapped_column(...) / Column(...) call
-      contains a ForeignKey(...) argument (relationship table).
-      Flag models that satisfy none of the three. Exempt join, lookup,
+      (3) a column of any name whose mapped_column(...) / Column(...) call
+      contains a ForeignKey(...) argument naming an identity table's
+      column (a table that satisfies pattern 2, or the users table);
+      (4) a column whose ForeignKey(...) names a column of another model's
+      table, where that model satisfies (1), (2), (3) or (4) (resolve
+      transitively; a cycle that never reaches (1)–(3) does not pass).
+      Read foreign keys from the models only, never from migration SQL.
+      Flag models that satisfy none of the four. Exempt join, lookup,
       and internal-only tables by class-name suffix (_lookup, _config,
       _enum, or the PascalCase equivalents). The SQLAlchemy declarative
       root class (Base, DeclarativeBase, Model) is skipped automatically
@@ -328,7 +335,7 @@ standards:
       DB queries (health endpoint must not depend on DB liveness).
 
   - id: API-011
-    title: Database migrations run via CI — never manually
+    title: Database migrations applied automatically before the new version is live — never manually
     status: requirement
     dimension: structural_conformance
     severity: ERROR

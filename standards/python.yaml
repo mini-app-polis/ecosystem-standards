@@ -99,7 +99,9 @@ standards:
     severity: ERROR
     applies_to: [pipeline-cog, trigger-cog, api-service, shared-library]
     description: >
-      All Python services declare miniapppolis-common-utils as a dependency.
+      Every Python service, cog and shared library declares
+      miniapppolis-common-utils as a dependency (common-python-utils
+      itself excepted).
       Shared behaviors live there, not duplicated per-repo. Flag if the
       service re-implements logging, API clients, or metadata helpers.
     checkable: true

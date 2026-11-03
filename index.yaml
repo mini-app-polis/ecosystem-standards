@@ -638,7 +638,7 @@ schema:
         purpose: Operational and maintenance scripts, run by hand or from CI.
         types: [pipeline-cog, trigger-cog, api-service, shared-library]
       - path: migrations/
-        purpose: Database migrations, applied by the release step.
+        purpose: Database migrations, applied automatically before the new version is live.
         rule: API-011
         types: [api-service]
       - path: railway.json
