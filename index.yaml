@@ -575,6 +575,8 @@ schema:
         rule: EVAL-008
       - path: LICENSE
         purpose: The repo's licence, where one is declared.
+      - path: .gitleaksignore
+        purpose: Secret-scan findings reviewed and accepted, by commit, file, rule and line.
 
       # Python services and libraries
       - path: pyproject.toml
@@ -673,6 +675,15 @@ schema:
         types: [infrastructure]
       - path: modules/
         purpose: Terraform modules the root composes.
+        types: [infrastructure]
+      - path: docs/
+        purpose: Longer-form documentation of what the Terraform declares.
+        types: [infrastructure]
+      - path: scripts/
+        purpose: Checks and helpers run by hand or from CI around the Terraform.
+        types: [infrastructure]
+      - path: tests/
+        purpose: Terraform tests and the tests of scripts/.
         types: [infrastructure]
 
   evaluator_yaml:
