@@ -1,3 +1,10 @@
+# [7.35.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.34.1...v7.35.0) (2026-11-03)
+
+
+### Features
+
+* **standards:** widen API-006 and XSTACK-004, make VER-002 text-only, fix migration and Sentry wording ([0bfc0dc](https://github.com/mini-app-polis/ecosystem-standards/commit/0bfc0dc5afaed4501ac11e7b6e68b9b4beca2748))
+
 ## [7.34.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.34.0...v7.34.1) (2026-11-03)
 
 
