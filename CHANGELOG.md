@@ -1,3 +1,10 @@
+## [7.34.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.34.0...v7.34.1) (2026-11-03)
+
+
+### Bug Fixes
+
+* **layout:** list .gitleaksignore and infrastructure's docs, scripts and tests; API-006 accepts a named user column ([4f708d3](https://github.com/mini-app-polis/ecosystem-standards/commit/4f708d3272525678bf64b96321d3cf816229a57f))
+
 # [7.34.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.33.0...v7.34.0) (2026-11-02)
 
 
