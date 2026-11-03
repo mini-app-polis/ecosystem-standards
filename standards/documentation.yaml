@@ -91,8 +91,11 @@ standards:
           dependency folders are not scanned. A name built at runtime
           rather than written literally is not collected; a literal held
           in a module-level constant, or in a module-level dict of them,
-          is collected where the read passes the constant or indexes
-          the dict.
+          is collected where the read passes the constant, indexes the
+          dict, or loops over the dict's values (.values(), or the second
+          name of .items()). A constant imported from another of the
+          repository's own modules counts as one, and a dict's value may
+          be such a constant.
       (3) Collect the names .env.example lists, commented or not
           (NAME= or # NAME=).
       (4) Flag each name read in (2) but missing from (3).
@@ -102,7 +105,8 @@ standards:
           "# external tooling" marks every name after it up to the next
           blank line, so one explanation can head a block of names. This
           is the CFG-002 marker.
-      Settings class fields count as reads; CFG-002 covers the
+      Settings class fields count as reads (a dataclass named for
+      settings is plain data, not a Settings class); CFG-002 covers the
       .env.example-to-Settings direction. That includes a field nothing
       on the request path touches, such as the migration connection
       OPS-002 requires: it is read by the step it exists for, and
