@@ -1,3 +1,10 @@
+## [7.35.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.35.0...v7.35.1) (2026-11-03)
+
+
+### Bug Fixes
+
+* **standards:** DOC-004 check notes cover imported constants, dict loops and settings-named dataclasses ([2b49f69](https://github.com/mini-app-polis/ecosystem-standards/commit/2b49f69cf46e7717706054b51abdca0b173c5031))
+
 # [7.35.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.34.1...v7.35.0) (2026-11-03)
 
 
