@@ -1,3 +1,10 @@
+# [7.36.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.35.1...v7.36.0) (2026-11-04)
+
+
+### Features
+
+* publish the registry's figures in facts.json, and record ADR-0016 ([c750bc3](https://github.com/mini-app-polis/ecosystem-standards/commit/c750bc319dd97cc2c30753b0fa2a6d96cba70bfd))
+
 ## [7.35.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.35.0...v7.35.1) (2026-11-03)
 
 
