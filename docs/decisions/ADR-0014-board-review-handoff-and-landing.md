@@ -3,6 +3,7 @@
 **Date:** 2026-10-30
 **Status:** Accepted
 **Repo:** ecosystem-standards
+**Superseded in part by:** ADR-0015 — the Landing and Closing out Review rules
 
 ---
 
@@ -35,6 +36,9 @@ task-manager-cog's sweep acts on.**
 - **Handing off.** Moving a task to Review comes with a comment starting
   `Handed off:` that says what changed, the repository and files, the
   commit message, and whether it is committed yet.
+> Superseded in part by ADR-0015 — see that ADR's Decision section for the
+> updated rule. The Landing and Closing out Review rules below no longer apply.
+
 - **Landing.** A task is closed by a comment starting `Landed:` that names
   the repository, branch, commit and CI result, posted by whoever confirms
   green CI on dev: an agent run, a Claude session or the owner.
