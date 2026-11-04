@@ -30,6 +30,7 @@ For the process of writing or superseding an ADR, see
 | ADR-0013 | Accepted  | [Railway-Hosted Cogs Are Recorded Exceptions to ADR-0009](ADR-0013-railway-cogs-as-recorded-exceptions.md) |
 | ADR-0014 | Accepted  | [Review Holds Handed-Off Work Until a `Landed:` Comment Closes It](ADR-0014-board-review-handoff-and-landing.md) |
 | ADR-0015 | Accepted  | [The Board Process — A Checked Review, a Complete Column, Work On Hold and Moves by Comment](ADR-0015-board-process.md) |
+| ADR-0016 | Accepted  | [Each Repository Publishes the Figures It Owns](ADR-0016-repositories-publish-their-figures.md) |
 
 ---
 
@@ -207,6 +208,13 @@ comments. On Hold is the owner's parking column, untouched by automation.
 Manual edits are polished by the next run. Grooming is renamed refining.
 Detected problems go to GitHub Issues in the affected repository, not the
 board.
+
+**ADR-0016 — Each Repository Publishes the Figures It Owns.**
+The repository that owns the data declares its quotable figures in
+`facts.yaml`; `facts generate` writes `facts.json` (schema in
+`schemas/facts.schema.json`) and `facts check` fails CI when it drifts.
+Readers point at the published figure and never recount. Runtime figures
+are out of scope.
 
 ---
 

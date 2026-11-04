@@ -71,6 +71,14 @@ jobs:
       - name: Compile standards catalog
         run: python3 scripts/compile_catalog.py
 
+      # facts.json holds the figures this repo owns (service counts, ADRs,
+      # rules); `facts check` fails when it no longer matches facts.yaml.
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Facts are current
+        run: uvx --from miniapppolis-common-utils facts check
+
   release:
     name: Release
     needs: [test, security]

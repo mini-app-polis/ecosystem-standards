@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mini-app-polis/ecosystem-standards/schemas/facts.schema.json",
+  "title": "facts.json",
+  "description": "The figures a repository owns, generated from its facts.yaml by `facts generate` (miniapppolis-common-utils). Never edited by hand; `facts check` fails CI when it no longer matches the repository's data.",
+  "type": "object",
+  "required": ["repo", "facts"],
+  "additionalProperties": false,
+  "properties": {
+    "repo": {
+      "description": "The repository that owns these figures.",
+      "type": "string",
+      "minLength": 1
+    },
+    "facts": {
+      "description": "Each fact by name.",
+      "type": "object",
+      "propertyNames": {"pattern": "^[a-z][a-z0-9_]*$"},
+      "additionalProperties": {"$ref": "#/$defs/fact"}
+    }
+  },
+  "$defs": {
+    "fact": {
+      "type": "object",
+      "required": ["value", "source", "as_of"],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "description": "The figure: a count, a value read from a file, or counts by group.",
+          "type": ["integer", "number", "string", "boolean", "object"],
+          "additionalProperties": {"type": "integer"}
+        },
+        "description": {
+          "description": "What the figure is, in a few words.",
+          "type": "string"
+        },
+        "source": {
+          "description": "What it is computed from, written by the generator.",
+          "type": "string",
+          "minLength": 1
+        },
+        "as_of": {
+          "description": "The day the value last changed (UTC).",
+          "type": "string",
+          "format": "date"
+        }
+      }
+    }
+  }
+}
