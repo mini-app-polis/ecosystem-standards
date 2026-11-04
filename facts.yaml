@@ -1,0 +1,23 @@
+# The figures this repository owns, computed into facts.json by `facts
+# generate` (common-python-utils) and checked in CI by `facts check`.
+# Facts are generated, never edited by hand.
+repo: ecosystem-standards
+facts:
+  services_total:
+    description: Services in the ecosystem registry
+    count: {file: ecosystem.yaml, path: services}
+  services_active:
+    description: Active services in the ecosystem registry
+    count: {file: ecosystem.yaml, path: services, where: {status: active}}
+  pipeline_cogs:
+    description: Pipeline cogs in the ecosystem registry
+    count: {file: ecosystem.yaml, path: services, where: {type: pipeline-cog}}
+  services_by_host:
+    description: Services in the ecosystem registry, by where they run
+    count: {file: ecosystem.yaml, path: services, group_by: host}
+  adrs:
+    description: Architecture decision records
+    files: docs/decisions/ADR-*.md
+  conformance_rules:
+    description: Rules in the standards catalog, counted from its sources
+    count: {file: standards/*.yaml, path: standards}

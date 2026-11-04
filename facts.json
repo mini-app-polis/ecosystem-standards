@@ -1,0 +1,48 @@
+{
+  "repo": "ecosystem-standards",
+  "facts": {
+    "services_total": {
+      "value": 21,
+      "description": "Services in the ecosystem registry",
+      "source": "count: ecosystem.yaml services",
+      "as_of": "2026-11-04"
+    },
+    "services_active": {
+      "value": 21,
+      "description": "Active services in the ecosystem registry",
+      "source": "count: ecosystem.yaml services where status=active",
+      "as_of": "2026-11-04"
+    },
+    "pipeline_cogs": {
+      "value": 8,
+      "description": "Pipeline cogs in the ecosystem registry",
+      "source": "count: ecosystem.yaml services where type=pipeline-cog",
+      "as_of": "2026-11-04"
+    },
+    "services_by_host": {
+      "value": {
+        "aws": 1,
+        "aws-lambda": 7,
+        "cloudflare-pages": 5,
+        "github": 2,
+        "railway": 4,
+        "unset": 2
+      },
+      "description": "Services in the ecosystem registry, by where they run",
+      "source": "count: ecosystem.yaml services by host",
+      "as_of": "2026-11-04"
+    },
+    "adrs": {
+      "value": 16,
+      "description": "Architecture decision records",
+      "source": "files: docs/decisions/ADR-*.md",
+      "as_of": "2026-11-04"
+    },
+    "conformance_rules": {
+      "value": 185,
+      "description": "Rules in the standards catalog, counted from its sources",
+      "source": "count: standards/*.yaml standards",
+      "as_of": "2026-11-04"
+    }
+  }
+}
