@@ -28,7 +28,8 @@ generated `facts.json`, checked in CI. Readers point at it; nobody recounts.**
 - **Declared in the repository.** `facts.yaml` names each figure and how it
   is computed from the repository's own files: a count of entries in a YAML
   or JSON file (optionally filtered or grouped), a count of files, a value
-  read from a file, or a count of matches in a file.
+  read from a file, or a count of matches across files (optionally only
+  inside matched regions, each distinct match counted once).
 - **Generated, never edited.** `facts generate` (miniapppolis-common-utils)
   writes `facts.json`, which follows `schemas/facts.schema.json`: per fact a
   value, a description, the source it was computed from, and the day the
