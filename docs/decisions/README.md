@@ -29,7 +29,7 @@ For the process of writing or superseding an ADR, see
 | ADR-0012 | Accepted  | [Four Test Layers, Each Proving Something the Others Cannot](ADR-0012-test-layers.md) |
 | ADR-0013 | Accepted  | [Railway-Hosted Cogs Are Recorded Exceptions to ADR-0009](ADR-0013-railway-cogs-as-recorded-exceptions.md) |
 | ADR-0014 | Accepted  | [Review Holds Handed-Off Work Until a `Landed:` Comment Closes It](ADR-0014-board-review-handoff-and-landing.md) |
-| ADR-0015 | Accepted  | [The Board Process — A Checked Review, a Complete Column, Held Work and Moves by Comment](ADR-0015-board-process.md) |
+| ADR-0015 | Accepted  | [The Board Process — A Checked Review, a Complete Column, Work On Hold and Moves by Comment](ADR-0015-board-process.md) |
 
 ---
 
@@ -203,7 +203,7 @@ merged with green CI on `dev`, and a `Handed off:` comment answering every
 Done when item) moves it to Complete, where it is marked complete, or back to
 In progress with a `Rejected:` comment. One writer applies every move, each
 with a named owner; sessions move tasks by `Started:` and `Handed off:`
-comments. Held is the owner's parking column, untouched by automation.
+comments. On Hold is the owner's parking column, untouched by automation.
 Manual edits are polished by the next run. Grooming is renamed refining.
 Detected problems go to GitHub Issues in the affected repository, not the
 board.

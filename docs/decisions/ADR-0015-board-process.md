@@ -1,4 +1,4 @@
-# ADR-0015: The Board Process — A Checked Review, a Complete Column, Held Work and Moves by Comment
+# ADR-0015: The Board Process — A Checked Review, a Complete Column, Work On Hold and Moves by Comment
 
 **Date:** 2026-11-04
 **Status:** Accepted
@@ -38,18 +38,18 @@ dependencies. A task's state is carried by its column and its comments.
 **Review holds work someone says is finished. A mechanical check decides
 whether it is: work that passes moves to Complete and only then is marked
 complete. Sessions move tasks by comment, one writer applies every move, and
-a Held column is the owner's alone.**
+an On Hold column is the owner's alone.**
 
 ### Columns
 
 | Column | Holds |
 |---|---|
-| Ideas | New tasks, not yet refined |
+| Inbox | New tasks, not yet refined |
 | Refining | Tasks being refined, or waiting on the owner's answers |
 | Ready | Tasks that meet the definition of ready |
 | In progress | Tasks someone has started |
 | Blocked | Tasks waiting only on other tasks or a date |
-| Held | Tasks the owner has parked; nothing automatic reads or moves them |
+| On Hold | Tasks the owner has parked; nothing automatic reads or moves them |
 | Review | Work someone says is finished, waiting for the Review check |
 | Complete | Work that passed the Review check, marked complete |
 
@@ -66,7 +66,7 @@ actor:
 | In progress to Review | a `Handed off:` comment |
 | Review to Complete, In progress or Refining | the Review check |
 | Blocked to Ready | the sweep, once the blockers are done |
-| Into or out of Held | the owner only |
+| Into or out of On Hold | the owner only |
 
 ### Moves by comment
 
@@ -97,9 +97,9 @@ check, and one that fails is reopened. `Landed:` stays as the record that an
 agent's pull request merged with green CI on `dev`; it no longer closes a
 task on its own.
 
-### Held
+### On Hold
 
-Held is parked work. The sweep never reads, refines, dispatches from, checks
+On Hold is parked work. The sweep never reads, refines, dispatches from, checks
 or moves a task there. Only the owner moves a task in or out.
 
 ### Manual edits
@@ -139,7 +139,7 @@ work for the owner, and they stay on the board.
 - Review holds only work waiting to be checked, so it stays short.
 - The board keeps one writer, and every move has a named owner, so a task
   out of place points at the actor that should have moved it.
-- Held gives the owner a place to set work aside without fighting the
+- On Hold gives the owner a place to set work aside without fighting the
   automation.
 - The board carries planned work; repositories carry their own problems.
 
@@ -167,7 +167,7 @@ has no blocker to finish, so it would never move.
 **Sessions move tasks directly.** Faster, but a second writer to the board,
 and it depends on every session remembering.
 
-**A `hold` tag instead of a Held column.** The task would keep its place, but
+**A `hold` tag instead of an On Hold column.** The task would keep its place, but
 a tag is easy to miss on the board, and a working session cannot set tags.
 
 **Detected problems as board tasks, promoted from Issues.** Every problem
