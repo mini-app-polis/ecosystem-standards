@@ -21,3 +21,8 @@ facts:
   conformance_rules:
     description: Rules in the standards catalog, counted from its sources
     count: {file: standards/*.yaml, path: standards}
+  test_functions:
+    description: Test functions in the test suites (def test_*, each parametrized function once)
+    matches:
+      file: tests/**/test_*.py
+      pattern: '(?m)^\s*(?:async\s+)?def test_\w+'
