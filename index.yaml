@@ -577,6 +577,10 @@ schema:
         purpose: The repo's licence, where one is declared.
       - path: .gitleaksignore
         purpose: Secret-scan findings reviewed and accepted, by commit, file, rule and line.
+      - path: facts.yaml
+        purpose: The figures the repo owns, each with how it is computed from the repo's own files.
+      - path: facts.json
+        purpose: Those figures as computed by `facts generate`; CI's `facts check` fails when it is stale.
 
       # Python services and libraries
       - path: pyproject.toml
