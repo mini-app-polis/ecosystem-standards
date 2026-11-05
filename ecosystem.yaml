@@ -123,26 +123,26 @@ services:
     the board''s template, mints the task id for its source (VN- for voice
     notes) or takes the one it brings (repo#n for issues), and creates the task.
     An hourly schedule also puts a sweep on the same queue: every open task in
-    the grooming columns is checked against the definition of ready, and a
+    the refining columns is checked against the definition of ready, and a
     ready one moves to Ready. No model calls. See task-manager-cog ADR-0001.
 
     '
-- id: task-groomer-cog
+- id: task-refiner-cog
   type: pipeline-cog
   status: active
   dod_type: new_cog
   language: python
   cog_subtype: pipeline
   host: aws-lambda
-  description: 'Grooms tasks on the Asana board. A Lambda function behind its
-    own SQS queue (task-groomer-jobs, one delivery per job). task-manager-cog
+  description: 'Refines tasks on the Asana board. A Lambda function behind its
+    own SQS queue (task-refiner-jobs, one delivery per job). task-manager-cog
     sends it a task that is not ready through api-kaianolevine-com (POST
-    /v1/tasks/groomings/jobs); a model reads the task and the code it names,
+    /v1/tasks/refinings/jobs); a model reads the task and the code it names,
     with read-only tools over the fleet''s repositories, and proposes what
     the task should say. The proposal goes back through the API to
     task-manager-cog, which applies it: this cog never writes to the board.
     Every paid run is capped (rounds, tokens, a monthly spend cap) and
-    recorded with the API. See task-groomer-cog ADR-0001.
+    recorded with the API. See task-refiner-cog ADR-0001.
 
     '
 - id: rotator-cog
