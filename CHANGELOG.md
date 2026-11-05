@@ -1,3 +1,10 @@
+# [7.37.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.36.0...v7.37.0) (2026-11-05)
+
+
+### Features
+
+* **facts:** publish the test-function count ([10df75d](https://github.com/mini-app-polis/ecosystem-standards/commit/10df75d4d3ee3c9bd303a2ca4c6e788e1efad5ac))
+
 # [7.36.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.35.1...v7.36.0) (2026-11-04)
 
 
