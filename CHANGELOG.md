@@ -1,3 +1,10 @@
+# [7.38.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.37.0...v7.38.0) (2026-11-05)
+
+
+### Features
+
+* **layout:** list facts.yaml and facts.json in every repo's layout ([65e269e](https://github.com/mini-app-polis/ecosystem-standards/commit/65e269eaf1157a380edebaa6a2ffaa9aac32b03a))
+
 # [7.37.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.36.0...v7.37.0) (2026-11-05)
 
 
