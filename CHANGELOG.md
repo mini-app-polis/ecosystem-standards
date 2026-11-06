@@ -1,3 +1,10 @@
+## [7.38.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.38.0...v7.38.1) (2026-11-06)
+
+
+### Bug Fixes
+
+* **layout:** infrastructure repos may carry .pre-commit-config.yaml for the facts hook ([aed6e52](https://github.com/mini-app-polis/ecosystem-standards/commit/aed6e5263d61baefaf96f617a16d6c3e3fe08807))
+
 # [7.38.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.37.0...v7.38.0) (2026-11-05)
 
 
