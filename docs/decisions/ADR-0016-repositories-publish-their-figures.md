@@ -83,10 +83,10 @@ reimplements the count and none of them notices drift.
 ## Amendment — 2026-11-05
 
 A figure such as a test count changes on most commits, so regenerating
-`facts.json` by hand meant CI failed whenever someone forgot. common-python-utils
-now ships a `facts` pre-commit hook (`.pre-commit-hooks.yaml`, id `facts`) that
-runs `facts generate` before every commit; when a figure changed it rewrites
-`facts.json` and stops the commit, the way ruff-format does. A repository with
-a `facts.yaml` lists the hook in its `.pre-commit-config.yaml`, pinned to a
-common-python-utils release. `facts check` in CI stays the backstop for a
-commit made without the hooks.
+`facts.json` by hand meant CI failed whenever someone forgot. Every repository
+with a `facts.yaml` now runs a local `facts` pre-commit hook: the same
+`uvx --from miniapppolis-common-utils facts generate` that CI checks with
+`facts check`. When a figure changed, the hook rewrites `facts.json` and stops
+the commit, the way ruff-format does; add `facts.json` and commit again.
+`facts check` in CI stays the backstop for a commit made without the hooks
+(pre-commit is installed per clone with `pre-commit install`).
