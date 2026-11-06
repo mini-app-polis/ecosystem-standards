@@ -63,6 +63,7 @@ must.
 **Negative / trade-offs**
 
 - A change to the data needs `facts generate` in the same commit, or CI fails.
+  The `facts` pre-commit hook (amendment below) runs it at commit time.
 - The four computation kinds cover counting and reading; a figure that needs
   more needs a new kind in the shared generator.
 
@@ -76,3 +77,16 @@ would have no history in git.
 
 **Readers recount from the source files.** What happened before: every reader
 reimplements the count and none of them notices drift.
+
+---
+
+## Amendment — 2026-11-05
+
+A figure such as a test count changes on most commits, so regenerating
+`facts.json` by hand meant CI failed whenever someone forgot. common-python-utils
+now ships a `facts` pre-commit hook (`.pre-commit-hooks.yaml`, id `facts`) that
+runs `facts generate` before every commit; when a figure changed it rewrites
+`facts.json` and stops the commit, the way ruff-format does. A repository with
+a `facts.yaml` lists the hook in its `.pre-commit-config.yaml`, pinned to a
+common-python-utils release. `facts check` in CI stays the backstop for a
+commit made without the hooks.
