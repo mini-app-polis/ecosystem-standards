@@ -76,7 +76,10 @@ description = "{one line description}"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "miniapppolis-common-utils>=5.24,<6",
+    # Add the extra for each mini_app_polis module the cog imports, e.g.
+    # "miniapppolis-common-utils[google]" for mini_app_polis.google; see the
+    # common-python-utils README for the list.
+    "miniapppolis-common-utils>=8.0,<9",
     "httpx",
 ]
 
