@@ -581,6 +581,9 @@ schema:
         purpose: The figures the repo owns, each with how it is computed from the repo's own files.
       - path: facts.json
         purpose: Those figures as computed by `facts generate`; CI's `facts check` fails when it is stale.
+      - path: .pre-commit-config.yaml
+        purpose: The facts hook (ADR-0016), which regenerates facts.json before each commit.
+        types: [infrastructure]
 
       # Python services and libraries
       - path: pyproject.toml
