@@ -1,3 +1,10 @@
+## [7.38.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.38.1...v7.38.2) (2026-11-07)
+
+
+### Bug Fixes
+
+* **catalog:** release the .pre-commit-config.yaml purpose update in index.yaml ([52d77ea](https://github.com/mini-app-polis/ecosystem-standards/commit/52d77eab3a7a63f2c8f6d177464f542550b23319))
+
 ## [7.38.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.38.0...v7.38.1) (2026-11-06)
 
 
