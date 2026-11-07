@@ -90,3 +90,13 @@ with a `facts.yaml` now runs a local `facts` pre-commit hook: the same
 the commit, the way ruff-format does; add `facts.json` and commit again.
 `facts check` in CI stays the backstop for a commit made without the hooks
 (pre-commit is installed per clone with `pre-commit install`).
+
+## Amendment — 2026-11-07
+
+Stopping the commit meant every commit that changed a figure had to be made
+twice, and the easy way round it, `git add .`, also takes in whatever else is
+lying in the working tree. The hook now runs
+`facts generate --stage` (common-python-utils 8.7.0 and later): when a figure
+changed, it rewrites `facts.json` and adds that one file to the commit being
+made, so the commit goes through the first time with its figures current.
+Nothing else is staged. `facts check` in CI is still the backstop.

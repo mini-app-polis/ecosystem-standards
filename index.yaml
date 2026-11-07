@@ -582,7 +582,7 @@ schema:
       - path: facts.json
         purpose: Those figures as computed by `facts generate`; CI's `facts check` fails when it is stale.
       - path: .pre-commit-config.yaml
-        purpose: The facts hook (ADR-0016), which regenerates facts.json before each commit.
+        purpose: The facts hook (ADR-0016), which regenerates facts.json before each commit and adds it to the commit when it changed.
         types: [infrastructure]
 
       # Python services and libraries
