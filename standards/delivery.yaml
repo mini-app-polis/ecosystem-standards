@@ -1784,8 +1784,10 @@ standards:
       base URL to a test command. If none, skip without emitting a finding.
       (2) [LLM] Flag a suite with no credential guard and no host guard, or
       whose workflow can point it at production.
-      (3) [deterministic] Flag workflows running such suites against the
-      same environment without a shared `concurrency:` group.
+      (3) [deterministic] Flag workflows running suites that write against
+      the same environment without a shared `concurrency:` group. A
+      read-only suite (one whose calls are all refused before they store
+      anything, or only read) needs no shared group and is not flagged.
     origin: >
       ADR-0012, 2026-09-29. deejaytools-com `src/contract/harness.ts` and
       `e2e/env.ts`; the `contract-dev-api` concurrency group shared by its
