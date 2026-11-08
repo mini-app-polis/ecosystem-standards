@@ -1,3 +1,10 @@
+## [7.38.3](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.38.2...v7.38.3) (2026-11-08)
+
+
+### Bug Fixes
+
+* **standards:** CD-033 flags missing shared concurrency only for suites that write ([663cbd2](https://github.com/mini-app-polis/ecosystem-standards/commit/663cbd22de1dab5da05e5b05ff02820f29bbead0))
+
 ## [7.38.2](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.38.1...v7.38.2) (2026-11-07)
 
 
