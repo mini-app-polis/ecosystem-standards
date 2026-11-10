@@ -1210,20 +1210,21 @@ standards:
       alone.
 
   - id: CD-031
-    title: Every change requests its own conformance evaluation, after CI and before the release
+    title: Every push to main requests its own conformance evaluation, after CI and before the release
     status: requirement
     dimension: cd_readiness
     severity: WARN
     applies_to: [all]
     description: >
       A repository's conformance changes when the repository changes, so
-      each change should evaluate it — including one that cuts no release
-      (a docs or chore commit), which is often the change that fixes a
-      finding. Every repo's CI has a job that calls the shared
-      `mini-app-polis/.github/.github/workflows/evaluate.yml` after CI
-      passes and before the release: `needs: [test, security]`, on pushes
-      to dev, with `ref: dev`. The release is then graded before it is cut,
-      and a fix is graded when it lands rather than at the next release.
+      each push to main should evaluate it — including one that cuts no
+      release (a promotion of docs or chore commits), which is often the
+      change that fixes a finding. Every repo's CI has a job that calls the
+      shared `mini-app-polis/.github/.github/workflows/evaluate.yml` after
+      CI passes and before the release: `needs: [test, security]`, on
+      pushes to main. Main is graded whether or not the push cuts a
+      release, so a fix is graded when it reaches main rather than at the
+      next release.
 
       ecosystem-standards and evaluator-cog pass `scope: fleet` and request
       after the release (and the deploy, where they deploy from CI) on
@@ -1253,8 +1254,8 @@ standards:
             other jobs' `needs:`, the `test` job, and reaches no job that
             runs `semantic-release` (itself, or through the shared release
             workflow or action). Flag one that waits for a release — a
-            change that cuts no release would never be graded — or one
-            that does not wait for `test`.
+            push that cuts no release would never be graded — or one that
+            does not wait for `test`.
         (3) A fleet-scope job (`scope: fleet`), and any evaluate job in a
             Terraform root, runs after the change ships: its `needs:`
             reaches a job that runs `semantic-release` or, in a Terraform
@@ -1264,8 +1265,8 @@ standards:
       both repos without the evaluate job every other repo in the fleet
       carried, and no rule noticed; their records only changed when a
       standards or evaluator release swept the fleet. 2026-11: moved after
-      CI and before the release, so a fix that cuts no release (a docs
-      commit answering a DOC-017 finding) is graded when it lands.
+      CI and before the release, so a push to main that cuts no release (a
+      docs commit answering a DOC-017 finding) is graded too.
 
   - id: CD-020
 
