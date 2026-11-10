@@ -214,8 +214,8 @@ Copy `.github/workflows/ci.yml` from deejay-cog and change only the
   workflows. `handler`, `architecture` and `python-version` must match
   the cog's module block in mini-app-polis/infra `cogs.tf`.
 - **evaluate** — `evaluate.yml@v3`, `needs: [test, security]`, on pushes
-  to dev with `ref: dev`, so every change is graded after CI and before it
-  is released — a docs or chore commit that cuts no release included
+  to main, so main is graded after CI and before the release — a push that
+  cuts no release (docs or chore commits only) included
 
 The release job, for reference. It calls the fleet's shared release
 workflow, which installs semantic-release and its plugins from the shared
