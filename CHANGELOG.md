@@ -1,3 +1,10 @@
+## [7.39.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.39.0...v7.39.1) (2026-11-10)
+
+
+### Bug Fixes
+
+* **cd-031:** the evaluation runs on pushes to main, after CI and before the release ([302b9d5](https://github.com/mini-app-polis/ecosystem-standards/commit/302b9d57ae67bc26e3a58fd469d110c693d96521))
+
 # [7.39.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.38.3...v7.39.0) (2026-11-10)
 
 
