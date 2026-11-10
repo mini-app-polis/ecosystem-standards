@@ -213,8 +213,9 @@ Copy `.github/workflows/ci.yml` from deejay-cog and change only the
   workflow because a release published with `GITHUB_TOKEN` starts no
   workflows. `handler`, `architecture` and `python-version` must match
   the cog's module block in mini-app-polis/infra `cogs.tf`.
-- **evaluate** — `evaluate.yml@v3`, `needs: deploy`, so a release is
-  graded only once it is running
+- **evaluate** — `evaluate.yml@v3`, `needs: [test, security]`, on pushes
+  to dev with `ref: dev`, so every change is graded after CI and before it
+  is released — a docs or chore commit that cuts no release included
 
 The release job, for reference. It calls the fleet's shared release
 workflow, which installs semantic-release and its plugins from the shared

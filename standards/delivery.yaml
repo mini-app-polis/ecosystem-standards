@@ -1210,21 +1210,26 @@ standards:
       alone.
 
   - id: CD-031
-    title: Every release requests its own conformance evaluation
+    title: Every change requests its own conformance evaluation, after CI and before the release
     status: requirement
     dimension: cd_readiness
     severity: WARN
     applies_to: [all]
     description: >
       A repository's conformance changes when the repository changes, so
-      its own release is the event that should evaluate it. Every repo's
-      CI ends its release path with a job that calls the shared
-      `mini-app-polis/.github/.github/workflows/evaluate.yml`, after the
-      release (and after the deploy, where the repo deploys from CI), on
-      pushes to main. ecosystem-standards and evaluator-cog pass
-      `scope: fleet`, because a new catalog or a new evaluator invalidates
-      every repository's last result; every other repo uses the default,
-      `scope: repo`.
+      each change should evaluate it — including one that cuts no release
+      (a docs or chore commit), which is often the change that fixes a
+      finding. Every repo's CI has a job that calls the shared
+      `mini-app-polis/.github/.github/workflows/evaluate.yml` after CI
+      passes and before the release: `needs: [test, security]`, on pushes
+      to dev, with `ref: dev`. The release is then graded before it is cut,
+      and a fix is graded when it lands rather than at the next release.
+
+      ecosystem-standards and evaluator-cog pass `scope: fleet` and request
+      after the release (and the deploy, where they deploy from CI) on
+      pushes to main: a new catalog or a new evaluator invalidates every
+      repository's last result, and the fleet must be graded by the one
+      that release ships.
 
       A Terraform root (type `infrastructure`) has no releases: a change
       ships when it is applied, so its evaluate job runs after the apply.
@@ -1243,17 +1248,24 @@ standards:
             mini-app-polis/.github repo that owns the workflow,
             `./.github/workflows/evaluate.yml`, its own copy by local path.
             Flag if none exists.
-        (2) Verify that job runs after the change ships: its `needs:`
-            reaches, directly or through other jobs' `needs:`, a job with
-            a step that runs `semantic-release` — or, in a Terraform root
-            with no releases, `terraform apply`. Flag an evaluate job that
-            can run before or without it — it would evaluate the tree
-            before the change shipped.
+        (2) A repo-scope job (no `scope: fleet` input) runs after CI and
+            before the release: its `needs:` reaches, directly or through
+            other jobs' `needs:`, the `test` job, and reaches no job that
+            runs `semantic-release` (itself, or through the shared release
+            workflow or action). Flag one that waits for a release — a
+            change that cuts no release would never be graded — or one
+            that does not wait for `test`.
+        (3) A fleet-scope job (`scope: fleet`), and any evaluate job in a
+            Terraform root, runs after the change ships: its `needs:`
+            reaches a job that runs `semantic-release` or, in a Terraform
+            root, `terraform apply`. Flag one that can run before it.
     origin: >
       2026-09: splitting deejaytools-com into a website and an API left
       both repos without the evaluate job every other repo in the fleet
       carried, and no rule noticed; their records only changed when a
-      standards or evaluator release swept the fleet.
+      standards or evaluator release swept the fleet. 2026-11: moved after
+      CI and before the release, so a fix that cuts no release (a docs
+      commit answering a DOC-017 finding) is graded when it lands.
 
   - id: CD-020
 
@@ -1606,9 +1618,9 @@ standards:
       `on: release`, because semantic-release publishes with GITHUB_TOKEN
       and GitHub starts no workflows from that token's events.
 
-      `evaluate` is the conformance request a repo makes on its own
-      release, calling the shared workflow in mini-app-polis/.github. It is
-      a stage rather than a variation on `test`: it runs after `release`, it
+      `evaluate` is the conformance request a repo makes on each change,
+      calling the shared workflow in mini-app-polis/.github. It is a stage
+      rather than a variation on `test`: it runs after `test` (CD-031), it
       asks about the repository rather than about the change, and nothing
       waits for its answer.
 
