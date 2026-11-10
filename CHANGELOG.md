@@ -1,3 +1,10 @@
+# [7.39.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.38.3...v7.39.0) (2026-11-10)
+
+
+### Features
+
+* **cd-031:** every change requests its evaluation after CI and before the release ([a195564](https://github.com/mini-app-polis/ecosystem-standards/commit/a1955644dfcd6eee1a264177baf27b7971036220))
+
 ## [7.38.3](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.38.2...v7.38.3) (2026-11-08)
 
 
