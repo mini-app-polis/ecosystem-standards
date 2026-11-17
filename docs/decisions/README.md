@@ -31,6 +31,7 @@ For the process of writing or superseding an ADR, see
 | ADR-0014 | Accepted  | [Review Holds Handed-Off Work Until a `Landed:` Comment Closes It](ADR-0014-board-review-handoff-and-landing.md) |
 | ADR-0015 | Accepted  | [The Board Process — A Checked Review, a Complete Column, Work On Hold and Moves by Comment](ADR-0015-board-process.md) |
 | ADR-0016 | Accepted  | [Each Repository Publishes the Figures It Owns](ADR-0016-repositories-publish-their-figures.md) |
+| ADR-0017 | Accepted  | [The Canonical Pipeline Runs on GitHub Actions, From .github](ADR-0017-ci-cd-platform-github-actions.md) |
 
 ---
 
@@ -215,6 +216,14 @@ The repository that owns the data declares its quotable figures in
 `schemas/facts.schema.json`) and `facts check` fails CI when it drifts.
 Readers point at the published figure and never recount. Runtime figures
 are out of scope.
+
+**ADR-0017 — The Canonical Pipeline Runs on GitHub Actions, From .github.**
+Scores GitHub Actions, GitLab CI and Dagger on Actions against the
+pipeline program's goals and migration cost. The canonical pipeline is
+reusable workflows in `.github`, versioned by semantic-release with a
+moving major tag, with unskippable controls from organization rulesets
+on the GitHub Team plan. GitLab needs Ultimate for enforced shared jobs;
+Dagger adds an engine without removing the platform underneath.
 
 ---
 
