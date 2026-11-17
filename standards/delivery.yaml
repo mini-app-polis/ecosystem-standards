@@ -1638,7 +1638,9 @@ standards:
           own reasons.
       (3) Collect the top-level keys under `jobs:`.
       (4) Flag any job name outside the set {security, test, release,
-          deploy, evaluate}, naming the offending job.
+          deploy, evaluate}, naming the offending job. A caller of the
+          canonical pipeline (CD-041) is checked by CD-041 and CD-042
+          instead: skip the repo when `jobs.pipeline` calls `pipeline.yml`.
       Only `.github/workflows/ci.yml` is in scope. Scheduled and
       dispatch-triggered workflows are not pipelines and are not checked.
     origin: >
@@ -1949,3 +1951,116 @@ standards:
       twice per change to dev — on the push and again on the promotion pull
       request, for the same commit.
 
+
+  # ─────────────────────────────────────────────
+  # THE CANONICAL PIPELINE (ADR-0017)
+  # ─────────────────────────────────────────────
+
+  - id: CD-041
+    title: ci.yml is a thin caller of the canonical pipeline at its current major
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    applies_to: [all]
+    description: >
+      A repository subscribes to the canonical pipeline rather than copying
+      its stages (ADR-0017). Its `ci.yml` has one job, `pipeline`, that
+      calls `pipeline.yml` in mini-app-polis/.github at the pipeline's
+      current major and passes the repository's profile and inputs. The
+      current major is `current_major` in `pipeline.yaml` at the root of
+      mini-app-polis/.github; this rule never names a number, so moving the
+      fleet to a new major changes one file.
+
+      mini-app-polis/.github itself calls its own `pipeline.yml` by local
+      path, since it is the pipeline's source.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Read `current_major` from `pipeline.yaml` at the root of
+          mini-app-polis/.github on `main`.
+      (2) Parse `.github/workflows/ci.yml`. Flag the repository when it is
+          absent.
+      (3) Flag unless `jobs.pipeline` exists and its `uses:` is
+          `mini-app-polis/.github/.github/workflows/pipeline.yml@v<current_major>`,
+          or, in mini-app-polis/.github, `./.github/workflows/pipeline.yml`.
+      (4) Flag a `jobs.pipeline` that declares `steps:` (a caller passes
+          `with:` and `secrets:` only).
+      Report the `uses:` found and the major expected.
+    origin: >
+      2026-11-17 workflow inventory (.github
+      docs/workflow-inventory-2026-11-17.md): every repository carried its
+      own copy of the stages, and repositories of the same type differed
+      in whether a stage was inline or shared, in triggers and in inputs,
+      with no reason recorded for any of it.
+
+  - id: CD-042
+    title: A repository adds to the pipeline only at its extension points
+    status: requirement
+    dimension: structural_conformance
+    severity: WARN
+    applies_to: [all]
+    description: >
+      Everything a commit's build needs runs in the one pipeline run, so
+      the run shows every stage (ADR-0017). A repository may add work only
+      as the pipeline's inputs or as jobs in its `ci.yml` that run after
+      the `pipeline` job, in the same run. It adds no other workflow that
+      runs a stage: nothing on `deployment_status`, `repository_dispatch`
+      or `workflow_run` that tests, builds or deploys a commit. Branch-flow
+      and board workflows (promotion, merging into `dev`, the agent) are
+      not stages and call their shared workflows in mini-app-polis/.github.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) Parse `.github/workflows/ci.yml`. Flag every job other than
+          `pipeline` whose `needs:` does not include `pipeline`.
+      (2) For every other file under `.github/workflows/`: skip a file
+          whose `on:` declares only `workflow_call` (a reusable workflow,
+          in mini-app-polis/.github). Flag a file triggered on
+          `deployment_status` or `repository_dispatch`.
+      (3) Flag a file triggered on `push`, `pull_request` or
+          `workflow_run` with any job that does not call a reusable
+          workflow in mini-app-polis/.github (`uses:
+          mini-app-polis/.github/.github/workflows/...`).
+      Files triggered only on `schedule` or `workflow_dispatch` are not
+      checked here; CD-043 covers any that deploy.
+      Name the file and job flagged.
+    origin: >
+      2026-11-17 workflow inventory: smoke and contract suites ran in
+      `deployed.yml` on `deployment_status`, site checks in `site.yml` and
+      contract suites in `contract.yml` on `repository_dispatch`, each a
+      separate run, so no single run showed whether a commit had passed.
+
+  - id: CD-043
+    title: Code reaches an environment only through the pipeline's deploy stage
+    status: requirement
+    dimension: cd_readiness
+    severity: WARN
+    applies_to: [all]
+    description: >
+      A commit is deployed by the pipeline's `deploy` stage, after it is
+      tested and, on `main`, released (ADR-0017). No platform builds or
+      deploys a branch on its own: Railway services and Cloudflare Pages
+      projects have their branch-triggered deploys turned off where they
+      are declared, and no workflow outside the pipeline run deploys code,
+      by hand or on a trigger.
+    checkable: true
+    check_notes: >
+      DETERMINISTIC CHECK.
+      (1) In every file under `.github/workflows/` other than `ci.yml` and
+          the reusable workflows of mini-app-polis/.github, flag a job that
+          calls `lambda-deploy.yml`, or a step that runs `railway up`,
+          `railway redeploy`, `wrangler pages deploy`, or posts to a
+          Cloudflare Pages deploy hook.
+      (2) Flag `.railway/railway.ts` when a service's `source` is a
+          `github(...)` repository with a `branch`, which deploys every
+          push to that branch.
+      (3) For type infrastructure: flag a `cloudflare_pages_project` whose
+          `source.config` sets `production_deployments_enabled = true` or a
+          `preview_deployment_setting` other than `"none"`.
+      Name the file, and the service or project.
+    origin: >
+      2026-11-17 workflow inventory: Railway deployed api-kaianolevine-com,
+      api-deejaytools and db-ops on every push to `main` and `dev` with
+      `checkSuites: false`, and Cloudflare Pages built every push of the
+      five sites, so code reached production whether or not CI passed or a
+      release was cut.
