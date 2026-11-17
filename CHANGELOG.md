@@ -1,3 +1,10 @@
+# [7.40.0](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.39.1...v7.40.0) (2026-11-17)
+
+
+### Features
+
+* **cd:** require every repository to subscribe to the canonical pipeline (CD-041, CD-042, CD-043) ([df7dbaa](https://github.com/mini-app-polis/ecosystem-standards/commit/df7dbaa03ba3ed2afa8cac9fc24a44a92eeb28d1))
+
 ## [7.39.1](https://github.com/mini-app-polis/ecosystem-standards/compare/v7.39.0...v7.39.1) (2026-11-10)
 
 
