@@ -33,16 +33,16 @@
       "as_of": "2026-11-04"
     },
     "adrs": {
-      "value": 16,
+      "value": 17,
       "description": "Architecture decision records",
       "source": "files: docs/decisions/ADR-*.md",
-      "as_of": "2026-11-04"
+      "as_of": "2026-11-17"
     },
     "conformance_rules": {
-      "value": 185,
+      "value": 188,
       "description": "Rules in the standards catalog, counted from its sources",
       "source": "count: standards/*.yaml standards",
-      "as_of": "2026-11-04"
+      "as_of": "2026-11-17"
     },
     "test_functions": {
       "value": 4,
