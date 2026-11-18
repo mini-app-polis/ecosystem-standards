@@ -126,10 +126,13 @@ plan. GitLab CI and Dagger are not adopted.**
 
 - The organization moves from GitHub Free to GitHub Team ($4 a month for
   one user).
-- Ruleset workflows do not run on events made with `GITHUB_TOKEN`, so the
-  pipeline's own automation (promotion, release commits) keeps using the
-  promote App's token, and GitHub Actions stays on the `main` ruleset's
-  bypass list for the release commit.
+- Ruleset workflows do not run on events made with `GITHUB_TOKEN`, and
+  run only on pull request and merge-queue events, so the organization
+  ruleset holds only `main`, which every change reaches through the
+  promotion pull request; `dev` keeps its direct pushes. The pipeline's
+  own automation (promotion, release commits) uses the promote App's
+  token, and the App is the `main` ruleset's one bypass for the release
+  commit: GitHub does not accept GitHub Actions as a bypass actor.
 - The one-view goal holds only while every stage stays a job of the one
   `ci.yml` run; any stage added as a separate workflow breaks it, so the
   conformance rules have to forbid that.
